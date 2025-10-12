@@ -13,15 +13,13 @@ export default function ReviewApplicationEventPage() {
   const [isNavigating, setIsNavigating] = useState(false);
   const [showCentroConfirm, setShowCentroConfirm] = useState(false);
   
-  // Sort states
-  const [sortBy, setSortBy] = useState("id"); // "id" or "name"
-  const [sortOrder, setSortOrder] = useState("asc"); // "asc" or "desc"
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("asc");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Fetch events for the logged-in admin (based on ngo_code)
   useEffect(() => {
     const fetchEvents = async () => {
       const adminData = JSON.parse(localStorage.getItem("admin"));
@@ -50,7 +48,6 @@ export default function ReviewApplicationEventPage() {
     fetchEvents();
   }, []);
 
-  // Prevent body scroll when modal is open and handle ESC key
   useEffect(() => {
     if (showCentroConfirm) {
       document.body.style.overflow = "hidden";
@@ -76,7 +73,6 @@ export default function ReviewApplicationEventPage() {
     };
   }, [showCentroConfirm]);
 
-  // Fetch pending applications for the selected event
   const fetchEventApplications = async (eventId) => {
     const { data, error } = await supabase
       .from("Event_User")
@@ -123,7 +119,6 @@ export default function ReviewApplicationEventPage() {
     setPendingApplications(filteredApplications);
   };
 
-  // Fetch event details
   const fetchEventDetails = async (eventId) => {
     const { data, error } = await supabase
       .from("Event_Information")
@@ -141,7 +136,6 @@ export default function ReviewApplicationEventPage() {
     setSelectedEventDetails(data);
   };
 
-  // Helper function to format time in 12-hour format
   const formatTime = (timeString) => {
     const [hours, minutes] = timeString.split(":");
     const date = new Date(0, 0, 0, hours, minutes);
@@ -152,7 +146,6 @@ export default function ReviewApplicationEventPage() {
     });
   };
 
-  // Helper function to format objectives into bullet points
   const formatObjectives = (objectivesString) => {
     if (!objectivesString) return null;
     const objectives = objectivesString.split("-");
@@ -163,7 +156,6 @@ export default function ReviewApplicationEventPage() {
     ));
   };
 
-  // Handle event selection
   const handleSelectEvent = (eventId) => {
     setSelectedEvent(eventId);
     fetchEventApplications(eventId);
@@ -171,7 +163,6 @@ export default function ReviewApplicationEventPage() {
     setSelectedVolunteer(null);
   };
 
-  // Handle navigation to AI scheduling page
   const handleReviewAiScheduling = async () => {
     if (!selectedVolunteer || !selectedEventDetails) return;
 
@@ -200,10 +191,8 @@ export default function ReviewApplicationEventPage() {
     }
   };
 
-  // Check if current path matches the button
   const isActive = (path) => location.pathname === path;
 
-  // Sort function
   const getSortedApplications = (applications) => {
     const sorted = [...applications].sort((a, b) => {
       if (sortBy === "id") {
@@ -228,10 +217,8 @@ export default function ReviewApplicationEventPage() {
 
   const handleSortChange = (newSortBy) => {
     if (sortBy === newSortBy) {
-      // Toggle order if clicking the same sort option
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
-      // Set new sort option with ascending order
       setSortBy(newSortBy);
       setSortOrder("asc");
     }
@@ -239,362 +226,330 @@ export default function ReviewApplicationEventPage() {
   };
 
   return (
-    <div
-      className="flex min-h-screen bg-no-repeat bg-center"
-      style={{
-        backgroundImage: `url(${CentroAdminBg})`,
-        backgroundSize: "100% 100%",
-      }}
-    >
-      <Sidebar />
-
-      <main className="flex-1 ml-64 p-4 overflow-y-auto">
-        <div id="review_application" className="relative z-10 space-y-4">
-          {/* Header with Navigation Buttons */}
-          <div className="flex gap-4">
-            <Link to="/review-application" className="flex-1">
-              <button
-                className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${
-                  isActive("/review-application")
-                    ? "bg-emerald-900 text-white border-emerald-500"
-                    : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
-                }`}
-              >
-                Organization Applications
-              </button>
-            </Link>
-            <Link to="/review-application-event" className="flex-1">
-              <button
-                className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${
-                  isActive("/review-application-event")
-                    ? "bg-emerald-900 text-white border-emerald-500"
-                    : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
-                }`}
-              >
-                Event Applications
-              </button>
-            </Link>
-          </div>
-
-          {/* Combined Event Dropdown and Pending Applications */}
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 px-6 py-4 flex justify-between items-center">
-            {/* Event Dropdown */}
-            <div className="flex items-center gap-3">
-              <label className="text-emerald-900 font-semibold text-lg">
-                Select Event:
-              </label>
-              <select
-                onChange={(e) => handleSelectEvent(e.target.value)}
-                className="px-4 py-2.5 rounded-lg bg-emerald-to-r from-emerald-50 to-emerald-100 text-emerald-900 font-medium cursor-pointer border-2 border-emerald-600 hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md min-w-[300px]"
-                value={selectedEvent || ""}
-              >
-                <option value="" disabled className="text-gray-500">
-                  -- Choose an Event --
-                </option>
-                {events.map((event) => (
-                  <option
-                    key={event.event_id}
-                    value={event.event_id}
-                    className="py-2 bg-white hover:bg-emerald-50"
-                  >
-                    {event.event_title} (ID: {event.event_id})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Pending Applications */}
-            <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2">
-              <span className="text-emerald-900 text-lg font-medium">
-                Pending Applications:
-              </span>
-              <span className="bg-emerald-600 text-white font-bold text-lg px-3 py-1 rounded-full shadow-sm">
-                {pendingApplications.length}
-              </span>
-            </div>
-          </div>
-
-          {/* Event Details (Overview) */}
-          {selectedEventDetails && (
-            <div className="mt-6 bg-white rounded-lg shadow p-6">
-              <h3 className="text-2xl text-emerald-900 font-semibold mb-4">
-                Event Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-lg text-emerald-900 mb-2">
-                    <strong>Event Title: </strong>
-                    {selectedEventDetails.event_title}
-                  </p>
-                  <p className="text-lg text-emerald-900 mb-2">
-                    <strong>Date: </strong>
-                    {new Date(selectedEventDetails.date).toLocaleDateString()}
-                  </p>
-                  <p className="text-lg text-emerald-900 mb-2">
-                    <strong>Time: </strong>
-                    {formatTime(selectedEventDetails.time_start)} -{" "}
-                    {formatTime(selectedEventDetails.time_end)}
-                  </p>
-                  <p className="text-lg text-emerald-900 mb-2">
-                    <strong>Location: </strong>
-                    {selectedEventDetails.location}
-                  </p>
-                  <p className="text-lg text-emerald-900 mb-2">
-                    <strong>Volunteer Limit: </strong>
-                    {selectedEventDetails.volunteers_limit}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-lg text-emerald-900 mb-2">
-                    <strong>Objectives: </strong>
-                  </p>
-                  <ul className="list-disc pl-5 mb-4">
-                    {formatObjectives(selectedEventDetails.event_objectives)}
-                  </ul>
-                  <p className="text-lg text-emerald-900">
-                    <strong>Description: </strong>
-                    {selectedEventDetails.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Volunteers List */}
-          {pendingApplications.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Table with Sort Button */}
-              <div className="md:col-span-2 bg-white rounded-lg shadow">
-{/* Sort Button - Outside of scrollable area */}
-<div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-  <h3 className="text-lg font-semibold text-emerald-900">
-    Applicant List
-  </h3>
-  <div className="relative">
-    <button
-      onClick={() => setShowSortDropdown(!showSortDropdown)}
-      className="flex items-center gap-2 bg-emerald-900 text-white font-semibold px-4 py-2 rounded-lg hover:bg-emerald-800 transition text-sm"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
-        />
-      </svg>
-      Sort
-    </button>
-
-    {showSortDropdown && (
-      <div className="absolute top-full mt-2 right-0 bg-white border-2 border-emerald-900 rounded-lg shadow-lg z-50 min-w-[180px]">
-        <div className="py-2">
-          <button
-            onClick={() => handleSortChange("id")}
-            className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-              sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-            }`}
-          >
-            <span>User ID</span>
-            {sortBy === "id" && (
-              <span className="text-emerald-900">
-                {sortOrder === "asc" ? "↑" : "↓"}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => handleSortChange("name")}
-            className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-              sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-            }`}
-          >
-            <span>Name</span>
-            {sortBy === "name" && (
-              <span className="text-emerald-900">
-                {sortOrder === "asc" ? "↑" : "↓"}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-
-{/* Fixed Header */}
-<div className="bg-emerald-700 text-white font-semibold text-lg grid grid-cols-3 px-4 py-3">
-  <div>User ID</div>
-  <div>Name</div>
-  <div>Email Address</div>
-</div>
-
-{/* Scrollable Table Body */}
-<div className="overflow-y-auto" style={{ maxHeight: "800px" }}>
-  <div className="text-emerald-900">
-    {sortedApplications.map((volunteer) => (
-      <div
-        key={volunteer.user_id}
-        className={`grid grid-cols-3 py-2 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
-          selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
-            ? "bg-emerald-100 font-semibold"
-            : ""
-        }`}
-        onClick={() => setSelectedVolunteer(volunteer)}
-      >
-        <div>{volunteer.user_id}</div>
-        <div>{volunteer.firstname} {volunteer.lastname}</div>
-        <div>{volunteer.email}</div>
-      </div>
-    ))}
-  </div>
-</div>
-              </div>
-
-{/* Profile Card - Fixed Height */}
-<div className="bg-white rounded-lg shadow p-4 flex flex-col h-[800px]">
-  {selectedVolunteer ? (
     <>
-      {/* Scrollable Content */}
-      <div className="overflow-y-auto flex-1 pr-2">
-        <img
-          src={
-            selectedVolunteer.profile_picture ||
-            "https://via.placeholder.com/150"
-          }
-          alt={selectedVolunteer.firstname}
-          className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
-        />
-        <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
-          {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-        </h3>
+      <div
+        className="flex min-h-screen bg-no-repeat bg-center bg-cover"
+        style={{
+          backgroundImage: `url(${CentroAdminBg})`,
+          backgroundSize: "100% 100%",
+        }}
+      >
+        <Sidebar />
 
-        <p className="text-m text-emerald-900 mb-4">
-          <span className="font-bold text-xl">Email Address</span>
-          <br />
-          {selectedVolunteer.email}
-        </p>
+        <main className="flex-1 ml-64 p-4 overflow-y-auto">
+          <div id="review_application" className="relative z-10 space-y-4">
+            <div className="flex gap-4">
+              <Link to="/review-application" className="flex-1">
+                <button
+                  className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${
+                    isActive("/review-application")
+                      ? "bg-emerald-900 text-white border-emerald-500"
+                      : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
+                  }`}
+                >
+                  Organization Applications
+                </button>
+              </Link>
+              <Link to="/review-application-event" className="flex-1">
+                <button
+                  className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${
+                    isActive("/review-application-event")
+                      ? "bg-emerald-900 text-white border-emerald-500"
+                      : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
+                  }`}
+                >
+                  Event Applications
+                </button>
+              </Link>
+            </div>
 
-        <p className="text-m text-emerald-900 mb-4">
-          <span className="font-bold text-xl">Contact Number</span>
-          <br />
-          {selectedVolunteer.contact_number}
-        </p>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <label className="text-emerald-900 font-semibold text-lg">
+                  Select Event:
+                </label>
+                <select
+                  onChange={(e) => handleSelectEvent(e.target.value)}
+                  className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-900 font-medium cursor-pointer border-2 border-emerald-600 hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md min-w-[300px]"
+                  value={selectedEvent || ""}
+                >
+                  <option value="" disabled className="text-gray-500">
+                    -- Choose an Event --
+                  </option>
+                  {events.map((event) => (
+                    <option
+                      key={event.event_id}
+                      value={event.event_id}
+                      className="py-2 bg-white hover:bg-emerald-50"
+                    >
+                      {event.event_title} (ID: {event.event_id})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <p className="text-m text-emerald-900 mb-4">
-          <span className="font-bold text-xl">User ID</span>
-          <br />
-          {selectedVolunteer.user_id}
-        </p>
+              <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-lg">
+                <span className="text-emerald-900 text-lg font-medium">
+                  Pending Applications:
+                </span>
+                <span className="bg-emerald-600 text-white font-bold text-lg px-3 py-1 rounded-full shadow-sm">
+                  {pendingApplications.length}
+                </span>
+              </div>
+            </div>
 
-        {selectedVolunteer.days_available && (
-          <p className="text-m text-emerald-900 mb-4">
-            <span className="font-bold text-xl">Days Available</span>
-            <br />
-            {selectedVolunteer.days_available}
-          </p>
-        )}
+            {selectedEventDetails && (
+              <div className="mt-6 bg-white rounded-lg shadow p-6">
+                <h3 className="text-2xl text-emerald-900 font-semibold mb-4">
+                  Event Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-lg text-emerald-900 mb-2">
+                      <strong>Event Title: </strong>
+                      {selectedEventDetails.event_title}
+                    </p>
+                    <p className="text-lg text-emerald-900 mb-2">
+                      <strong>Date: </strong>
+                      {new Date(selectedEventDetails.date).toLocaleDateString()}
+                    </p>
+                    <p className="text-lg text-emerald-900 mb-2">
+                      <strong>Time: </strong>
+                      {formatTime(selectedEventDetails.time_start)} -{" "}
+                      {formatTime(selectedEventDetails.time_end)}
+                    </p>
+                    <p className="text-lg text-emerald-900 mb-2">
+                      <strong>Location: </strong>
+                      {selectedEventDetails.location}
+                    </p>
+                    <p className="text-lg text-emerald-900 mb-2">
+                      <strong>Volunteer Limit: </strong>
+                      {selectedEventDetails.volunteers_limit}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-lg text-emerald-900 mb-2">
+                      <strong>Objectives: </strong>
+                    </p>
+                    <ul className="list-disc pl-5 mb-4">
+                      {formatObjectives(selectedEventDetails.event_objectives)}
+                    </ul>
+                    <p className="text-lg text-emerald-900">
+                      <strong>Description: </strong>
+                      {selectedEventDetails.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-        {selectedVolunteer.time_availability && (
-          <p className="text-m text-emerald-900 mb-4">
-            <span className="font-bold text-xl">Time of Availability</span>
-            <br />
-            {selectedVolunteer.time_availability}
-          </p>
-        )}
+            {pendingApplications.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                    <h3 className="text-lg font-semibold text-emerald-900">
+                      Applicant List
+                    </h3>
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowSortDropdown(!showSortDropdown)}
+                        className="flex items-center gap-2 bg-emerald-900 text-white font-semibold px-4 py-2 rounded-lg hover:bg-emerald-800 transition text-sm"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+                          />
+                        </svg>
+                        Sort
+                      </button>
 
-        {selectedVolunteer.busy_hours && (
-          <p className="text-m text-emerald-900 mb-4">
-            <span className="font-bold text-xl text-red-600">Busy Hours</span>
-            <br />
-            <span className="font-light text-m text-red-600">
-              {selectedVolunteer.busy_hours}
-            </span>
-          </p>
-        )}
+                      {showSortDropdown && (
+                        <div className="absolute top-full mt-2 right-0 bg-white border-2 border-emerald-900 rounded-lg shadow-lg z-50 min-w-[180px]">
+                          <div className="py-2">
+                            <button
+                              onClick={() => handleSortChange("id")}
+                              className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
+                                sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                              }`}
+                            >
+                              <span>User ID</span>
+                              {sortBy === "id" && (
+                                <span className="text-emerald-900">
+                                  {sortOrder === "asc" ? "↑" : "↓"}
+                                </span>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleSortChange("name")}
+                              className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
+                                sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                              }`}
+                            >
+                              <span>Name</span>
+                              {sortBy === "name" && (
+                                <span className="text-emerald-900">
+                                  {sortOrder === "asc" ? "↑" : "↓"}
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-        {selectedVolunteer.preferred_volunteering && (
-          <>
-            <p className="mt-3 font-bold text-xl mb-2 text-emerald-900">
-              Preferred Type of Volunteering
-            </p>
-            <ul className="list-disc pl-5 text-m text-emerald-900">
-              {selectedVolunteer.preferred_volunteering
-                .split(",")
-                .map((type, idx) => (
-                  <li key={idx} className="mb-1">
-                    {type.trim()}
-                  </li>
-                ))}
-            </ul>
-          </>
-        )}
+                  <div className="bg-emerald-700 text-white font-semibold text-lg grid grid-cols-3 px-4 py-3">
+                    <div>User ID</div>
+                    <div>Name</div>
+                    <div>Email Address</div>
+                  </div>
+
+                  <div className="overflow-y-auto" style={{ maxHeight: "800px" }}>
+                    <div className="text-emerald-900">
+                      {sortedApplications.map((volunteer) => (
+                        <div
+                          key={volunteer.user_id}
+                          className={`grid grid-cols-3 py-2 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
+                            selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
+                              ? "bg-emerald-100 font-semibold"
+                              : ""
+                          }`}
+                          onClick={() => setSelectedVolunteer(volunteer)}
+                        >
+                          <div>{volunteer.user_id}</div>
+                          <div>{volunteer.firstname} {volunteer.lastname}</div>
+                          <div className="truncate">{volunteer.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow p-4 flex flex-col" style={{ height: "900px" }}>
+                  {selectedVolunteer ? (
+                    <>
+                      <div className="overflow-y-auto flex-1 pr-2">
+                        <img
+                          src={
+                            selectedVolunteer.profile_picture ||
+                            "https://via.placeholder.com/150"
+                          }
+                          alt={selectedVolunteer.firstname}
+                          className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
+                        />
+                        <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
+                          {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+                        </h3>
+
+                        <p className="text-base text-emerald-900 mb-4">
+                          <span className="font-bold text-xl">Email Address</span>
+                          <br />
+                          {selectedVolunteer.email}
+                        </p>
+
+                        <p className="text-base text-emerald-900 mb-4">
+                          <span className="font-bold text-xl">Contact Number</span>
+                          <br />
+                          {selectedVolunteer.contact_number}
+                        </p>
+
+                        <p className="text-base text-emerald-900 mb-4">
+                          <span className="font-bold text-xl">User ID</span>
+                          <br />
+                          {selectedVolunteer.user_id}
+                        </p>
+
+                        {selectedVolunteer.days_available && (
+                          <p className="text-base text-emerald-900 mb-4">
+                            <span className="font-bold text-xl">Days Available</span>
+                            <br />
+                            {selectedVolunteer.days_available}
+                          </p>
+                        )}
+
+                        {selectedVolunteer.time_availability && (
+                          <p className="text-base text-emerald-900 mb-4">
+                            <span className="font-bold text-xl">Time of Availability</span>
+                            <br />
+                            {selectedVolunteer.time_availability}
+                          </p>
+                        )}
+
+                        {selectedVolunteer.busy_hours && (
+                          <p className="text-base text-emerald-900 mb-4">
+                            <span className="font-bold text-xl text-red-600">Busy Hours</span>
+                            <br />
+                            <span className="font-light text-base text-red-600">
+                              {selectedVolunteer.busy_hours}
+                            </span>
+                          </p>
+                        )}
+
+                        {selectedVolunteer.preferred_volunteering && (
+                          <>
+                            <p className="mt-3 font-bold text-xl mb-2 text-emerald-900">
+                              Preferred Type of Volunteering
+                            </p>
+                            <ul className="list-disc pl-5 text-base text-emerald-900">
+                              {selectedVolunteer.preferred_volunteering
+                                .split(",")
+                                .map((type, idx) => (
+                                  <li key={idx} className="mb-1">
+                                    {type.trim()}
+                                  </li>
+                                ))}
+                            </ul>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
+                        <button
+                          onClick={() => setShowCentroConfirm(true)}
+                          disabled={isNavigating}
+                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+                        >
+                          Review CENTROsuggests Deployment
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-gray-500 text-center mt-10">
+                      Select a volunteer to review
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-8">
+                <p className="text-gray-500 text-center text-xl">
+                  {events.length === 0
+                    ? "No events found for your organization"
+                    : "No pending applications for the selected event"}
+                </p>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
 
-      {/* Fixed Button at Bottom */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <button
-          onClick={() => setShowCentroConfirm(true)}
-          disabled={isNavigating}
-          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
-        >
-          Review CENTROsuggests Deployment
-        </button>
-      </div>
-    </>
-  ) : (
-    <p className="text-gray-500 text-center mt-10">
-      Select a volunteer to review
-    </p>
-  )}
-</div>
-
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow p-8">
-              <p className="text-gray-500 text-center text-xl">
-                {events.length === 0
-                  ? "No events found for your organization"
-                  : "No pending applications for the selected event"}
-              </p>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* CENTROsuggests Confirmation Modal */}
       {showCentroConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 flex items-center justify-center z-50"
           onClick={handleBackdropClick}
-          style={{
-            zIndex: 99999999,
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: "100vw",
-            height: "100vh",
-          }}
         >
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            style={{ zIndex: 99999998 }}
-          ></div>
+          <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
 
-          <div
-            className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-orange-400"
-            style={{
-              zIndex: 100000000,
-              position: "relative",
-            }}
-          >
+          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform transition-all scale-100 border-2 border-orange-400 z-50">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
                 <svg
@@ -653,35 +608,6 @@ export default function ReviewApplicationEventPage() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-        .animate-scaleIn {
-          animation: scaleIn 0.2s ease-out;
-        }
-      `}</style>
-    </div>
+    </>
   );
 }
