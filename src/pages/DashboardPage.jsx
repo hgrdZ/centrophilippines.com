@@ -474,8 +474,8 @@ function DashboardPage() {
             </Link>
           </div>
 
-          {/* ROW 2: 4 Main Stats (4 columns) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+          {/* ROW 2: Completion Rate, Total Volunteers, Participation Rate (3 columns) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             {/* Completion Rate */}
             <div
               onClick={() => openModal("completion")}
@@ -570,114 +570,115 @@ function DashboardPage() {
               </p>
               <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
             </div>
-
-            {/* Growth Rate */}
-            <div
-              onClick={() => openModal("growth")}
-              className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-            >
-              <h4 className="font-bold font-montserrat text-sm mb-3">
-                Volunteer Growth Rate
-              </h4>
-              <ResponsiveContainer width="100%" height={120}>
-                <BarChart data={chartData.growth}>
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Bar dataKey="volunteers" fill={COLORS.growth} />
-                </BarChart>
-              </ResponsiveContainer>
-              <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-            </div>
           </div>
 
-          {/* ROW 3: Applications (left, 2 cols) + Right Stack (3 cards) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
-            {/* Applications Chart - spans 2 columns */}
-            <div
-              onClick={() => openModal("applications")}
-              className="md:col-span-2 bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-            >
-              <h4 className="font-bold mb-4 mt-2 font-montserrat text-sm">
-                Expected Volunteer Applications - Current Week
-              </h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={chartData.applications?.data || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="applications"
-                    stroke={COLORS.applications}
-                    strokeWidth={3}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              <div className="mt-4 text-center">
-                <p className="text-lg font-montserrat">
-                  Projected Today:{" "}
-                  <span className="font-bold text-emerald-700 text-xl">
-                    {chartData.applications?.forecast || 0}
-                  </span>
-                </p>
-              </div>
-              <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-            </div>
+{/* ROW 3: Expected Applications | Growth Rate | 3 Stacked Cards */}
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
+  {/* COLUMN 1 - Expected Volunteer Applications */}
+  <div
+    onClick={() => openModal("applications")}
+    className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+  >
+    <h4 className="font-bold mb-4 mt-2 font-montserrat text-sm">
+      Expected Volunteer Applications - Current Week
+    </h4>
+    <ResponsiveContainer width="100%" height={320}>
+      <LineChart data={chartData.applications?.data || []}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+        <YAxis tick={{ fontSize: 10 }} />
+        <Tooltip />
+        <Line
+          type="monotone"
+          dataKey="applications"
+          stroke={COLORS.applications}
+          strokeWidth={3}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+    <div className="mt-4 text-center">
+      <p className="text-lg font-montserrat">
+        Projected Today:{" "}
+        <span className="font-bold text-emerald-700 text-xl">
+          {chartData.applications?.forecast || 0}
+        </span>
+      </p>
+    </div>
+    <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+  </div>
 
-            {/* Right Stack - 3 cards */}
-            <div className="flex flex-col gap-4">
-              {/* Feedback */}
-              <div
-                onClick={() => openModal("feedback")}
-                className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-              >
-                <h4 className="font-bold font-montserrat text-sm">
-                  Volunteer Feedback Score
-                </h4>
-                <p className="text-yellow-500 text-2xl mt-2">
-                  {"⭐".repeat(dashboardData.feedbackScore)}
-                </p>
-                <p className="text-xs font-montserrat mt-2">High satisfaction</p>
-                <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-              </div>
+  {/* COLUMN 2 - Volunteer Growth Rate */}
+  <div
+    onClick={() => openModal("growth")}
+    className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+  >
+    <h4 className="font-bold font-montserrat text-sm mb-3">
+      Volunteer Growth Rate
+    </h4>
+    <ResponsiveContainer width="100%" height={320}>
+      <BarChart data={chartData.growth}>
+        <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+        <YAxis tick={{ fontSize: 10 }} />
+        <Bar dataKey="volunteers" fill={COLORS.growth} />
+      </BarChart>
+    </ResponsiveContainer>
+    <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+  </div>
 
-              {/* Beneficiary Reach */}
-              <div
-                onClick={() => openModal("beneficiary")}
-                className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-              >
-                <h4 className="font-bold font-montserrat text-sm">
-                  Beneficiary Reach
-                </h4>
-                <p className="text-3xl font-extrabold text-emerald-700 mt-2">
-                  {dashboardData.beneficiaryReach.toLocaleString()}
-                </p>
-                <p className="text-xs font-montserrat mt-1">Total served</p>
-                <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-              </div>
+  {/* COLUMN 3 - 3 Stacked Cards */}
+  <div className="flex flex-col gap-4">
+    {/* Feedback */}
+    <div
+      onClick={() => openModal("feedback")}
+      className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+    >
+      <h4 className="font-bold font-montserrat text-sm">
+        Volunteer Feedback Score
+      </h4>
+      <p className="text-yellow-500 text-2xl mt-2">
+        {"⭐".repeat(dashboardData.feedbackScore)}
+      </p>
+      <p className="text-xs font-montserrat mt-2">High satisfaction</p>
+      <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+    </div>
 
-              {/* Active Events */}
-              <div
-                onClick={() => openModal("activeEvents")}
-                className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-              >
-                <h4 className="font-bold font-montserrat text-sm">
-                  Active Events This Month
-                </h4>
-                <p className="text-3xl font-extrabold text-emerald-700 mt-2">
-                  {dashboardData.activeEvents}
-                </p>
-                <p className="text-xs font-montserrat mt-1">
-                  {new Date().toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-                <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-              </div>
-            </div>
-          </div>
+    {/* Beneficiary Reach */}
+    <div
+      onClick={() => openModal("beneficiary")}
+      className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+    >
+      <h4 className="font-bold font-montserrat text-sm">
+        Beneficiary Reach
+      </h4>
+      <p className="text-3xl font-extrabold text-emerald-700 mt-2">
+        {dashboardData.beneficiaryReach.toLocaleString()}
+      </p>
+      <p className="text-xs font-montserrat mt-1">Total served</p>
+      <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+    </div>
+
+    {/* Active Events */}
+    <div
+      onClick={() => openModal("activeEvents")}
+      className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+    >
+      <h4 className="font-bold font-montserrat text-sm">
+        Active Events This Month
+      </h4>
+      <p className="text-3xl font-extrabold text-emerald-700 mt-2">
+        {dashboardData.activeEvents}
+      </p>
+      <p className="text-xs font-montserrat mt-1">
+        {new Date().toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        })}
+      </p>
+      <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+    </div>
+  </div>
+</div>
+
 
           {/* ROW 4: Events Performance - Full Width */}
           {chartData.eventsPerformance.length > 0 && (
