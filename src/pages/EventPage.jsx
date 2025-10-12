@@ -215,169 +215,165 @@ function EventPage() {
   return (
     <div className="flex min-h-screen bg-no-repeat bg-center bg-cover" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
       <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
-      <main className="flex-1 ml-64 p-6 overflow-y-auto">
+      <main className="flex-1 ml-64 p-4 overflow-y-auto">
         <div className="bg-white rounded-lg shadow overflow-hidden">
           
           <div className={`${getHeaderColor(eventData.event_id)} text-center rounded-t-full py-3 font-bold text-3xl shadow-md text-emerald-900 border-emerald-800 cursor-pointer hover:opacity-90 transition-opacity`} title="Click to edit Event Title">
             <span className="text-white font-extrabold">{eventData.event_id}</span>
           </div>
 
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Event Details (2/3 width) */}
-            <div className="lg:col-span-2 space-y-6">
-              <h2 className="text-4xl font-bold text-emerald-800 leading-snug hover:text-emerald-700 transition-colors" title="Click to edit Event Name">
-                {eventData.event_title}
-              </h2>
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Event Details (2/3 width) */}
+              <div className="lg:col-span-2 space-y-4">
+                <h2 className="text-3xl font-bold text-emerald-800 leading-snug hover:text-emerald-700 transition-colors" title="Click to edit Event Name">
+                  {eventData.event_title}
+                </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="rounded-lg overflow-hidden shadow-lg cursor-pointer hover:opacity-90 transition-all" title="Click to edit Event Image">
-                  {eventImage ? (
-                    <img src={eventImage} alt="Event" className="w-full h-64 object-cover rounded-lg" onError={() => setEventImage(null)} />
-                  ) : (
-                    <div className="w-full h-64 bg-gray-100 flex flex-col items-center justify-center text-emerald-900 rounded-lg">
-                      <div className="text-4xl mb-2">📸</div>
-                      <p className="font-semibold">Add Event Image</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3 text-gray-700 text-base">
-                  <div className="flex items-start hover:text-emerald-800 transition-colors">
-                    <strong className="min-w-fit">Date:</strong> 
-                    <span className="ml-2">{formatDate(eventData.date)}</span>
+                <div className="flex gap-4">
+                  <div className="flex-1 rounded-lg overflow-hidden shadow-lg cursor-pointer hover:opacity-90 transition-all" title="Click to edit Event Image">
+                    {eventImage ? (
+                      <img src={eventImage} alt="Event" className="w-full h-48 object-cover" onError={() => setEventImage(null)} />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-100 flex flex-col items-center justify-center text-emerald-900">
+                        <div className="text-4xl mb-2">📸</div>
+                        <p className="font-semibold text-sm">Add Event Image</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-start hover:text-emerald-800 transition-colors">
-                    <strong className="min-w-fit">Time:</strong>
-                    <span className="ml-2">
-                      {formatTime(eventData.time_start)} – {formatTime(eventData.time_end)}
+
+                  <div className="flex-1 space-y-2 text-gray-700 text-sm">
+                    <div className="hover:text-emerald-800 transition-colors">
+                      <strong>Date:</strong> <span>{formatDate(eventData.date)}</span>
+                    </div>
+                    <div className="hover:text-emerald-800 transition-colors">
+                      <strong>Time:</strong> <span>{formatTime(eventData.time_start)} – {formatTime(eventData.time_end)}</span>
                       {eventData.time_start && eventData.time_end && (
-                        <span className="text-gray-600 block mt-1">
+                        <div className="text-gray-600 text-xs ml-0 mt-1">
                           ({calculateDuration(eventData.time_start, eventData.time_end)})
-                        </span>
+                        </div>
                       )}
-                    </span>
-                  </div>
-                  <div className="flex items-start hover:text-emerald-800 transition-colors">
-                    <strong className="min-w-fit">Location:</strong> 
-                    <span className="ml-2">{eventData.location || "TBA"}</span>
-                  </div>
-                  {eventData.call_time && (
-                    <div className="flex items-start">
-                      <strong className="min-w-fit">Call Time:</strong> 
-                      <span className="ml-2">{formatTime(eventData.call_time)}</span>
                     </div>
-                  )}
+                    <div className="hover:text-emerald-800 transition-colors">
+                      <strong>Location:</strong> <span>{eventData.location || "TBA"}</span>
+                    </div>
+                    {eventData.call_time && (
+                      <div>
+                        <strong>Call Time:</strong> <span>{formatTime(eventData.call_time)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Event Objectives:</h3>
-                <ul className="list-disc pl-6 space-y-2 text-gray-800 bg-emerald-50 p-4 rounded-lg">
-                  {parseObjectives(eventData.event_objectives).map((objective, index) => (
-                    <li key={index} className="leading-relaxed">{objective.trim()}</li>
-                  ))}
-                </ul>
-              </div>
-
-              {eventData.description && (
                 <div>
-                  <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Event Description:</h3>
-                  <div className="text-gray-800 bg-blue-50 p-4 rounded-lg leading-relaxed">{eventData.description}</div>
+                  <h3 className="font-semibold text-lg text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Event Objectives:</h3>
+                  <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm bg-emerald-50 p-3 rounded-lg">
+                    {parseObjectives(eventData.event_objectives).map((objective, index) => (
+                      <li key={index} className="leading-relaxed">{objective.trim()}</li>
+                    ))}
+                  </ul>
                 </div>
-              )}
 
-              {eventData.what_expect && (
-                <div>
-                  <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors mb-2">What to Expect:</h3>
-                  {parseBulletPoints(eventData.what_expect).length > 0 ? (
-                    <ul className="list-disc pl-6 space-y-2 text-gray-800 bg-yellow-50 p-4 rounded-lg">
-                      {parseBulletPoints(eventData.what_expect).map((item, index) => (
-                        <li key={index} className="leading-relaxed">{item.trim()}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-gray-800 bg-yellow-50 p-4 rounded-lg leading-relaxed">{eventData.what_expect}</div>
-                  )}
-                </div>
-              )}
+                {eventData.description && (
+                  <div>
+                    <h3 className="font-semibold text-lg text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Event Description:</h3>
+                    <div className="text-gray-800 text-sm bg-blue-50 p-3 rounded-lg leading-relaxed">{eventData.description}</div>
+                  </div>
+                )}
 
-              {eventData.volunteer_guidelines && (
-                <div>
-                  <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Volunteer Guidelines:</h3>
-                  {parseBulletPoints(eventData.volunteer_guidelines).length > 0 ? (
-                    <ul className="list-disc pl-6 space-y-2 text-gray-800 bg-purple-50 p-4 rounded-lg">
-                      {parseBulletPoints(eventData.volunteer_guidelines).map((item, index) => (
-                        <li key={index} className="leading-relaxed">{item.trim()}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-gray-800 bg-purple-50 p-4 rounded-lg leading-relaxed">{eventData.volunteer_guidelines}</div>
-                  )}
-                </div>
-              )}
+                {eventData.what_expect && (
+                  <div>
+                    <h3 className="font-semibold text-lg text-emerald-900 hover:text-emerald-700 transition-colors mb-2">What to Expect:</h3>
+                    {parseBulletPoints(eventData.what_expect).length > 0 ? (
+                      <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm bg-yellow-50 p-3 rounded-lg">
+                        {parseBulletPoints(eventData.what_expect).map((item, index) => (
+                          <li key={index} className="leading-relaxed">{item.trim()}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-gray-800 text-sm bg-yellow-50 p-3 rounded-lg leading-relaxed">{eventData.what_expect}</div>
+                    )}
+                  </div>
+                )}
 
-              {eventData.volunteer_opportunities && (
-                <div>
-                  <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Volunteer Opportunities:</h3>
-                  {parseBulletPoints(eventData.volunteer_opportunities).length > 0 ? (
-                    <ul className="list-disc pl-6 space-y-2 text-gray-800 bg-green-50 p-4 rounded-lg">
-                      {parseBulletPoints(eventData.volunteer_opportunities).map((item, index) => (
-                        <li key={index} className="leading-relaxed">{item.trim()}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-gray-800 bg-green-50 p-4 rounded-lg leading-relaxed">{eventData.volunteer_opportunities}</div>
-                  )}
-                </div>
-              )}
+                {eventData.volunteer_guidelines && (
+                  <div>
+                    <h3 className="font-semibold text-lg text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Volunteer Guidelines:</h3>
+                    {parseBulletPoints(eventData.volunteer_guidelines).length > 0 ? (
+                      <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm bg-purple-50 p-3 rounded-lg">
+                        {parseBulletPoints(eventData.volunteer_guidelines).map((item, index) => (
+                          <li key={index} className="leading-relaxed">{item.trim()}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-gray-800 text-sm bg-purple-50 p-3 rounded-lg leading-relaxed">{eventData.volunteer_guidelines}</div>
+                    )}
+                  </div>
+                )}
 
-              <div className="flex justify-center pt-4">
-                <Link to={`/event/${eventData.event_id}/first`}>
-                  <button className="bg-emerald-900 text-white font-semibold px-8 py-3 rounded-lg hover:bg-emerald-700 shadow-lg transition-colors cursor-pointer">Review Certifications</button>
-                </Link>
-              </div>
-            </div>
+                {eventData.volunteer_opportunities && (
+                  <div>
+                    <h3 className="font-semibold text-lg text-emerald-900 hover:text-emerald-700 transition-colors mb-2">Volunteer Opportunities:</h3>
+                    {parseBulletPoints(eventData.volunteer_opportunities).length > 0 ? (
+                      <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm bg-green-50 p-3 rounded-lg">
+                        {parseBulletPoints(eventData.volunteer_opportunities).map((item, index) => (
+                          <li key={index} className="leading-relaxed">{item.trim()}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-gray-800 text-sm bg-green-50 p-3 rounded-lg leading-relaxed">{eventData.volunteer_opportunities}</div>
+                    )}
+                  </div>
+                )}
 
-            {/* Right Column - Stats & Actions (1/3 width) */}
-            <div className="lg:col-span-1 space-y-6">
-              <div className="text-center">
-                <div className={`px-6 py-2 rounded-full text-center font-bold ${
-                  eventData.status === 'ONGOING' ? 'bg-emerald-500 text-white' : 
-                  eventData.status === 'UPCOMING' ? 'bg-yellow-500 text-white' : 
-                  'bg-gray-500 text-white'
-                }`}>{eventData.status}</div>
-              </div>
-
-              <div className="bg-emerald-900 rounded-lg p-6 text-center shadow-lg transition-colors" title="Click to view submission details">
-                <p className="text-xl font-semibold text-white mb-2">Complete Submissions</p>
-                <p className="text-5xl font-bold text-yellow-400 mb-2">{volunteerStats.submissions}</p>
-                <p className="text-base text-yellow-500 font-bold">out of {eventData.volunteers_limit || "unlimited"} volunteers</p>
-                <Link to={`/folder/${eventId}`}>
-                  <button className="bg-emerald-600 text-white font-semibold px-8 py-2 rounded-full mt-4 hover:bg-emerald-700 transition-colors cursor-pointer">Open Folder</button>
-                </Link>
-              </div>
-
-              <div className="bg-emerald-900 rounded-lg p-6 text-center shadow-lg transition-colors" title="Click to view volunteer details">
-                <p className="text-lg font-semibold text-white mb-2">Total Volunteers Joined</p>
-                <p className="text-6xl font-bold text-yellow-400 mb-2">{volunteerStats.totalJoined}</p>
-                <div className="text-base text-white space-y-1">
-                  <p><span className="font-semibold text-yellow-500">{volunteerStats.ongoingCount}</span> Going</p>
-                  <p><span className="font-semibold text-yellow-500">{volunteerStats.pendingCount}</span> Pending</p>
-                  {eventData.volunteers_limit && <p className="mt-2 text-white font-semibold">Limit: {eventData.volunteers_limit}</p>}
+                <div className="flex justify-center pt-2">
+                  <Link to={`/event/${eventData.event_id}/first`}>
+                    <button className="bg-emerald-900 text-white font-semibold px-8 py-2.5 rounded-lg hover:bg-emerald-700 shadow-lg transition-colors cursor-pointer">Review Certifications</button>
+                  </Link>
                 </div>
               </div>
 
-              {eventData.created_at && (
-                <div className="bg-emerald-900 rounded-lg p-4 text-center">
-                  <p className="text-base text-yellow-400 font-bold">Event Created</p>
-                  <p className="font-semibold text-white">{formatDate(eventData.created_at)}</p>
+              {/* Right Column - Stats & Actions (1/3 width) */}
+              <div className="lg:col-span-1 space-y-4">
+                <div className="text-center">
+                  <div className={`px-6 py-2 rounded-full text-center font-bold ${
+                    eventData.status === 'ONGOING' ? 'bg-emerald-500 text-white' : 
+                    eventData.status === 'UPCOMING' ? 'bg-yellow-500 text-white' : 
+                    'bg-gray-500 text-white'
+                  }`}>{eventData.status}</div>
                 </div>
-              )}
 
-              <div className="text-center pt-4">
-                <Link to="/manage-reports">
-                  <button className="bg-orange-500 text-white font-semibold px-8 py-3 rounded-lg hover:bg-yellow-500 shadow-lg transition-colors cursor-pointer w-full">Back to Events</button>
-                </Link>
+                <div className="bg-emerald-900 rounded-lg p-4 text-center shadow-lg transition-colors" title="Click to view submission details">
+                  <p className="text-lg font-semibold text-white mb-1">Complete Submissions</p>
+                  <p className="text-5xl font-bold text-yellow-400 mb-1">{volunteerStats.submissions}</p>
+                  <p className="text-sm text-yellow-500 font-bold">out of {eventData.volunteers_limit || "unlimited"} volunteers</p>
+                  <Link to={`/folder/${eventId}`}>
+                    <button className="bg-emerald-600 text-white font-semibold px-6 py-2 rounded-full mt-3 hover:bg-emerald-700 transition-colors cursor-pointer">Open Folder</button>
+                  </Link>
+                </div>
+
+                <div className="bg-emerald-900 rounded-lg p-4 text-center shadow-lg transition-colors" title="Click to view volunteer details">
+                  <p className="text-base font-semibold text-white mb-1">Total Volunteers Joined</p>
+                  <p className="text-5xl font-bold text-yellow-400 mb-2">{volunteerStats.totalJoined}</p>
+                  <div className="text-sm text-white space-y-0.5">
+                    <p><span className="font-semibold text-yellow-500">{volunteerStats.ongoingCount}</span> Going</p>
+                    <p><span className="font-semibold text-yellow-500">{volunteerStats.pendingCount}</span> Pending</p>
+                    {eventData.volunteers_limit && <p className="mt-1 text-white font-semibold">Limit: {eventData.volunteers_limit}</p>}
+                  </div>
+                </div>
+
+                {eventData.created_at && (
+                  <div className="bg-emerald-900 rounded-lg p-3 text-center">
+                    <p className="text-sm text-yellow-400 font-bold">Event Created</p>
+                    <p className="font-semibold text-white text-sm">{formatDate(eventData.created_at)}</p>
+                  </div>
+                )}
+
+                <div className="text-center pt-2">
+                  <Link to="/manage-reports">
+                    <button className="bg-orange-500 text-white font-semibold px-8 py-2.5 rounded-lg hover:bg-yellow-500 shadow-lg transition-colors cursor-pointer w-full">Back to Events</button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
