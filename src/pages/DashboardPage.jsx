@@ -415,7 +415,7 @@ function DashboardPage() {
         className="flex-1 ml-64 p-6 overflow-y-auto transition-all duration-300"
         style={{ filter: modalState.isOpen ? "blur(3px)" : "none" }}
       >
-        <div className="relative z-10 space-y-6">
+        <div className="relative z-10 space-y-6 w-full max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
             {viewingContext?.is_super_admin_view
               ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SUPER ADMIN VIEW)`
@@ -438,7 +438,7 @@ function DashboardPage() {
           )}
 
           {/* ROW 1: Greetings, Create Announcement, Create Event (3 columns) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             <div
               className="p-5 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
               style={{ backgroundColor: "#d8eeeb" }}
@@ -475,7 +475,7 @@ function DashboardPage() {
           </div>
 
           {/* ROW 2: 4 Main Stats (4 columns) */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             {/* Completion Rate */}
             <div
               onClick={() => openModal("completion")}
@@ -591,7 +591,7 @@ function DashboardPage() {
           </div>
 
           {/* ROW 3: Applications (left, 2 cols) + Right Stack (3 cards) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
             {/* Applications Chart - spans 2 columns */}
             <div
               onClick={() => openModal("applications")}
@@ -885,7 +885,7 @@ function DashboardPage() {
   {chartData.growth.map((data, index) => (
     <div
       key={index}
-      className="bg-purple-50 p-6 rounded-lg text-center min-w-[150px] flex-shrink-0"
+      className="bg-purple-50 p-4 rounded-lg text-center min-w-[150px] flex-shrink-0"
     >
       <p className="text-sm text-gray-600 font-semibold">{data.month}</p>
       <p className="text-2xl font-bold text-purple-700">{data.volunteers}</p>
