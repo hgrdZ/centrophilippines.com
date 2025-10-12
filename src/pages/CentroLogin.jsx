@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import VolunteerImg1 from "../images/volunteer1.png";
-import VolunteerImg2 from "../images/volunteer2.png";
-import VolunteerImg3 from "../images/volunteer3.png";
-import VolunteerImg4 from "../images/volunteer4.png";
-import VolunteerImg5 from "../images/volunteer5.png";
-import VolunteerImg6 from "../images/volunteer6.png";
-import VolunteerImg7 from "../images/volunteer7.png";
-import CentroLogo from "../images/CENTRO_Logo.png";
 import supabase from "../config/supabaseClient";
-import LoginIcon from "../images/login.svg";
-import PasswordIcon from "../images/password.svg";
-import ShowPasswordIcon from "../images/showpassword.svg";
 
 function CentroLogin({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -23,15 +12,21 @@ function CentroLogin({ setIsAuthenticated }) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  // Images from public folder
   const images = [
-    VolunteerImg1,
-    VolunteerImg2,
-    VolunteerImg3,
-    VolunteerImg4,
-    VolunteerImg5,
-    VolunteerImg6,
-    VolunteerImg7,
+    "/images/volunteer1.png",
+    "/images/volunteer2.png",
+    "/images/volunteer3.png",
+    "/images/volunteer4.png",
+    "/images/volunteer5.png",
+    "/images/volunteer6.png",
+    "/images/volunteer7.png",
   ];
+
+  const CentroLogo = "/images/CENTRO_Logo.png";
+  const LoginIcon = "/images/login.svg";
+  const PasswordIcon = "/images/password.svg";
+  const ShowPasswordIcon = "/images/showpassword.svg";
 
   // Animated image slideshow states
   const [currentImage, setCurrentImage] = useState(images[0]);
@@ -52,7 +47,7 @@ function CentroLogin({ setIsAuthenticated }) {
 
     const interval = setInterval(changeImage, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [nextImage, images]);
 
   // Load saved credentials on mount
   useEffect(() => {
@@ -131,7 +126,6 @@ function CentroLogin({ setIsAuthenticated }) {
       <div className="flex h-full w-full">
         {/* LEFT SIDE - Animated Auto-Slideshow */}
         <div className="w-1/2 relative hidden md:flex items-center justify-center overflow-hidden">
-          {/* Current image */}
           <img
             src={currentImage}
             alt="Volunteer"
@@ -139,7 +133,6 @@ function CentroLogin({ setIsAuthenticated }) {
               fadeIn ? "opacity-100" : "opacity-0"
             }`}
           />
-          {/* Next image fades in */}
           <img
             src={nextImage}
             alt="Volunteer next"
