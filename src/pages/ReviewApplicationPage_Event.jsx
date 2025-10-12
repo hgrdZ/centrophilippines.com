@@ -362,124 +362,198 @@ export default function ReviewApplicationEventPage() {
 
           {/* Volunteers List */}
           {pendingApplications.length > 0 ? (
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-  {/* Applicant List - span 2 columns */}
-  <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col h-[850px] min-h-[850px] overflow-hidden">
-    {/* Header and Sort */}
-    <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50 sticky top-0 z-10">
-      <h3 className="text-lg font-semibold text-emerald-900">Applicant List</h3>
-      <div className="relative">
-        <button
-          onClick={() => setShowSortDropdown(!showSortDropdown)}
-          className="flex items-center gap-2 bg-emerald-900 text-white font-semibold px-4 py-2 rounded-lg hover:bg-emerald-800 transition text-sm"
-        >
-          Sort
-        </button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Table with Sort Button */}
+              <div className="md:col-span-2 bg-white rounded-lg shadow">
+{/* Sort Button - Outside of scrollable area */}
+<div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+  <h3 className="text-lg font-semibold text-emerald-900">
+    Applicant List
+  </h3>
+  <div className="relative">
+    <button
+      onClick={() => setShowSortDropdown(!showSortDropdown)}
+      className="flex items-center gap-2 bg-emerald-900 text-white font-semibold px-4 py-2 rounded-lg hover:bg-emerald-800 transition text-sm"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+        />
+      </svg>
+      Sort
+    </button>
 
-        {showSortDropdown && (
-          <div className="absolute top-full mt-2 right-0 bg-white border-2 border-emerald-900 rounded-lg shadow-lg z-50 min-w-[180px]">
-            <div className="py-2">
-              <button
-                onClick={() => handleSortChange("id")}
-                className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-                  sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                }`}
-              >
-                <span>User ID</span>
-                {sortBy === "id" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
-              </button>
-              <button
-                onClick={() => handleSortChange("name")}
-                className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-                  sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                }`}
-              >
-                <span>Name</span>
-                {sortBy === "name" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* Table Header */}
-    <div className="bg-emerald-700 text-white font-semibold text-lg grid grid-cols-3 px-4 py-3">
-      <div>User ID</div>
-      <div>Name</div>
-      <div>Email Address</div>
-    </div>
-
-    {/* Scrollable Applicants */}
-    <div className="overflow-y-auto flex-1">
-      {sortedApplications.map((volunteer) => (
-        <div
-          key={volunteer.user_id}
-          className={`grid grid-cols-3 py-2 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
-            selectedVolunteer?.user_id === volunteer.user_id ? "bg-emerald-100 font-semibold" : ""
-          }`}
-          onClick={() => setSelectedVolunteer(volunteer)}
-        >
-          <div>{volunteer.user_id}</div>
-          <div>{volunteer.firstname} {volunteer.lastname}</div>
-          <div>{volunteer.email}</div>
-        </div>
-      ))}
-    </div>
-  </div>
-
-  {/* Profile Card */}
-  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col h-[850px] min-h-[850px] overflow-hidden">
-    {selectedVolunteer ? (
-      <>
-        <div className="overflow-y-auto flex-1 p-4">
-          <img
-            src={selectedVolunteer.profile_picture || "https://via.placeholder.com/150"}
-            alt={selectedVolunteer.firstname}
-            className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
-          />
-          <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
-            {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-          </h3>
-          <div className="space-y-4 text-emerald-900">
-            <p><strong>Email:</strong> {selectedVolunteer.email}</p>
-            <p><strong>Contact:</strong> {selectedVolunteer.contact_number}</p>
-            <p><strong>User ID:</strong> {selectedVolunteer.user_id}</p>
-            {selectedVolunteer.days_available && <p><strong>Days Available:</strong> {selectedVolunteer.days_available}</p>}
-            {selectedVolunteer.time_availability && <p><strong>Time Availability:</strong> {selectedVolunteer.time_availability}</p>}
-            {selectedVolunteer.busy_hours && (
-              <p className="text-red-600">
-                <strong>Busy Hours:</strong> {selectedVolunteer.busy_hours}
-              </p>
-            )}
-          </div>
-
-          {selectedVolunteer.preferred_volunteering && (
-            <>
-              <p className="mt-4 font-bold text-lg">Preferred Volunteering:</p>
-              <ul className="list-disc pl-5 text-emerald-900">
-                {selectedVolunteer.preferred_volunteering.split(",").map((type, i) => (
-                  <li key={i}>{type.trim()}</li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-
-        <div className="p-4 border-t border-gray-200 bg-white sticky bottom-0">
+    {showSortDropdown && (
+      <div className="absolute top-full mt-2 right-0 bg-white border-2 border-emerald-900 rounded-lg shadow-lg z-50 min-w-[180px]">
+        <div className="py-2">
           <button
-            onClick={() => setShowCentroConfirm(true)}
-            disabled={isNavigating}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+            onClick={() => handleSortChange("id")}
+            className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
+              sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+            }`}
           >
-            Review CENTROsuggests Deployment
+            <span>User ID</span>
+            {sortBy === "id" && (
+              <span className="text-emerald-900">
+                {sortOrder === "asc" ? "↑" : "↓"}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => handleSortChange("name")}
+            className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
+              sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+            }`}
+          >
+            <span>Name</span>
+            {sortBy === "name" && (
+              <span className="text-emerald-900">
+                {sortOrder === "asc" ? "↑" : "↓"}
+              </span>
+            )}
           </button>
         </div>
-      </>
-    ) : (
-      <p className="text-gray-500 text-center mt-10">Select a volunteer to review</p>
+      </div>
     )}
   </div>
+</div>
+
+{/* Fixed Header */}
+<div className="bg-emerald-700 text-white font-semibold text-lg grid grid-cols-3 px-4 py-3">
+  <div>User ID</div>
+  <div>Name</div>
+  <div>Email Address</div>
+</div>
+
+{/* Scrollable Table Body */}
+<div className="overflow-y-auto" style={{ maxHeight: "800px" }}>
+  <div className="text-emerald-900">
+    {sortedApplications.map((volunteer) => (
+      <div
+        key={volunteer.user_id}
+        className={`grid grid-cols-3 py-2 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
+          selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
+            ? "bg-emerald-100 font-semibold"
+            : ""
+        }`}
+        onClick={() => setSelectedVolunteer(volunteer)}
+      >
+        <div>{volunteer.user_id}</div>
+        <div>{volunteer.firstname} {volunteer.lastname}</div>
+        <div>{volunteer.email}</div>
+      </div>
+    ))}
+  </div>
+</div>
+              </div>
+
+{/* Profile Card - Fixed Height */}
+<div className="bg-white rounded-lg shadow p-4 flex flex-col h-[800px]">
+  {selectedVolunteer ? (
+    <>
+      {/* Scrollable Content */}
+      <div className="overflow-y-auto flex-1 pr-2">
+        <img
+          src={
+            selectedVolunteer.profile_picture ||
+            "https://via.placeholder.com/150"
+          }
+          alt={selectedVolunteer.firstname}
+          className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
+        />
+        <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
+          {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+        </h3>
+
+        <p className="text-m text-emerald-900 mb-4">
+          <span className="font-bold text-xl">Email Address</span>
+          <br />
+          {selectedVolunteer.email}
+        </p>
+
+        <p className="text-m text-emerald-900 mb-4">
+          <span className="font-bold text-xl">Contact Number</span>
+          <br />
+          {selectedVolunteer.contact_number}
+        </p>
+
+        <p className="text-m text-emerald-900 mb-4">
+          <span className="font-bold text-xl">User ID</span>
+          <br />
+          {selectedVolunteer.user_id}
+        </p>
+
+        {selectedVolunteer.days_available && (
+          <p className="text-m text-emerald-900 mb-4">
+            <span className="font-bold text-xl">Days Available</span>
+            <br />
+            {selectedVolunteer.days_available}
+          </p>
+        )}
+
+        {selectedVolunteer.time_availability && (
+          <p className="text-m text-emerald-900 mb-4">
+            <span className="font-bold text-xl">Time of Availability</span>
+            <br />
+            {selectedVolunteer.time_availability}
+          </p>
+        )}
+
+        {selectedVolunteer.busy_hours && (
+          <p className="text-m text-emerald-900 mb-4">
+            <span className="font-bold text-xl text-red-600">Busy Hours</span>
+            <br />
+            <span className="font-light text-m text-red-600">
+              {selectedVolunteer.busy_hours}
+            </span>
+          </p>
+        )}
+
+        {selectedVolunteer.preferred_volunteering && (
+          <>
+            <p className="mt-3 font-bold text-xl mb-2 text-emerald-900">
+              Preferred Type of Volunteering
+            </p>
+            <ul className="list-disc pl-5 text-m text-emerald-900">
+              {selectedVolunteer.preferred_volunteering
+                .split(",")
+                .map((type, idx) => (
+                  <li key={idx} className="mb-1">
+                    {type.trim()}
+                  </li>
+                ))}
+            </ul>
+          </>
+        )}
+      </div>
+
+      {/* Fixed Button at Bottom */}
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <button
+          onClick={() => setShowCentroConfirm(true)}
+          disabled={isNavigating}
+          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+        >
+          Review CENTROsuggests Deployment
+        </button>
+      </div>
+    </>
+  ) : (
+    <p className="text-gray-500 text-center mt-10">
+      Select a volunteer to review
+    </p>
+  )}
+</div>
+
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow p-8">
