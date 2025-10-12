@@ -1,0 +1,267 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import VolunteerImg1 from "../images/volunteer1.png";
+import VolunteerImg2 from "../images/volunteer2.png";
+import VolunteerImg3 from "../images/volunteer3.png";
+import VolunteerImg4 from "../images/volunteer4.png";
+import VolunteerImg5 from "../images/volunteer5.png";
+import VolunteerImg6 from "../images/volunteer6.png";
+import VolunteerImg7 from "../images/volunteer7.png";
+import CentroLogo from "../images/CENTRO_Logo.png";
+import supabase from "../config/supabaseClient";
+import LoginIcon from "../images/login.svg";
+import PasswordIcon from "../images/password.svg";
+import ShowPasswordIcon from "../images/showpassword.svg";
+
+function CentroLogin({ setIsAuthenticated }) {
+  const navigate = useNavigate();
+  const [loginId, setLoginId] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const images = [
+    VolunteerImg1,
+    VolunteerImg2,
+    VolunteerImg3,
+    VolunteerImg4,
+    VolunteerImg5,
+    VolunteerImg6,
+    VolunteerImg7,
+  ];
+
+  // Animated image slideshow states
+  const [currentImage, setCurrentImage] = useState(images[0]);
+  const [nextImage, setNextImage] = useState(images[1]);
+  const [fadeIn, setFadeIn] = useState(true);
+
+  // Smooth image transition every 10 seconds
+  useEffect(() => {
+    const changeImage = () => {
+      setFadeIn(false); // start fade out
+      setTimeout(() => {
+        const randomIndex = Math.floor(Math.random() * images.length);
+        setCurrentImage(nextImage);
+        setNextImage(images[randomIndex]);
+        setFadeIn(true); // fade in next
+      }, 500);
+    };
+
+    const interval = setInterval(changeImage, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load saved credentials on mount
+  useEffect(() => {
+    const savedLoginId = localStorage.getItem("rememberedLoginId");
+    const savedPassword = localStorage.getItem("rememberedPassword");
+    const wasRemembered = localStorage.getItem("rememberMe") === "true";
+
+    if (wasRemembered && savedLoginId && savedPassword) {
+      setLoginId(savedLoginId);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const handleLogin = async () => {
+    setError("");
+
+    if (!loginId || !password) {
+      setError("Both Admin ID and Password are required.");
+      return;
+    }
+
+    setLoading(true);
+    setProgress(0);
+
+    try {
+      const { data, error } = await supabase
+        .from("NGO_Admin")
+        .select(`
+          *,
+          NGO_Information (
+            ngo_code, name, description, address, phone_number, email
+          )
+        `)
+        .eq("login_id", loginId)
+        .eq("password", password)
+        .single();
+
+      if (error || !data) {
+        setError("Invalid Admin ID or Password.");
+        setLoading(false);
+      } else {
+        if (rememberMe) {
+          localStorage.setItem("rememberedLoginId", loginId);
+          localStorage.setItem("rememberedPassword", password);
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          localStorage.removeItem("rememberedLoginId");
+          localStorage.removeItem("rememberedPassword");
+          localStorage.removeItem("rememberMe");
+        }
+
+        let i = 0;
+        const interval = setInterval(() => {
+          i += 10;
+          setProgress(i);
+          if (i >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              setIsAuthenticated(true);
+              localStorage.setItem("isAuthenticated", "true");
+              localStorage.setItem("admin", JSON.stringify(data));
+              navigate("/dashboard");
+            }, 300);
+          }
+        }, 150);
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen overflow-hidden relative font-montserrat bg-white opacity-100">
+      <div className="flex h-full w-full">
+        {/* LEFT SIDE - Animated Auto-Slideshow */}
+        <div className="w-1/2 relative hidden md:flex items-center justify-center overflow-hidden">
+          {/* Current image */}
+          <img
+            src={currentImage}
+            alt="Volunteer"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+              fadeIn ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          {/* Next image fades in */}
+          <img
+            src={nextImage}
+            alt="Volunteer next"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+              fadeIn ? "opacity-0" : "opacity-100"
+            }`}
+          />
+          <div className="absolute inset-0 bg-black/20"></div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="w-full md:w-1/2 flex flex-col items-center bg-gray-100 opacity-90 relative">
+          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center mt-12 px-2">
+            <img src={CentroLogo} className="mt-28 w-64 md:w-1/2" alt="Centro Logo" />
+
+            <h2 className="text-4xl font-extrabold font-montserrat text-emerald-800 mb-3">
+              Hello, Admin!
+            </h2>
+            <p className="text-emerald-800 mb-6 text-base">Welcome to CENTRO!</p>
+
+            {/* Username */}
+            <div className="w-3/4 mb-4">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
+                <input
+                  type="text"
+                  placeholder="Enter your Admin ID"
+                  className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base"
+                  value={loginId}
+                  onChange={(e) => setLoginId(e.target.value)}
+                />
+                <img src={LoginIcon} alt="User Icon" className="w-5 h-5 ml-2" />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="w-3/4 mb-3">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base placeholder-gray-400"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="ml-2 focus:outline-none cursor-pointer"
+                >
+                  <img
+                    src={showPassword ? ShowPasswordIcon : PasswordIcon}
+                    alt="Toggle password visibility"
+                    className="w-5 h-5 cursor-pointer"
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me & Forgot Password */}
+            <div className="w-3/4 flex justify-between items-center mt-1 mb-6">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                />
+                <span className="ml-2 text-sm text-gray-700 font-medium">
+                  Remember Me
+                </span>
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-gray-700 hover:underline font-medium"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="w-3/4 mb-4 text-center bg-red-500 text-white text-sm font-semibold py-2 rounded-xl">
+                {error}
+              </div>
+            )}
+
+            {/* Sign In Button */}
+            <button
+              onClick={handleLogin}
+              className="w-3/4 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition duration-300 shadow-md cursor-pointer"
+            >
+              LOG IN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* LOADING SCREEN */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+          <img src={CentroLogo} alt="Centro Logo" className="w-32 mb-4 animate-pulse" />
+          <div className="w-60 h-3 bg-white/20 rounded-full overflow-hidden mb-1">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400 rounded-full animate-progress"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <p className="text-white font-semibold text-sm">{progress}% Loading...</p>
+          <style>{`
+            @keyframes shimmer {
+              0% { background-position: -200% 0; }
+              100% { background-position: 200% 0; }
+            }
+            .animate-progress {
+              background-size: 200% 100%;
+              animation: shimmer 1.5s linear infinite;
+            }
+          `}</style>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default CentroLogin;
