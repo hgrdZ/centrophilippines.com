@@ -14,43 +14,43 @@ export default function ReviewApplicationEventPage() {
   const [showCentroConfirm, setShowCentroConfirm] = useState(false);
   
   // Sort states
-  const [sortBy, setSortBy] = useState("id");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState("id"); // "id" or "name"
+  const [sortOrder, setSortOrder] = useState("asc"); // "asc" or "desc"
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Fetch events for the logged-in admin (based on ngo_code)
   useEffect(() => {
     const fetchEvents = async () => {
-      try {
-        const adminData = JSON.parse(localStorage.getItem("admin") || "{}");
-        if (adminData?.NGO_Information?.ngo_code) {
-          const ngoCode = adminData.NGO_Information.ngo_code;
+      const adminData = JSON.parse(localStorage.getItem("admin"));
+      if (adminData) {
+        const ngoCode = adminData.NGO_Information.ngo_code;
 
-          const { data, error } = await supabase
-            .from("Event_Information")
-            .select("event_id, event_title")
-            .eq("ngo_id", ngoCode)
-            .neq("status", "COMPLETED");
+        const { data, error } = await supabase
+          .from("Event_Information")
+          .select("event_id, event_title")
+          .eq("ngo_id", ngoCode)
+          .neq("status", "COMPLETED");
 
-          if (error) {
-            console.error("Error fetching events:", error);
-          } else if (data && data.length > 0) {
-            setEvents(data);
+        if (error) {
+          console.error("Error fetching events:", error);
+        } else {
+          setEvents(data);
+          if (data.length > 0) {
             setSelectedEvent(data[0].event_id);
             fetchEventDetails(data[0].event_id);
             fetchEventApplications(data[0].event_id);
           }
         }
-      } catch (err) {
-        console.error("Error in fetchEvents:", err);
       }
     };
 
     fetchEvents();
   }, []);
 
+  // Prevent body scroll when modal is open and handle ESC key
   useEffect(() => {
     if (showCentroConfirm) {
       document.body.style.overflow = "hidden";
@@ -76,87 +76,75 @@ export default function ReviewApplicationEventPage() {
     };
   }, [showCentroConfirm]);
 
+  // Fetch pending applications for the selected event
   const fetchEventApplications = async (eventId) => {
-    try {
-      const { data, error } = await supabase
-        .from("Event_User")
-        .select(
-          "user_id, event_id, status, days_available, time_availability, busy_hours"
-        )
-        .eq("event_id", eventId)
-        .eq("status", "PENDING");
+    const { data, error } = await supabase
+      .from("Event_User")
+      .select(
+        "user_id, event_id, status, days_available, time_availability, busy_hours"
+      )
+      .eq("event_id", eventId)
+      .eq("status", "PENDING");
 
-      if (error) {
-        console.error("Error fetching applications:", error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        setPendingApplications([]);
-        return;
-      }
-
-      const volunteerApplications = await Promise.all(
-        data.map(async (app) => {
-          const { data: volunteerData, error: userError } = await supabase
-            .from("LoginInformation")
-            .select(
-              "user_id, firstname, lastname, email, contact_number, profile_picture, preferred_volunteering"
-            )
-            .eq("user_id", app.user_id)
-            .single();
-
-          if (userError) {
-            console.error("Error fetching volunteer info:", userError);
-            return null;
-          }
-
-          return {
-            ...volunteerData,
-            application_id: app.user_id,
-            event_id: app.event_id,
-            days_available: app.days_available,
-            time_availability: app.time_availability,
-            busy_hours: app.busy_hours,
-          };
-        })
-      );
-
-      const filteredApplications = volunteerApplications.filter(
-        (app) => app !== null
-      );
-      setPendingApplications(filteredApplications);
-    } catch (err) {
-      console.error("Error in fetchEventApplications:", err);
-      setPendingApplications([]);
+    if (error) {
+      console.error("Error fetching applications:", error);
+      return;
     }
+
+    const volunteerApplications = await Promise.all(
+      data.map(async (app) => {
+        const { data: volunteerData, error: userError } = await supabase
+          .from("LoginInformation")
+          .select(
+            "user_id, firstname, lastname, email, contact_number, profile_picture, preferred_volunteering"
+          )
+          .eq("user_id", app.user_id)
+          .single();
+
+        if (userError) {
+          console.error("Error fetching volunteer info:", userError);
+          return null;
+        }
+
+        return {
+          ...volunteerData,
+          application_id: app.user_id,
+          event_id: app.event_id,
+          days_available: app.days_available,
+          time_availability: app.time_availability,
+          busy_hours: app.busy_hours,
+        };
+      })
+    );
+
+    const filteredApplications = volunteerApplications.filter(
+      (app) => app !== null
+    );
+    setPendingApplications(filteredApplications);
   };
 
+  // Fetch event details
   const fetchEventDetails = async (eventId) => {
-    try {
-      const { data, error } = await supabase
-        .from("Event_Information")
-        .select(
-          "event_id, event_title, date, time_start, time_end, event_objectives, volunteer_joined, created_at, event_image, status, location, description, volunteers_limit"
-        )
-        .eq("event_id", eventId)
-        .single();
+    const { data, error } = await supabase
+      .from("Event_Information")
+      .select(
+        "event_id, event_title, date, time_start, time_end, event_objectives, volunteer_joined, created_at, event_image, status, location, description, volunteers_limit"
+      )
+      .eq("event_id", eventId)
+      .single();
 
-      if (error) {
-        console.error("Error fetching event details:", error);
-        return;
-      }
-
-      setSelectedEventDetails(data);
-    } catch (err) {
-      console.error("Error in fetchEventDetails:", err);
+    if (error) {
+      console.error("Error fetching event details:", error);
+      return;
     }
+
+    setSelectedEventDetails(data);
   };
 
+  // Helper function to format time in 12-hour format
   const formatTime = (timeString) => {
-    if (!timeString) return "N/A";
     const [hours, minutes] = timeString.split(":");
-    const date = new Date(0, 0, 0, parseInt(hours) || 0, parseInt(minutes) || 0);
+    const date = new Date(0, 0, 0, hours, minutes);
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -164,6 +152,7 @@ export default function ReviewApplicationEventPage() {
     });
   };
 
+  // Helper function to format objectives into bullet points
   const formatObjectives = (objectivesString) => {
     if (!objectivesString) return null;
     const objectives = objectivesString.split("-");
@@ -174,6 +163,7 @@ export default function ReviewApplicationEventPage() {
     ));
   };
 
+  // Handle event selection
   const handleSelectEvent = (eventId) => {
     setSelectedEvent(eventId);
     fetchEventApplications(eventId);
@@ -181,6 +171,7 @@ export default function ReviewApplicationEventPage() {
     setSelectedVolunteer(null);
   };
 
+  // Handle navigation to AI scheduling page
   const handleReviewAiScheduling = async () => {
     if (!selectedVolunteer || !selectedEventDetails) return;
 
@@ -209,17 +200,19 @@ export default function ReviewApplicationEventPage() {
     }
   };
 
+  // Check if current path matches the button
   const isActive = (path) => location.pathname === path;
 
+  // Sort function
   const getSortedApplications = (applications) => {
     const sorted = [...applications].sort((a, b) => {
       if (sortBy === "id") {
-        const idA = parseInt(a.user_id?.replace(/\D/g, '') || "0") || 0;
-        const idB = parseInt(b.user_id?.replace(/\D/g, '') || "0") || 0;
+        const idA = parseInt(a.user_id.replace(/\D/g, '')) || 0;
+        const idB = parseInt(b.user_id.replace(/\D/g, '')) || 0;
         return sortOrder === "asc" ? idA - idB : idB - idA;
       } else if (sortBy === "name") {
-        const nameA = `${a.firstname || ""} ${a.lastname || ""}`.toLowerCase().trim();
-        const nameB = `${b.firstname || ""} ${b.lastname || ""}`.toLowerCase().trim();
+        const nameA = `${a.firstname} ${a.lastname}`.toLowerCase();
+        const nameB = `${b.firstname} ${b.lastname}`.toLowerCase();
         if (sortOrder === "asc") {
           return nameA.localeCompare(nameB);
         } else {
@@ -235,8 +228,10 @@ export default function ReviewApplicationEventPage() {
 
   const handleSortChange = (newSortBy) => {
     if (sortBy === newSortBy) {
+      // Toggle order if clicking the same sort option
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
+      // Set new sort option with ascending order
       setSortBy(newSortBy);
       setSortOrder("asc");
     }
@@ -290,7 +285,7 @@ export default function ReviewApplicationEventPage() {
               </label>
               <select
                 onChange={(e) => handleSelectEvent(e.target.value)}
-                className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-900 font-medium cursor-pointer border-2 border-emerald-600 hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md min-w-[300px]"
+                className="px-4 py-2.5 rounded-lg bg-emerald-to-r from-emerald-50 to-emerald-100 text-emerald-900 font-medium cursor-pointer border-2 border-emerald-600 hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md min-w-[300px]"
                 value={selectedEvent || ""}
               >
                 <option value="" disabled className="text-gray-500">
@@ -367,197 +362,124 @@ export default function ReviewApplicationEventPage() {
 
           {/* Volunteers List */}
           {pendingApplications.length > 0 ? (
-            <div className="flex flex-col md:flex-row gap-6 w-full">
-              {/* Table with Sort Button */}
-              <div className="flex-1 md:w-2/3 bg-white rounded-lg shadow flex flex-col overflow-hidden" style={{ height: "800px" }}>
-                {/* Sort Button - Outside of scrollable area */}
-                <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50 flex-shrink-0">
-                  <h3 className="text-lg font-semibold text-emerald-900">
-                    Applicant List
-                  </h3>
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowSortDropdown(!showSortDropdown)}
-                      className="flex items-center gap-2 bg-emerald-900 text-white font-semibold px-4 py-2 rounded-lg hover:bg-emerald-800 transition text-sm"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
-                        />
-                      </svg>
-                      Sort
-                    </button>
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+  {/* Applicant List - span 2 columns */}
+  <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col h-[850px] min-h-[850px] overflow-hidden">
+    {/* Header and Sort */}
+    <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50 sticky top-0 z-10">
+      <h3 className="text-lg font-semibold text-emerald-900">Applicant List</h3>
+      <div className="relative">
+        <button
+          onClick={() => setShowSortDropdown(!showSortDropdown)}
+          className="flex items-center gap-2 bg-emerald-900 text-white font-semibold px-4 py-2 rounded-lg hover:bg-emerald-800 transition text-sm"
+        >
+          Sort
+        </button>
 
-                    {showSortDropdown && (
-                      <div className="absolute top-full mt-2 right-0 bg-white border-2 border-emerald-900 rounded-lg shadow-lg z-50 min-w-[180px]">
-                        <div className="py-2">
-                          <button
-                            onClick={() => handleSortChange("id")}
-                            className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-                              sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                            }`}
-                          >
-                            <span>User ID</span>
-                            {sortBy === "id" && (
-                              <span className="text-emerald-900">
-                                {sortOrder === "asc" ? "↑" : "↓"}
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleSortChange("name")}
-                            className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-                              sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                            }`}
-                          >
-                            <span>Name</span>
-                            {sortBy === "name" && (
-                              <span className="text-emerald-900">
-                                {sortOrder === "asc" ? "↑" : "↓"}
-                              </span>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        {showSortDropdown && (
+          <div className="absolute top-full mt-2 right-0 bg-white border-2 border-emerald-900 rounded-lg shadow-lg z-50 min-w-[180px]">
+            <div className="py-2">
+              <button
+                onClick={() => handleSortChange("id")}
+                className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
+                  sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                }`}
+              >
+                <span>User ID</span>
+                {sortBy === "id" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
+              </button>
+              <button
+                onClick={() => handleSortChange("name")}
+                className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
+                  sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                }`}
+              >
+                <span>Name</span>
+                {sortBy === "name" && <span>{sortOrder === "asc" ? "↑" : "↓"}</span>}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
 
-                {/* Fixed Header */}
-                <div className="bg-emerald-700 text-white font-semibold text-lg grid grid-cols-3 px-4 py-3 flex-shrink-0">
-                  <div>User ID</div>
-                  <div>Name</div>
-                  <div>Email Address</div>
-                </div>
+    {/* Table Header */}
+    <div className="bg-emerald-700 text-white font-semibold text-lg grid grid-cols-3 px-4 py-3">
+      <div>User ID</div>
+      <div>Name</div>
+      <div>Email Address</div>
+    </div>
 
-                {/* Scrollable Table Body */}
-                <div className="overflow-y-auto flex-1">
-                  <div className="text-emerald-900">
-                    {sortedApplications.map((volunteer) => (
-                      <div
-                        key={volunteer.user_id}
-                        className={`grid grid-cols-3 py-2 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
-                          selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
-                            ? "bg-emerald-100 font-semibold"
-                            : ""
-                        }`}
-                        onClick={() => setSelectedVolunteer(volunteer)}
-                      >
-                        <div>{volunteer.user_id}</div>
-                        <div>{volunteer.firstname} {volunteer.lastname}</div>
-                        <div>{volunteer.email}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+    {/* Scrollable Applicants */}
+    <div className="overflow-y-auto flex-1">
+      {sortedApplications.map((volunteer) => (
+        <div
+          key={volunteer.user_id}
+          className={`grid grid-cols-3 py-2 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
+            selectedVolunteer?.user_id === volunteer.user_id ? "bg-emerald-100 font-semibold" : ""
+          }`}
+          onClick={() => setSelectedVolunteer(volunteer)}
+        >
+          <div>{volunteer.user_id}</div>
+          <div>{volunteer.firstname} {volunteer.lastname}</div>
+          <div>{volunteer.email}</div>
+        </div>
+      ))}
+    </div>
+  </div>
 
-              {/* Profile Card - Fixed Height */}
-              <div className="md:w-1/3 bg-white rounded-lg shadow p-4 flex flex-col overflow-hidden" style={{ height: "800px" }}>
-                {selectedVolunteer ? (
-                  <>
-                    {/* Scrollable Content */}
-                    <div className="overflow-y-auto flex-1 pr-2">
-                      <img
-                        src={
-                          selectedVolunteer.profile_picture ||
-                          "https://via.placeholder.com/150"
-                        }
-                        alt={selectedVolunteer.firstname}
-                        className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
-                      />
-                      <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
-                        {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-                      </h3>
+  {/* Profile Card */}
+  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col h-[850px] min-h-[850px] overflow-hidden">
+    {selectedVolunteer ? (
+      <>
+        <div className="overflow-y-auto flex-1 p-4">
+          <img
+            src={selectedVolunteer.profile_picture || "https://via.placeholder.com/150"}
+            alt={selectedVolunteer.firstname}
+            className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
+          />
+          <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
+            {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+          </h3>
+          <div className="space-y-4 text-emerald-900">
+            <p><strong>Email:</strong> {selectedVolunteer.email}</p>
+            <p><strong>Contact:</strong> {selectedVolunteer.contact_number}</p>
+            <p><strong>User ID:</strong> {selectedVolunteer.user_id}</p>
+            {selectedVolunteer.days_available && <p><strong>Days Available:</strong> {selectedVolunteer.days_available}</p>}
+            {selectedVolunteer.time_availability && <p><strong>Time Availability:</strong> {selectedVolunteer.time_availability}</p>}
+            {selectedVolunteer.busy_hours && (
+              <p className="text-red-600">
+                <strong>Busy Hours:</strong> {selectedVolunteer.busy_hours}
+              </p>
+            )}
+          </div>
 
-                      <p className="text-m text-emerald-900 mb-4">
-                        <span className="font-bold text-xl">Email Address</span>
-                        <br />
-                        {selectedVolunteer.email}
-                      </p>
+          {selectedVolunteer.preferred_volunteering && (
+            <>
+              <p className="mt-4 font-bold text-lg">Preferred Volunteering:</p>
+              <ul className="list-disc pl-5 text-emerald-900">
+                {selectedVolunteer.preferred_volunteering.split(",").map((type, i) => (
+                  <li key={i}>{type.trim()}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
 
-                      <p className="text-m text-emerald-900 mb-4">
-                        <span className="font-bold text-xl">Contact Number</span>
-                        <br />
-                        {selectedVolunteer.contact_number}
-                      </p>
-
-                      <p className="text-m text-emerald-900 mb-4">
-                        <span className="font-bold text-xl">User ID</span>
-                        <br />
-                        {selectedVolunteer.user_id}
-                      </p>
-
-                      {selectedVolunteer.days_available && (
-                        <p className="text-m text-emerald-900 mb-4">
-                          <span className="font-bold text-xl">Days Available</span>
-                          <br />
-                          {selectedVolunteer.days_available}
-                        </p>
-                      )}
-
-                      {selectedVolunteer.time_availability && (
-                        <p className="text-m text-emerald-900 mb-4">
-                          <span className="font-bold text-xl">Time of Availability</span>
-                          <br />
-                          {selectedVolunteer.time_availability}
-                        </p>
-                      )}
-
-                      {selectedVolunteer.busy_hours && (
-                        <p className="text-m text-emerald-900 mb-4">
-                          <span className="font-bold text-xl text-red-600">Busy Hours</span>
-                          <br />
-                          <span className="font-light text-m text-red-600">
-                            {selectedVolunteer.busy_hours}
-                          </span>
-                        </p>
-                      )}
-
-                      {selectedVolunteer.preferred_volunteering && (
-                        <>
-                          <p className="mt-3 font-bold text-xl mb-2 text-emerald-900">
-                            Preferred Type of Volunteering
-                          </p>
-                          <ul className="list-disc pl-5 text-m text-emerald-900">
-                            {selectedVolunteer.preferred_volunteering
-                              .split(",")
-                              .map((type, idx) => (
-                                <li key={idx} className="mb-1">
-                                  {type.trim()}
-                                </li>
-                              ))}
-                          </ul>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Fixed Button at Bottom */}
-                    <div className="mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
-                      <button
-                        onClick={() => setShowCentroConfirm(true)}
-                        disabled={isNavigating}
-                        className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
-                      >
-                        Review CENTROsuggests Deployment
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-gray-500 text-center mt-10">
-                    Select a volunteer to review
-                  </p>
-                )}
-              </div>
+        <div className="p-4 border-t border-gray-200 bg-white sticky bottom-0">
+          <button
+            onClick={() => setShowCentroConfirm(true)}
+            disabled={isNavigating}
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+          >
+            Review CENTROsuggests Deployment
+          </button>
+        </div>
+      </>
+    ) : (
+      <p className="text-gray-500 text-center mt-10">Select a volunteer to review</p>
+    )}
+  </div>
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow p-8">
