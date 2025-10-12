@@ -362,9 +362,9 @@ export default function ReviewApplicationEventPage() {
 
           {/* Volunteers List */}
           {pendingApplications.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col md:flex-row gap-6 w-full">
               {/* Table with Sort Button */}
-              <div className="md:col-span-2 bg-white rounded-lg shadow">
+              <div className="flex-1 md:w-2/3 bg-white rounded-lg shadow flex flex-col h-[800px] overflow-hidden">
 {/* Sort Button - Outside of scrollable area */}
 <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
   <h3 className="text-lg font-semibold text-emerald-900">
@@ -435,7 +435,7 @@ export default function ReviewApplicationEventPage() {
 </div>
 
 {/* Scrollable Table Body */}
-<div className="overflow-y-auto" style={{ maxHeight: "800px" }}>
+<div className="overflow-y-auto flex-1" style={{ maxHeight: "800px" }}>
   <div className="text-emerald-900">
     {sortedApplications.map((volunteer) => (
       <div
@@ -457,7 +457,7 @@ export default function ReviewApplicationEventPage() {
               </div>
 
 {/* Profile Card - Fixed Height */}
-<div className="bg-white rounded-lg shadow p-4 flex flex-col h-[800px]">
+<div className="md:w-1/3 bg-white rounded-lg shadow p-4 flex flex-col h-[800px]">
   {selectedVolunteer ? (
     <>
       {/* Scrollable Content */}
