@@ -344,8 +344,9 @@ export default function ReviewApplicationEventPage() {
             )}
 
             {pendingApplications.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Applicant List - 7 columns (wider) */}
+                <div className="lg:col-span-7 bg-white rounded-lg shadow overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
                     <h3 className="text-lg font-semibold text-emerald-900">
                       Applicant List
@@ -407,10 +408,10 @@ export default function ReviewApplicationEventPage() {
                     </div>
                   </div>
 
-                  <div className="bg-emerald-700 text-white font-semibold text-lg grid grid-cols-3 px-4 py-3">
-                    <div>User ID</div>
-                    <div>Name</div>
-                    <div>Email Address</div>
+                  <div className="bg-emerald-700 text-white font-semibold text-base grid grid-cols-12 px-4 py-3 gap-2">
+                    <div className="col-span-3">User ID</div>
+                    <div className="col-span-4">Name</div>
+                    <div className="col-span-5">Email Address</div>
                   </div>
 
                   <div className="overflow-y-auto" style={{ maxHeight: "800px" }}>
@@ -418,23 +419,24 @@ export default function ReviewApplicationEventPage() {
                       {sortedApplications.map((volunteer) => (
                         <div
                           key={volunteer.user_id}
-                          className={`grid grid-cols-3 py-2 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
+                          className={`grid grid-cols-12 py-3 px-4 border-b cursor-pointer transition hover:bg-emerald-50 gap-2 ${
                             selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
                               ? "bg-emerald-100 font-semibold"
                               : ""
                           }`}
                           onClick={() => setSelectedVolunteer(volunteer)}
                         >
-                          <div>{volunteer.user_id}</div>
-                          <div>{volunteer.firstname} {volunteer.lastname}</div>
-                          <div className="truncate">{volunteer.email}</div>
+                          <div className="col-span-3 text-sm">{volunteer.user_id}</div>
+                          <div className="col-span-4 text-sm">{volunteer.firstname} {volunteer.lastname}</div>
+                          <div className="col-span-5 text-sm truncate" title={volunteer.email}>{volunteer.email}</div>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow p-4 flex flex-col" style={{ height: "900px" }}>
+                {/* Profile Card - 5 columns */}
+                <div className="lg:col-span-5 bg-white rounded-lg shadow p-4 flex flex-col" style={{ height: "900px" }}>
                   {selectedVolunteer ? (
                     <>
                       <div className="overflow-y-auto flex-1 pr-2">
@@ -453,7 +455,7 @@ export default function ReviewApplicationEventPage() {
                         <p className="text-base text-emerald-900 mb-4">
                           <span className="font-bold text-xl">Email Address</span>
                           <br />
-                          {selectedVolunteer.email}
+                          <span className="break-words">{selectedVolunteer.email}</span>
                         </p>
 
                         <p className="text-base text-emerald-900 mb-4">
@@ -516,7 +518,7 @@ export default function ReviewApplicationEventPage() {
                         <button
                           onClick={() => setShowCentroConfirm(true)}
                           disabled={isNavigating}
-                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center text-sm"
                         >
                           Review CENTROsuggests Deployment
                         </button>
