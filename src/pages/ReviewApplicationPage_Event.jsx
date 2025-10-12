@@ -344,9 +344,9 @@ export default function ReviewApplicationEventPage() {
             )}
 
             {pendingApplications.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Applicant List - 7 columns (wider) */}
-                <div className="lg:col-span-7 bg-white rounded-lg shadow overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Applicant List - 2 columns out of 3 */}
+                <div className="md:col-span-2 bg-white rounded-lg shadow overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
                     <h3 className="text-lg font-semibold text-emerald-900">
                       Applicant List
@@ -408,10 +408,10 @@ export default function ReviewApplicationEventPage() {
                     </div>
                   </div>
 
-                  <div className="bg-emerald-700 text-white font-semibold text-base grid grid-cols-12 px-4 py-3 gap-2">
-                    <div className="col-span-3">User ID</div>
-                    <div className="col-span-4">Name</div>
-                    <div className="col-span-5">Email Address</div>
+                  <div className="bg-emerald-700 text-white font-semibold text-base grid grid-cols-3 px-4 py-3">
+                    <div>User ID</div>
+                    <div>Name</div>
+                    <div>Email Address</div>
                   </div>
 
                   <div className="overflow-y-auto" style={{ maxHeight: "800px" }}>
@@ -419,24 +419,24 @@ export default function ReviewApplicationEventPage() {
                       {sortedApplications.map((volunteer) => (
                         <div
                           key={volunteer.user_id}
-                          className={`grid grid-cols-12 py-3 px-4 border-b cursor-pointer transition hover:bg-emerald-50 gap-2 ${
+                          className={`grid grid-cols-3 py-3 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
                             selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
                               ? "bg-emerald-100 font-semibold"
                               : ""
                           }`}
                           onClick={() => setSelectedVolunteer(volunteer)}
                         >
-                          <div className="col-span-3 text-sm">{volunteer.user_id}</div>
-                          <div className="col-span-4 text-sm">{volunteer.firstname} {volunteer.lastname}</div>
-                          <div className="col-span-5 text-sm truncate" title={volunteer.email}>{volunteer.email}</div>
+                          <div className="text-sm">{volunteer.user_id}</div>
+                          <div className="text-sm">{volunteer.firstname} {volunteer.lastname}</div>
+                          <div className="text-sm truncate" title={volunteer.email}>{volunteer.email}</div>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Profile Card - 5 columns */}
-                <div className="lg:col-span-5 bg-white rounded-lg shadow p-4 flex flex-col" style={{ height: "900px" }}>
+                {/* Profile Card - 1 column out of 3 */}
+                <div className="md:col-span-1 bg-white rounded-lg shadow p-4 flex flex-col" style={{ height: "900px" }}>
                   {selectedVolunteer ? (
                     <>
                       <div className="overflow-y-auto flex-1 pr-2">
@@ -448,49 +448,49 @@ export default function ReviewApplicationEventPage() {
                           alt={selectedVolunteer.firstname}
                           className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
                         />
-                        <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
+                        <h3 className="text-xl text-emerald-900 font-bold text-center mb-6">
                           {selectedVolunteer.firstname} {selectedVolunteer.lastname}
                         </h3>
 
-                        <p className="text-base text-emerald-900 mb-4">
-                          <span className="font-bold text-xl">Email Address</span>
+                        <p className="text-sm text-emerald-900 mb-4">
+                          <span className="font-bold text-base">Email Address</span>
                           <br />
-                          <span className="break-words">{selectedVolunteer.email}</span>
+                          <span className="break-all">{selectedVolunteer.email}</span>
                         </p>
 
-                        <p className="text-base text-emerald-900 mb-4">
-                          <span className="font-bold text-xl">Contact Number</span>
+                        <p className="text-sm text-emerald-900 mb-4">
+                          <span className="font-bold text-base">Contact Number</span>
                           <br />
                           {selectedVolunteer.contact_number}
                         </p>
 
-                        <p className="text-base text-emerald-900 mb-4">
-                          <span className="font-bold text-xl">User ID</span>
+                        <p className="text-sm text-emerald-900 mb-4">
+                          <span className="font-bold text-base">User ID</span>
                           <br />
                           {selectedVolunteer.user_id}
                         </p>
 
                         {selectedVolunteer.days_available && (
-                          <p className="text-base text-emerald-900 mb-4">
-                            <span className="font-bold text-xl">Days Available</span>
+                          <p className="text-sm text-emerald-900 mb-4">
+                            <span className="font-bold text-base">Days Available</span>
                             <br />
                             {selectedVolunteer.days_available}
                           </p>
                         )}
 
                         {selectedVolunteer.time_availability && (
-                          <p className="text-base text-emerald-900 mb-4">
-                            <span className="font-bold text-xl">Time of Availability</span>
+                          <p className="text-sm text-emerald-900 mb-4">
+                            <span className="font-bold text-base">Time of Availability</span>
                             <br />
                             {selectedVolunteer.time_availability}
                           </p>
                         )}
 
                         {selectedVolunteer.busy_hours && (
-                          <p className="text-base text-emerald-900 mb-4">
-                            <span className="font-bold text-xl text-red-600">Busy Hours</span>
+                          <p className="text-sm text-emerald-900 mb-4">
+                            <span className="font-bold text-base text-red-600">Busy Hours</span>
                             <br />
-                            <span className="font-light text-base text-red-600">
+                            <span className="font-light text-sm text-red-600">
                               {selectedVolunteer.busy_hours}
                             </span>
                           </p>
@@ -498,10 +498,10 @@ export default function ReviewApplicationEventPage() {
 
                         {selectedVolunteer.preferred_volunteering && (
                           <>
-                            <p className="mt-3 font-bold text-xl mb-2 text-emerald-900">
+                            <p className="mt-3 font-bold text-base mb-2 text-emerald-900">
                               Preferred Type of Volunteering
                             </p>
-                            <ul className="list-disc pl-5 text-base text-emerald-900">
+                            <ul className="list-disc pl-5 text-sm text-emerald-900">
                               {selectedVolunteer.preferred_volunteering
                                 .split(",")
                                 .map((type, idx) => (
