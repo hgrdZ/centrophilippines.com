@@ -36,12 +36,12 @@ function CentroLogin({ setIsAuthenticated }) {
   // Smooth image transition every 10 seconds
   useEffect(() => {
     const changeImage = () => {
-      setFadeIn(false);
+      setFadeIn(false); // start fade out
       setTimeout(() => {
         const randomIndex = Math.floor(Math.random() * images.length);
         setCurrentImage(nextImage);
         setNextImage(images[randomIndex]);
-        setFadeIn(true);
+        setFadeIn(true); // fade in next
       }, 500);
     };
 
@@ -122,88 +122,87 @@ function CentroLogin({ setIsAuthenticated }) {
   };
 
   return (
-    <div className="fixed inset-0 font-montserrat bg-white flex flex-col lg:flex-row">
-      {/* LEFT SIDE - Image Slideshow (Hidden on mobile, visible on desktop) */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden">
-        <img
-          src={currentImage}
-          alt="Volunteer"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-            fadeIn ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        <img
-          src={nextImage}
-          alt="Volunteer next"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-            fadeIn ? "opacity-0" : "opacity-100"
-          }`}
-        />
-        <div className="absolute inset-0 bg-black/20"></div>
-      </div>
+    <div className="h-screen w-screen overflow-hidden relative font-montserrat bg-white opacity-100">
+      <div className="flex h-full w-full">
+        {/* LEFT SIDE - Animated Auto-Slideshow */}
+        <div className="w-1/2 relative hidden md:flex items-center justify-center overflow-hidden">
+          <img
+            src={currentImage}
+            alt="Volunteer"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+              fadeIn ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <img
+            src={nextImage}
+            alt="Volunteer next"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+              fadeIn ? "opacity-0" : "opacity-100"
+            }`}
+          />
+          <div className="absolute inset-0 bg-black/20"></div>
+        </div>
 
-      {/* RIGHT SIDE - Login Section (Full width on mobile, half on desktop) */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-100 overflow-y-auto">
-        <div className="w-full max-w-md px-6 py-8 flex flex-col">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <img src={CentroLogo} className="w-48 md:w-56" alt="Centro Logo" />
-          </div>
+        {/* RIGHT SIDE */}
+        <div className="w-full md:w-1/2 flex flex-col items-center bg-gray-100 opacity-90 relative">
+          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center mt-12 px-2">
+            <img src={CentroLogo} className="mt-28 w-64 md:w-1/2" alt="Centro Logo" />
 
-          {/* Welcome Text */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-emerald-800 mb-2">
+            <h2 className="text-4xl font-extrabold font-montserrat text-emerald-800 mb-3">
               Hello, Admin!
             </h2>
-            <p className="text-emerald-800 text-base">Welcome to CENTRO!</p>
-          </div>
+            <p className="text-emerald-800 mb-6 text-base">Welcome to CENTRO!</p>
 
-          {/* Login Form */}
-          <div className="space-y-4">
             {/* Username */}
-            <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 shadow-sm">
-              <input
-                type="text"
-                placeholder="Enter your Admin ID"
-                className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base"
-                value={loginId}
-                onChange={(e) => setLoginId(e.target.value)}
-              />
-              <img src={LoginIcon} alt="User Icon" className="w-5 h-5 ml-2 flex-shrink-0" />
+            <div className="w-3/4 mb-4">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
+                <input
+                  type="text"
+                  placeholder="Enter your Admin ID"
+                  className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base"
+                  value={loginId}
+                  onChange={(e) => setLoginId(e.target.value)}
+                />
+                <img src={LoginIcon} alt="User Icon" className="w-5 h-5 ml-2" />
+              </div>
             </div>
 
             {/* Password */}
-            <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 shadow-sm">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base placeholder-gray-400"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="ml-2 focus:outline-none flex-shrink-0"
-              >
-                <img
-                  src={showPassword ? ShowPasswordIcon : PasswordIcon}
-                  alt="Toggle password visibility"
-                  className="w-5 h-5"
+            <div className="w-3/4 mb-3">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base placeholder-gray-400"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="ml-2 focus:outline-none cursor-pointer"
+                >
+                  <img
+                    src={showPassword ? ShowPasswordIcon : PasswordIcon}
+                    alt="Toggle password visibility"
+                    className="w-5 h-5 cursor-pointer"
+                  />
+                </button>
+              </div>
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex justify-between items-center pt-1">
+            <div className="w-3/4 flex justify-between items-center mt-1 mb-6">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500"
+                  className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
                 />
-                <span className="ml-2 text-sm text-gray-700 font-medium">Remember Me</span>
+                <span className="ml-2 text-sm text-gray-700 font-medium">
+                  Remember Me
+                </span>
               </label>
               <Link
                 to="/forgot-password"
@@ -214,18 +213,16 @@ function CentroLogin({ setIsAuthenticated }) {
             </div>
 
             {/* Error Message */}
-            <div className="h-12 flex items-center justify-center">
-              {error && (
-                <div className="w-full text-center bg-red-500 text-white text-sm font-semibold py-2 rounded-xl">
-                  {error}
-                </div>
-              )}
-            </div>
+            {error && (
+              <div className="w-3/4 mb-4 text-center bg-red-500 text-white text-sm font-semibold py-2 rounded-xl">
+                {error}
+              </div>
+            )}
 
             {/* Sign In Button */}
             <button
               onClick={handleLogin}
-              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition duration-300 shadow-md"
+              className="w-3/4 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition duration-300 shadow-md cursor-pointer"
             >
               LOG IN
             </button>
