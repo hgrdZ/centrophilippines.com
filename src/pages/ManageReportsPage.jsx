@@ -618,8 +618,8 @@ const renderEventCard = (event, index) => {
       {/* Main Content */}
       <main className="flex-1 ml-64 p-4 overflow-y-auto">
         <div id="manage_reports" className="relative z-10 space-y-6">
-          {/* Search and Total Count */}
-          <div className="bg-white rounded-lg shadow border border-gray-300 px-4 py-2 flex justify-between items-center">
+          {/* Search Bar and Actions */}
+          <div className="bg-white rounded-lg shadow border border-gray-300 px-4 py-3 flex justify-between items-center">
             <div className="flex items-center border border-emerald-900 bg-emerald-100 rounded-full px-4 py-2 w-full max-w-md">
               <input
                 type="text"
@@ -628,12 +628,94 @@ const renderEventCard = (event, index) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-  
             </div>
-            <div className="text-emerald-900 text-lg font-semibold ml-4">
-              Total Number of Events: <span className="font-bold">{filteredEvents.length}</span>
+
+            <div className="flex items-center gap-4">
+              <div className="text-emerald-900 text-lg font-semibold">
+                Total Events: <span className="font-bold">{filteredEvents.length}</span>
+              </div>
+
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="bg-emerald-900 text-white font-semibold px-6 py-2 rounded-lg hover:bg-emerald-800 transition flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Generate Report
+              </button>
             </div>
           </div>
+
+          {/* Report Generation Modal */}
+          {showReportModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-emerald-900">Generate Report</h2>
+                  <button
+                    onClick={() => setShowReportModal(false)}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Select Month
+                    </label>
+                    <select
+                      value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">-- Select Month --</option>
+                      <option value="all">All Months</option>
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {new Date(0, i).toLocaleString("default", { month: "long" })}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Select Year
+                    </label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                      className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">-- Select Year --</option>
+                      {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                  <button
+                    onClick={() => setShowReportModal(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 font-semibold px-4 py-3 rounded-lg hover:bg-gray-400 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleGenerateMonthlyReport}
+                    className="flex-1 bg-emerald-900 text-white font-semibold px-4 py-3 rounded-lg hover:bg-emerald-800 transition"
+                  >
+                    Generate PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
