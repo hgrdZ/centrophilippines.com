@@ -124,7 +124,7 @@ function CentroLogin({ setIsAuthenticated }) {
   return (
   <div className="h-screen w-screen overflow-hidden font-montserrat bg-white flex flex-col md:flex-row">
     {/* LEFT SIDE - Always Visible Slideshow */}
-    <div className="w-full md:w-1/2 relative flex items-center justify-center overflow-hidden min-h-[300px] md:min-h-screen">
+    <div className="w-full md:w-1/2 relative flex items-center justify-center overflow-y-auto">
       <img
         src={currentImage}
         alt="Volunteer"
