@@ -324,7 +324,7 @@ function CreateAnnouncement() {
 
   return (
     <div
-      className="flex min-h-screen bg-no-repeat bg-center"
+      className="flex h-screen bg-no-repeat bg-center overflow-hidden"
       style={{
         backgroundImage: `url(${CentroAdminBg})`,
         backgroundSize: "100% 100%",
@@ -332,18 +332,18 @@ function CreateAnnouncement() {
     >
       <Sidebar />
 
-      <main className="flex-1 flex justify-center ml-64 p-4">
-        <div className="w-full max-w-6xl">
-          <div className="border-2 border-emerald-900 rounded-lg mb-2 p-2 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
+      <main className="flex-1 flex justify-center ml-64 p-6 overflow-y-auto">
+        <div className="w-full max-w-6xl pb-8">
+          <div className="border-2 border-emerald-900 rounded-lg mb-4 p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
 
           <div
-            className="rounded-lg shadow-xl p-6 w-full border-4 border-green-800"
+            className="rounded-lg shadow-xl p-8 w-full border-4 border-green-800"
             style={{ backgroundColor: "#fff4d9" }}
           >
             {/* Title */}
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block mb-2 font-semibold text-lg text-green-900">Title</label>
               <input
                 type="text"
@@ -355,11 +355,11 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1">
-                  <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
+                  <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2 flex-shrink-0" />
                   <input
                     type="datetime-local"
                     value={postDate}
@@ -375,12 +375,12 @@ function CreateAnnouncement() {
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3">
-                  <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
+                  <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2 flex-shrink-0" />
                   <select
                     value={priorityType}
                     onChange={(e) => setPriorityType(e.target.value)}
-                    className="w-full p-2 border-none focus:outline-none cursor-pointer"
+                    className="w-full p-2 border-none focus:outline-none cursor-pointer bg-transparent"
                   >
                     <option value="">Select priority type</option>
                     <option value="High">High</option>
@@ -392,10 +392,10 @@ function CreateAnnouncement() {
             </div>
 
             {/* Announcement Type */}
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type</label>
-              <div className="flex items-center border bg-white border-green-300 rounded px-3">
-                <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2" />
+              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
+                <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2 flex-shrink-0" />
                 <select
                   value={announcementType}
                   onChange={(e) => {
@@ -404,7 +404,7 @@ function CreateAnnouncement() {
                       setSelectedEvent(""); // Reset event selection if not "Event" type
                     }
                   }}
-                  className="w-full p-2 border-none focus:outline-none cursor-pointer"
+                  className="w-full p-2 border-none focus:outline-none cursor-pointer bg-transparent"
                 >
                   <option value="">Select announcement type</option>
                   <option value="All">All (Organization-wide)</option>
@@ -415,14 +415,14 @@ function CreateAnnouncement() {
 
             {/* Event Selection - Only show when "Event" is selected */}
             {announcementType === "Event" && (
-              <div className="mb-4">
+              <div className="mb-6">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Select Event</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3">
-                  <img src={EventIcon} alt="Event" className="w-5 h-5 mr-2" />
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
+                  <img src={EventIcon} alt="Event" className="w-5 h-5 mr-2 flex-shrink-0" />
                   <select
                     value={selectedEvent}
                     onChange={(e) => setSelectedEvent(e.target.value)}
-                    className="w-full p-2 border-none focus:outline-none cursor-pointer"
+                    className="w-full p-2 border-none focus:outline-none cursor-pointer bg-transparent"
                   >
                     <option value="">Select event</option>
                     {events.map((event) => (
@@ -436,27 +436,27 @@ function CreateAnnouncement() {
             )}
 
             {/* Message */}
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block mb-2 font-semibold text-lg text-green-900">Message</label>
               <textarea
                 placeholder="Enter your announcement message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full p-3 rounded bg-white border border-green-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+                className="w-full p-3 rounded bg-white border border-green-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer resize-none"
               />
             </div>
 
             {/* File & Expiry Date */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3">
-                  <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
+                  <img src={FileIcon} alt="File" className="w-5 h-5 mr-2 flex-shrink-0" />
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
                     onChange={handleFileSelection}
-                    className="w-full px-4 py-2 border-none rounded bg-white focus:outline-none cursor-pointer"
+                    className="w-full px-2 py-1 border-none rounded bg-white focus:outline-none cursor-pointer text-sm"
                   />
                 </div>
                 
@@ -510,8 +510,8 @@ function CreateAnnouncement() {
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3">
-                  <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
+                  <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2 flex-shrink-0" />
                   <input
                     type="date"
                     value={expiryDate}
@@ -524,7 +524,7 @@ function CreateAnnouncement() {
             </div>
 
             {/* Buttons with Confirmation */}
-            <div className="flex flex-wrap gap-6 justify-center text-lg pb-6">
+            <div className="flex flex-wrap gap-6 justify-center text-lg pt-4">
               <button
                 disabled={loading}
                 onClick={() =>
@@ -538,7 +538,7 @@ function CreateAnnouncement() {
                     onCancel: () => setModalConfig(null),
                   })
                 }
-                className="bg-green-700 text-white px-8 py-3 rounded-full border-green-800 border-2 hover:bg-green-900 disabled:opacity-50 cursor-pointer font-semibold"
+                className="bg-green-700 text-white px-10 py-3 rounded-full border-green-800 border-2 hover:bg-green-900 disabled:opacity-50 cursor-pointer font-semibold shadow-md"
               >
                 {loading ? "Publishing..." : "Publish Announcement"}
               </button>
@@ -555,7 +555,7 @@ function CreateAnnouncement() {
                     onCancel: () => setModalConfig(null),
                   })
                 }
-                className="bg-red-600 text-white px-8 py-3 rounded-full border-red-700 border-2 hover:bg-red-700 cursor-pointer font-semibold"
+                className="bg-red-600 text-white px-10 py-3 rounded-full border-red-700 border-2 hover:bg-red-700 cursor-pointer font-semibold shadow-md"
               >
                 Discard
               </button>
