@@ -332,8 +332,8 @@ function CreateAnnouncement() {
     >
       <Sidebar />
 
-      <main className="flex-1 flex justify-center ml-64 p-4">
-        <div className="w-full max-w-6xl">
+      <main className="flex-1 ml-64 p-6 overflow-x-hidden">
+  <div className="w-full min-w-full max-w-none">
           <div className="border-2 border-emerald-900 rounded-lg mb-2 p-2 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
