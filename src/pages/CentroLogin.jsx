@@ -36,12 +36,12 @@ function CentroLogin({ setIsAuthenticated }) {
   // Smooth image transition every 10 seconds
   useEffect(() => {
     const changeImage = () => {
-      setFadeIn(false); // start fade out
+      setFadeIn(false);
       setTimeout(() => {
         const randomIndex = Math.floor(Math.random() * images.length);
         setCurrentImage(nextImage);
         setNextImage(images[randomIndex]);
-        setFadeIn(true); // fade in next
+        setFadeIn(true);
       }, 500);
     };
 
@@ -122,39 +122,46 @@ function CentroLogin({ setIsAuthenticated }) {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative font-montserrat bg-white opacity-100">
-      <div className="flex h-full w-full">
-        {/* LEFT SIDE - Animated Auto-Slideshow */}
-        <div className="w-1/2 relative hidden md:flex items-center justify-center overflow-hidden">
-          <img
-            src={currentImage}
-            alt="Volunteer"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-              fadeIn ? "opacity-100" : "opacity-0"
-            }`}
-          />
-          <img
-            src={nextImage}
-            alt="Volunteer next"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-              fadeIn ? "opacity-0" : "opacity-100"
-            }`}
-          />
-          <div className="absolute inset-0 bg-black/20"></div>
-        </div>
+    <div className="h-screen w-screen overflow-hidden font-montserrat bg-white flex">
+      {/* LEFT SIDE - Animated Auto-Slideshow */}
+      <div className="hidden md:flex md:w-1/2 relative items-center justify-center overflow-hidden">
+        <img
+          src={currentImage}
+          alt="Volunteer"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+            fadeIn ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        <img
+          src={nextImage}
+          alt="Volunteer next"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+            fadeIn ? "opacity-0" : "opacity-100"
+          }`}
+        />
+        <div className="absolute inset-0 bg-black/20"></div>
+      </div>
 
-        {/* RIGHT SIDE */}
-        <div className="w-full md:w-1/2 flex flex-col items-center bg-gray-100 opacity-90 relative">
-          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center mt-12 px-2">
-            <img src={CentroLogo} className="mt-28 w-64 md:w-1/2" alt="Centro Logo" />
+      {/* RIGHT SIDE - Fixed Container */}
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100 overflow-y-auto">
+        <div className="w-full max-w-md px-6 py-8 flex flex-col">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img src={CentroLogo} className="w-48 md:w-56" alt="Centro Logo" />
+          </div>
 
-            <h2 className="text-4xl font-extrabold font-montserrat text-emerald-800 mb-3">
+          {/* Welcome Text */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-extrabold font-montserrat text-emerald-800 mb-2">
               Hello, Admin!
             </h2>
-            <p className="text-emerald-800 mb-6 text-base">Welcome to CENTRO!</p>
+            <p className="text-emerald-800 text-base">Welcome to CENTRO!</p>
+          </div>
 
+          {/* Login Form */}
+          <div className="space-y-4">
             {/* Username */}
-            <div className="w-3/4 mb-4">
+            <div className="w-full">
               <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
                 <input
                   type="text"
@@ -163,12 +170,12 @@ function CentroLogin({ setIsAuthenticated }) {
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
                 />
-                <img src={LoginIcon} alt="User Icon" className="w-5 h-5 ml-2" />
+                <img src={LoginIcon} alt="User Icon" className="w-5 h-5 ml-2 flex-shrink-0" />
               </div>
             </div>
 
             {/* Password */}
-            <div className="w-3/4 mb-3">
+            <div className="w-full">
               <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -180,25 +187,25 @@ function CentroLogin({ setIsAuthenticated }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="ml-2 focus:outline-none cursor-pointer"
+                  className="ml-2 focus:outline-none flex-shrink-0"
                 >
                   <img
                     src={showPassword ? ShowPasswordIcon : PasswordIcon}
                     alt="Toggle password visibility"
-                    className="w-5 h-5 cursor-pointer"
+                    className="w-5 h-5"
                   />
                 </button>
               </div>
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="w-3/4 flex justify-between items-center mt-1 mb-6">
+            <div className="flex justify-between items-center pt-1">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                  className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500"
                 />
                 <span className="ml-2 text-sm text-gray-700 font-medium">
                   Remember Me
@@ -212,17 +219,19 @@ function CentroLogin({ setIsAuthenticated }) {
               </Link>
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="w-3/4 mb-4 text-center bg-red-500 text-white text-sm font-semibold py-2 rounded-xl">
-                {error}
-              </div>
-            )}
+            {/* Error Message - Fixed Height Space */}
+            <div className="h-12 flex items-center justify-center">
+              {error && (
+                <div className="w-full text-center bg-red-500 text-white text-sm font-semibold py-2 rounded-xl">
+                  {error}
+                </div>
+              )}
+            </div>
 
             {/* Sign In Button */}
             <button
               onClick={handleLogin}
-              className="w-3/4 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition duration-300 shadow-md cursor-pointer"
+              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition duration-300 shadow-md"
             >
               LOG IN
             </button>
