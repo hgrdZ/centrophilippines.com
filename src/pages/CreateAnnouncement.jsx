@@ -358,7 +358,7 @@ function CreateAnnouncement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 w-full">
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1">
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-1/2">
                   <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
                   <input
                     type="datetime-local"
@@ -375,7 +375,7 @@ function CreateAnnouncement() {
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3">
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-1/2">
                   <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
                   <select
                     value={priorityType}
@@ -450,7 +450,7 @@ function CreateAnnouncement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 w-full">
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3">
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-1/2">
                   <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
                   <input
                     type="file"
@@ -510,7 +510,7 @@ function CreateAnnouncement() {
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3">
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-1/2">
                   <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
                   <input
                     type="date"
