@@ -142,41 +142,41 @@ function CentroLogin({ setIsAuthenticated }) {
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
-      {/* RIGHT SIDE - Fixed Container */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100 overflow-y-auto">
-        <div className="w-full max-w-md px-6 py-8 flex flex-col">
+      {/* RIGHT SIDE - Fixed Container with Perfect Centering */}
+      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100 min-h-screen">
+        <div className="w-full max-w-[500px] px-8 py-6">
           {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <img src={CentroLogo} className="w-48 md:w-56" alt="Centro Logo" />
+          <div className="flex justify-center mb-6">
+            <img src={CentroLogo} className="w-40 h-auto" alt="Centro Logo" />
           </div>
 
           {/* Welcome Text */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-extrabold font-montserrat text-emerald-800 mb-2">
+            <h2 className="text-4xl font-extrabold font-montserrat text-emerald-800 mb-3">
               Hello, Admin!
             </h2>
-            <p className="text-emerald-800 text-base">Welcome to CENTRO!</p>
+            <p className="text-emerald-800 text-base font-medium">Welcome to CENTRO!</p>
           </div>
 
           {/* Login Form */}
-          <div className="space-y-4">
-            {/* Username */}
+          <div className="space-y-5">
+            {/* Username Input */}
             <div className="w-full">
-              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-4 focus-within:border-emerald-700 transition-all shadow-sm">
                 <input
                   type="text"
                   placeholder="Enter your Admin ID"
-                  className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base"
+                  className="w-full bg-transparent outline-none font-semibold text-gray-700 text-base placeholder-gray-400"
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
                 />
-                <img src={LoginIcon} alt="User Icon" className="w-5 h-5 ml-2 flex-shrink-0" />
+                <img src={LoginIcon} alt="User Icon" className="w-5 h-5 ml-3 flex-shrink-0" />
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password Input */}
             <div className="w-full">
-              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
+              <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-4 focus-within:border-emerald-700 transition-all shadow-sm">
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
@@ -187,7 +187,7 @@ function CentroLogin({ setIsAuthenticated }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="ml-2 focus:outline-none flex-shrink-0"
+                  className="ml-3 focus:outline-none flex-shrink-0"
                 >
                   <img
                     src={showPassword ? ShowPasswordIcon : PasswordIcon}
@@ -199,13 +199,13 @@ function CentroLogin({ setIsAuthenticated }) {
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex justify-between items-center pt-1">
+            <div className="flex justify-between items-center py-1">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500"
+                  className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
                 />
                 <span className="ml-2 text-sm text-gray-700 font-medium">
                   Remember Me
@@ -220,9 +220,9 @@ function CentroLogin({ setIsAuthenticated }) {
             </div>
 
             {/* Error Message - Fixed Height Space */}
-            <div className="h-12 flex items-center justify-center">
+            <div className="h-14 flex items-center justify-center">
               {error && (
-                <div className="w-full text-center bg-red-500 text-white text-sm font-semibold py-2 rounded-xl">
+                <div className="w-full text-center bg-red-500 text-white text-sm font-semibold py-2.5 rounded-xl shadow-md">
                   {error}
                 </div>
               )}
@@ -231,7 +231,7 @@ function CentroLogin({ setIsAuthenticated }) {
             {/* Sign In Button */}
             <button
               onClick={handleLogin}
-              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition duration-300 shadow-md"
+              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-4 rounded-xl transition duration-300 shadow-md text-base"
             >
               LOG IN
             </button>
