@@ -122,29 +122,29 @@ function CentroLogin({ setIsAuthenticated }) {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden font-montserrat bg-white flex">
-      {/* LEFT SIDE - Animated Auto-Slideshow */}
-      <div className="hidden md:flex md:w-1/2 relative items-center justify-center overflow-hidden">
-        <img
-          src={currentImage}
-          alt="Volunteer"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-            fadeIn ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        <img
-          src={nextImage}
-          alt="Volunteer next"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-            fadeIn ? "opacity-0" : "opacity-100"
-          }`}
-        />
-        <div className="absolute inset-0 bg-black/20"></div>
-      </div>
+<div className="h-screen w-screen overflow-hidden font-montserrat bg-white flex flex-col md:flex-row">
+  {/* LEFT SIDE - Visible Always */}
+  <div className="w-full md:w-1/2 relative flex items-center justify-center overflow-hidden min-h-[300px] md:min-h-screen">
+    <img
+      src={currentImage}
+      alt="Volunteer"
+      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+        fadeIn ? "opacity-100" : "opacity-0"
+      }`}
+    />
+    <img
+      src={nextImage}
+      alt="Volunteer next"
+      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+        fadeIn ? "opacity-0" : "opacity-100"
+      }`}
+    />
+    <div className="absolute inset-0 bg-black/25"></div>
+  </div>
 
-      {/* RIGHT SIDE - Fixed Container with Perfect Centering */}
-      <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100 min-h-screen">
-        <div className="w-full max-w-[500px] px-8 py-6">
+  {/* RIGHT SIDE - Login Panel */}
+  <div className="w-full md:w-1/2 flex items-center justify-center bg-gray-100 min-h-[400px] md:min-h-screen">
+    <div className="w-full max-w-[500px] px-8 py-6">
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <img src={CentroLogo} className="w-40 h-auto" alt="Centro Logo" />
