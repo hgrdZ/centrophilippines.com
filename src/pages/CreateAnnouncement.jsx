@@ -324,30 +324,16 @@ function CreateAnnouncement() {
 
   return (
     <div
-      className="flex w-screen overflow-x-hidden"
+      className="flex min-h-screen bg-no-repeat bg-center"
       style={{
         backgroundImage: `url(${CentroAdminBg})`,
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />   
+      <Sidebar />
 
-      <main
-  className="flex-1 p-6 overflow-x-hidden"
-  style={{
-    marginLeft: "16rem", // same as ml-64
-    width: "calc(100vw - 16rem)",
-    maxWidth: "100vw",
-  }}
->
-  <div
-    className="rounded-lg shadow-xl p-6 border-4 border-green-800"
-    style={{
-      backgroundColor: "#fff4d9",
-      width: "100%",
-    }}
-  >
-
+      <main className="flex-1 flex justify-center ml-64 p-4">
+        <div className="w-full max-w-6xl">
           <div className="border-2 border-emerald-900 rounded-lg mb-2 p-2 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
@@ -524,7 +510,7 @@ function CreateAnnouncement() {
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-full">
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-1/2">
                   <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
                   <input
                     type="date"
