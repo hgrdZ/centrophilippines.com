@@ -324,63 +324,54 @@ function CreateAnnouncement() {
 
   return (
     <div
-      className="flex h-screen bg-no-repeat bg-center overflow-hidden"
+      className="flex min-h-screen bg-no-repeat bg-center"
       style={{
         backgroundImage: `url(${CentroAdminBg})`,
         backgroundSize: "100% 100%",
       }}
     >
       <Sidebar />
-
-      <main className="flex-1 flex justify-center ml-64 p-6 overflow-y-auto">
-        <div className="w-full max-w-6xl pb-8">
-          <div className="border-2 border-emerald-900 rounded-lg mb-4 p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
+<main className="flex-1 ml-64 overflow-y-auto p-8 flex justify-center items-start transition-all duration-300">
+        <div className="w-full max-w-6xl space-y-6">
+          <div className="border-2 border-emerald-900 rounded-lg p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-lg">
             CREATE ANNOUNCEMENT
           </div>
 
-          <div
-            className="rounded-lg shadow-xl p-8 w-full border-4 border-green-800"
-            style={{ backgroundColor: "#fff4d9" }}
-          >
+          <div className="rounded-xl shadow-xl p-8 border-4 border-green-800 space-y-6" style={{ backgroundColor: "#fff4d9" }}>
             {/* Title */}
-            <div className="mb-6">
+            <div>
               <label className="block mb-2 font-semibold text-lg text-green-900">Title</label>
               <input
                 type="text"
-                placeholder="Enter announcement title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-3 rounded border bg-white border-green-300 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+                placeholder="Enter announcement title"
+                className="w-full p-3 rounded-lg border border-green-300 bg-white focus:outline-none focus:ring-2 focus:ring-green-700"
               />
             </div>
 
-            {/* Post Date & Priority */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Date & Priority */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
-                  <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2 flex-shrink-0" />
+                <div className="flex items-center border border-green-300 bg-white rounded-lg px-3 py-1">
+                  <img src={DatesIcon} alt="Date" className="w-5 h-5 mr-2" />
                   <input
                     type="datetime-local"
                     value={postDate}
                     onChange={(e) => setPostDate(e.target.value)}
-                    className="w-full p-2 border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
-                    style={{
-                      colorScheme: 'light',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'textfield'
-                    }}
+                    className="w-full p-2 border-none focus:outline-none text-gray-700 bg-transparent"
                   />
                 </div>
               </div>
               <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
-                  <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2 flex-shrink-0" />
+                <div className="flex items-center border border-green-300 bg-white rounded-lg px-3">
+                  <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
                   <select
                     value={priorityType}
                     onChange={(e) => setPriorityType(e.target.value)}
-                    className="w-full p-2 border-none focus:outline-none cursor-pointer bg-transparent"
+                    className="w-full p-2 border-none focus:outline-none"
                   >
                     <option value="">Select priority type</option>
                     <option value="High">High</option>
@@ -392,37 +383,35 @@ function CreateAnnouncement() {
             </div>
 
             {/* Announcement Type */}
-            <div className="mb-6">
+            <div>
               <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type</label>
-              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
-                <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2 flex-shrink-0" />
+              <div className="flex items-center border border-green-300 bg-white rounded-lg px-3">
+                <img src={EventIcon} alt="Announcement" className="w-5 h-5 mr-2" />
                 <select
                   value={announcementType}
                   onChange={(e) => {
                     setAnnouncementType(e.target.value);
-                    if (e.target.value !== "Event") {
-                      setSelectedEvent(""); // Reset event selection if not "Event" type
-                    }
+                    if (e.target.value !== "Event") setSelectedEvent("");
                   }}
-                  className="w-full p-2 border-none focus:outline-none cursor-pointer bg-transparent"
+                  className="w-full p-2 border-none focus:outline-none"
                 >
-                  <option value="">Select announcement type</option>
+                  <option value="">Select type</option>
                   <option value="All">All (Organization-wide)</option>
                   <option value="Event">Event-specific</option>
                 </select>
               </div>
             </div>
 
-            {/* Event Selection - Only show when "Event" is selected */}
+            {/* Conditional Event Dropdown */}
             {announcementType === "Event" && (
-              <div className="mb-6">
+              <div>
                 <label className="block mb-2 font-semibold text-lg text-green-900">Select Event</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
-                  <img src={EventIcon} alt="Event" className="w-5 h-5 mr-2 flex-shrink-0" />
+                <div className="flex items-center border border-green-300 bg-white rounded-lg px-3">
+                  <img src={EventIcon} alt="Event" className="w-5 h-5 mr-2" />
                   <select
                     value={selectedEvent}
                     onChange={(e) => setSelectedEvent(e.target.value)}
-                    className="w-full p-2 border-none focus:outline-none cursor-pointer bg-transparent"
+                    className="w-full p-2 border-none focus:outline-none"
                   >
                     <option value="">Select event</option>
                     {events.map((event) => (
@@ -436,40 +425,41 @@ function CreateAnnouncement() {
             )}
 
             {/* Message */}
-            <div className="mb-6">
+            <div>
               <label className="block mb-2 font-semibold text-lg text-green-900">Message</label>
               <textarea
-                placeholder="Enter your announcement message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full p-3 rounded bg-white border border-green-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer resize-none"
+                placeholder="Enter your announcement message"
+                className="w-full h-40 p-3 rounded-lg border border-green-300 bg-white focus:outline-none focus:ring-2 focus:ring-green-700"
               />
             </div>
 
-            {/* File & Expiry Date */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div>
-                <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
-                  <img src={FileIcon} alt="File" className="w-5 h-5 mr-2 flex-shrink-0" />
+            {/* ✅ Fixed File & Expiry Date */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 w-full">
+              {/* File Upload */}
+              <div className="flex flex-col justify-between">
+                <label className="block mb-2 font-semibold text-lg text-green-900">
+                  Attach File (Optional)
+                </label>
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2">
+                  <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
                     onChange={handleFileSelection}
-                    className="w-full px-2 py-1 border-none rounded bg-white focus:outline-none cursor-pointer text-sm"
+                    className="flex-1 px-2 py-1 border-none bg-white focus:outline-none cursor-pointer text-sm"
                   />
                 </div>
-                
-                {/* File Preview Section */}
+
                 {selectedFile && (
                   <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                     <div className="text-center">
                       {filePreview ? (
-                        // Image preview
                         <div>
-                          <img 
-                            src={filePreview} 
-                            alt="Preview" 
+                          <img
+                            src={filePreview}
+                            alt="Preview"
                             className="max-w-full max-h-32 object-contain mx-auto rounded border"
                           />
                           <p className="text-sm text-gray-600 mt-2 font-medium">
@@ -480,12 +470,9 @@ function CreateAnnouncement() {
                           </p>
                         </div>
                       ) : (
-                        // File icon preview
                         <div>
                           {getFileIcon(selectedFile.name)}
-                          <p className="text-sm text-gray-700 font-medium">
-                            {selectedFile.name}
-                          </p>
+                          <p className="text-sm text-gray-700 font-medium">{selectedFile.name}</p>
                           <p className="text-xs text-gray-500">
                             {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
@@ -496,9 +483,8 @@ function CreateAnnouncement() {
                         onClick={() => {
                           setSelectedFile(null);
                           setFilePreview(null);
-                          // Reset the file input
                           const fileInput = document.querySelector('input[type="file"]');
-                          if (fileInput) fileInput.value = '';
+                          if (fileInput) fileInput.value = "";
                         }}
                         className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium"
                       >
@@ -508,23 +494,27 @@ function CreateAnnouncement() {
                   </div>
                 )}
               </div>
-              <div>
-                <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2 w-full">
-                  <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2 flex-shrink-0" />
+
+              {/* Expiry Date */}
+              <div className="flex flex-col justify-between">
+                <label className="block mb-2 font-semibold text-lg text-green-900">
+                  Expiry Date (Optional)
+                </label>
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-2">
+                  <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
                   <input
                     type="date"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
                     min={new Date().toISOString().split("T")[0]}
-                    className="w-full p-2 border-none rounded bg-white focus:outline-none cursor-pointer"
+                    className="w-full border-none bg-white focus:outline-none cursor-pointer text-sm"
                   />
                 </div>
               </div>
             </div>
 
             {/* Buttons with Confirmation */}
-            <div className="flex flex-wrap gap-6 justify-center text-lg pt-4">
+            <div className="flex flex-wrap gap-6 justify-center text-lg pb-6">
               <button
                 disabled={loading}
                 onClick={() =>
@@ -538,7 +528,7 @@ function CreateAnnouncement() {
                     onCancel: () => setModalConfig(null),
                   })
                 }
-                className="bg-green-700 text-white px-10 py-3 rounded-full border-green-800 border-2 hover:bg-green-900 disabled:opacity-50 cursor-pointer font-semibold shadow-md"
+                className="bg-green-700 text-white px-8 py-3 rounded-full border-green-800 border-2 hover:bg-green-900 disabled:opacity-50 cursor-pointer font-semibold"
               >
                 {loading ? "Publishing..." : "Publish Announcement"}
               </button>
@@ -555,7 +545,7 @@ function CreateAnnouncement() {
                     onCancel: () => setModalConfig(null),
                   })
                 }
-                className="bg-red-600 text-white px-10 py-3 rounded-full border-red-700 border-2 hover:bg-red-700 cursor-pointer font-semibold shadow-md"
+                className="bg-red-600 text-white px-8 py-3 rounded-full border-red-700 border-2 hover:bg-red-700 cursor-pointer font-semibold"
               >
                 Discard
               </button>
