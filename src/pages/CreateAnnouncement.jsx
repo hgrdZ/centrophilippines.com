@@ -324,16 +324,30 @@ function CreateAnnouncement() {
 
   return (
     <div
-      className="flex min-h-screen bg-no-repeat bg-center"
+      className="flex w-screen overflow-x-hidden"
       style={{
         backgroundImage: `url(${CentroAdminBg})`,
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />
+      <Sidebar />   
 
-      <main className="flex-1 ml-64 p-6 overflow-x-hidden">
-  <div className="w-full min-w-full max-w-none">
+      <main
+  className="flex-1 p-6 overflow-x-hidden"
+  style={{
+    marginLeft: "16rem", // same as ml-64
+    width: "calc(100vw - 16rem)",
+    maxWidth: "100vw",
+  }}
+>
+  <div
+    className="rounded-lg shadow-xl p-6 border-4 border-green-800"
+    style={{
+      backgroundColor: "#fff4d9",
+      width: "100%",
+    }}
+  >
+
           <div className="border-2 border-emerald-900 rounded-lg mb-2 p-2 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
