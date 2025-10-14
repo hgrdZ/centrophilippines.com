@@ -140,7 +140,7 @@ function CentroLogin({ setIsAuthenticated }) {
 
         {/* ✅ RIGHT SIDE (LOGIN FORM) */}
         <div className="w-1/2 flex flex-col items-center bg-gray-100 relative">
-          <div className="w-full flex flex-col items-center mt-20 px-4">
+          <div className="w-3/4 flex flex-col items-center mt-20 px-4">
             <img src={CentroLogo} className="w-full " alt="Centro Logo" />
 
             <h2 className="text-4xl font-extrabold text-emerald-800 mb-2">Hello, Admin!</h2>
