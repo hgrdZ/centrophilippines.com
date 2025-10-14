@@ -353,43 +353,50 @@ function CreateAnnouncement() {
           className="w-full p-3 rounded border bg-white border-green-300 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
         />
       </div>
-
       {/* Post Date & Priority */}
-          <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4 mb-4">
-          <div className="flex flex-col w-full">
-          <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
-          <div className="flex items-center border w-full bg-white border-green-300 rounded px-2">
-            <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
-            <input
-              type="datetime-local"
-              value={postDate}
-              onChange={(e) => setPostDate(e.target.value)}
-              className="w-full p-2 border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
-              style={{
-                colorScheme: 'light',
-                WebkitAppearance: 'none',
-                MozAppearance: 'textfield'
-              }}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col w-full">
-          <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-          <div className="flex items-center w-full border bg-white border-green-300 rounded px-2">
-            <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
-            <select
-              value={priorityType}
-              onChange={(e) => setPriorityType(e.target.value)}
-              className="w-full p-2 border-none focus:outline-none cursor-pointer"
-            >
-              <option value="">Select priority type</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-        </div>
-      </div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+  {/* Post Date */}
+  <div className="flex flex-col w-full">
+    <label className="block mb-2 font-semibold text-lg text-green-900">
+      Post Date & Time
+    </label>
+    <div className="flex items-center border bg-white border-green-300 rounded px-2 w-full">
+      <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
+      <input
+        type="datetime-local"
+        value={postDate}
+        onChange={(e) => setPostDate(e.target.value)}
+        className="flex-1 p-2 border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+        style={{
+          colorScheme: "light",
+          WebkitAppearance: "none",
+          MozAppearance: "textfield",
+        }}
+      />
+    </div>
+  </div>
+
+  {/* Priority Type */}
+  <div className="flex flex-col w-full">
+    <label className="block mb-2 font-semibold text-lg text-green-900">
+      Priority Type
+    </label>
+    <div className="flex items-center border bg-white border-green-300 rounded px-2 w-full">
+      <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
+      <select
+        value={priorityType}
+        onChange={(e) => setPriorityType(e.target.value)}
+        className="flex-1 p-2 border-none focus:outline-none cursor-pointer"
+      >
+        <option value="">Select priority type</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+  </div>
+</div>
+
 
       {/* Announcement Type */}
       <div className="mb-4">
@@ -447,16 +454,16 @@ function CreateAnnouncement() {
       </div>
 
       {/* File & Expiry Date */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div  className="flex flex-col w-full">
-          <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-          <div className="flex items-center w-full border bg-white border-green-300 rounded px-3">
+              <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
+    <div className="flex items-center border bg-white border-green-300 rounded px-3 w-full">
             <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
             <input
               type="file"
               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
               onChange={handleFileSelection}
-              className="w-1/2 px-4 py-2 border-none rounded bg-white focus:outline-none cursor-pointer"
+        className="flex-1 p-2 border-none bg-transparent focus:outline-none cursor-pointer"
             />
           </div>
           
@@ -507,14 +514,14 @@ function CreateAnnouncement() {
         </div>
         <div className="flex flex-col w-full">
           <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-          <div className="flex items-center border w-full bg-white border-green-300 rounded px-3">
+    <div className="flex items-center border bg-white border-green-300 rounded px-3 w-full">
             <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
             <input
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
               min={new Date().toISOString().split("T")[0]}
-              className="w-full p-2 border-none rounded bg-white focus:outline-none cursor-pointer"
+        className="flex-1 p-2 border-none bg-transparent focus:outline-none cursor-pointer"
             />
           </div>
         </div>
