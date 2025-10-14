@@ -4,9 +4,6 @@ import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import Sidebar from "../components/Sidebar";
 import supabase from "../config/supabaseClient";
 
-// REMOVED: OpenAI import and initialization
-// API calls will now go through our backend
-
 function ReviewAiScheduling() {
   const [volunteer, setVolunteer] = useState(null);
   const [eventDetails, setEventDetails] = useState(null);
@@ -25,11 +22,14 @@ function ReviewAiScheduling() {
   const [showSuccessApprove, setShowSuccessApprove] = useState(false);
   const [showSuccessReject, setShowSuccessReject] = useState(false);
   const [showSuccessAdjust, setShowSuccessAdjust] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [processedVolunteer, setProcessedVolunteer] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // IMPORTANT: Replace this with your actual backend URL
   const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+  const EMAIL_API_URL = 'http://localhost:5000';
 
   useEffect(() => {
     if (
@@ -48,6 +48,18 @@ function ReviewAiScheduling() {
       navigate("/review-application-event");
     }
   }, [location.state, navigate]);
+
+  // Auto-hide success modals after 3 seconds
+  useEffect(() => {
+    if (showSuccessApprove || showSuccessReject || showSuccessAdjust) {
+      const timer = setTimeout(() => {
+        setShowSuccessApprove(false);
+        setShowSuccessReject(false);
+        setShowSuccessAdjust(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessApprove, showSuccessReject, showSuccessAdjust]);
 
   const fetchAcceptedVolunteersCount = async (eventId) => {
     try {
@@ -121,7 +133,6 @@ function ReviewAiScheduling() {
     }
   };
 
-  // UPDATED: Now calls backend API instead of OpenAI directly
   const generateAiSuggestions = async (volunteerData, eventData) => {
     setIsLoading(true);
     try {
@@ -366,6 +377,37 @@ function ReviewAiScheduling() {
     });
   };
 
+  const sendRejectionEmail = async (volunteerEmail, volunteerName, eventTitle, ngoName, reason) => {
+    try {
+      console.log('📧 Sending rejection email to:', volunteerEmail);
+      const response = await fetch(`${EMAIL_API_URL}/api/send-reject-event`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: volunteerEmail,
+          volunteerName: volunteerName,
+          eventTitle: eventTitle,
+          ngoName: ngoName,
+          reason: reason
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Server responded with error:', response.status);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log('✓ Email sent successfully:', result);
+      return result.success;
+    } catch (error) {
+      console.error('✗ Error sending email:', error);
+      return false;
+    }
+  };
+
   const handlePreviousApplicant = () => {
     if (currentVolunteerIndex > 0 && allVolunteers.length > 0) {
       const prevVolunteer = allVolunteers[currentVolunteerIndex - 1];
@@ -392,6 +434,7 @@ function ReviewAiScheduling() {
   };
 
   const handleShowRejectModal = () => {
+    setRejectionReason("");
     setShowRejectModal(true);
   };
 
@@ -401,6 +444,7 @@ function ReviewAiScheduling() {
 
   const handleCloseRejectModal = () => {
     setShowRejectModal(false);
+    setRejectionReason("");
   };
 
   const handleConfirmApprove = async () => {
@@ -421,6 +465,7 @@ function ReviewAiScheduling() {
       setShowApproveModal(false);
       setShowSuccessApprove(true);
       setAcceptedVolunteersCount((prev) => prev + 1);
+      setProcessedVolunteer(volunteer);
 
       const updatedVolunteers = allVolunteers.filter(
         (v) => v.user_id !== volunteer.user_id
@@ -444,7 +489,29 @@ function ReviewAiScheduling() {
   };
 
   const handleConfirmReject = async () => {
+    if (!rejectionReason.trim()) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+
+    setIsSendingEmail(true);
+
     try {
+      const adminData = JSON.parse(localStorage.getItem("admin"));
+      if (!adminData) {
+        alert("Admin data not found. Please log in again.");
+        setIsSendingEmail(false);
+        return;
+      }
+
+      const { data: ngoData, error: ngoError } = await supabase
+        .from("NGO_Information")
+        .select("name")
+        .eq("admin_id", adminData.NGO_Information.admin_id)
+        .single();
+
+      const ngoName = ngoData?.name || adminData.NGO_Information.name || "Centro Organization";
+
       const { error: updateError } = await supabase
         .from("Event_User")
         .update({ status: "REJECTED" })
@@ -455,11 +522,23 @@ function ReviewAiScheduling() {
       if (updateError) {
         console.error("Error updating volunteer status:", updateError);
         alert("Failed to update status. Please try again.");
+        setIsSendingEmail(false);
         return;
       }
 
+      const volunteerFullName = `${volunteer.firstname} ${volunteer.lastname}`;
+      await sendRejectionEmail(
+        volunteer.email,
+        volunteerFullName,
+        eventDetails.event_title,
+        ngoName,
+        rejectionReason
+      );
+
       setShowRejectModal(false);
+      setIsSendingEmail(false);
       setShowSuccessReject(true);
+      setProcessedVolunteer(volunteer);
 
       const updatedVolunteers = allVolunteers.filter(
         (v) => v.user_id !== volunteer.user_id
@@ -479,6 +558,7 @@ function ReviewAiScheduling() {
     } catch (error) {
       console.error("Unexpected error during rejection:", error);
       alert("An unexpected error occurred. Please try again.");
+      setIsSendingEmail(false);
     }
   };
 
@@ -513,9 +593,9 @@ function ReviewAiScheduling() {
         .from("Event_User")
         .update({
           status: "ONGOING",
-          adjusted_time_slot: adjustedTimeSlot || null,
-          adjusted_duration: adjustedDuration || null,
-          adjusted_volunteer_type: adjustedVolunteerType || null,
+          adjusted_time_slot: adjustedTimeSlot,
+          adjusted_duration: adjustedDuration,
+          adjusted_volunteer_type: adjustedVolunteerType,
           adjustment_notes: `Schedule adjusted: ${adjustedTimeSlot} for ${adjustedDuration} as ${adjustedVolunteerType}`,
         })
         .eq("user_id", volunteer.user_id)
@@ -554,42 +634,9 @@ function ReviewAiScheduling() {
   };
 
   const handleRejectAdjusted = async () => {
-    try {
-      const { error: updateError } = await supabase
-        .from("Event_User")
-        .update({ status: "REJECTED" })
-        .eq("user_id", volunteer.user_id)
-        .eq("event_id", eventDetails.event_id)
-        .eq("status", "PENDING");
-
-      if (updateError) {
-        console.error("Error updating volunteer status:", updateError);
-        alert("Failed to update status. Please try again.");
-        return;
-      }
-
-      handleCloseAdjustModal();
-      setShowSuccessReject(true);
-
-      const updatedVolunteers = allVolunteers.filter(
-        (v) => v.user_id !== volunteer.user_id
-      );
-      setAllVolunteers(updatedVolunteers);
-
-      if (updatedVolunteers.length > 0) {
-        const nextIndex =
-          currentVolunteerIndex >= updatedVolunteers.length
-            ? 0
-            : currentVolunteerIndex;
-        const nextVolunteer = updatedVolunteers[nextIndex];
-        setVolunteer(nextVolunteer);
-        setCurrentVolunteerIndex(nextIndex);
-        generateAiSuggestions(nextVolunteer, eventDetails);
-      }
-    } catch (error) {
-      console.error("Unexpected error during rejection:", error);
-      alert("An unexpected error occurred. Please try again.");
-    }
+    setRejectionReason("");
+    handleCloseAdjustModal();
+    setShowRejectModal(true);
   };
 
   if (!volunteer || !eventDetails) {
@@ -847,7 +894,7 @@ function ReviewAiScheduling() {
         </div>
       </main>
 
-      {/* All modals remain the same as original */}
+      {/* Adjust Confirm Modal */}
       {showAdjustConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
@@ -922,6 +969,7 @@ function ReviewAiScheduling() {
         </div>
       )}
 
+      {/* Adjust Modal */}
       {showAdjustModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
@@ -1060,9 +1108,10 @@ function ReviewAiScheduling() {
         </div>
       )}
 
+      {/* Success Approve Modal */}
       {showSuccessApprove && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-500 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-500 p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
               <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1074,26 +1123,22 @@ function ReviewAiScheduling() {
               </h3>
               <p className="text-gray-700 mb-4">
                 <span className="font-bold">
-                  {volunteer?.firstname} {volunteer?.lastname}
+                  {processedVolunteer?.firstname} {processedVolunteer?.lastname}
                 </span>{" "}
                 has been approved for the event.
               </p>
-              <Link to="/review-application-event">
-                <button
-                  onClick={() => setShowSuccessApprove(false)}
-                  className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg border-2 border-emerald-700 hover:bg-emerald-700 transition-all duration-200 cursor-pointer"
-                >
-                  Back to Applications
-                </button>
-              </Link>
+              <div className="text-sm text-gray-500">
+                Auto-closing in 3 seconds...
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Success Reject Modal */}
       {showSuccessReject && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500 p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
               <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1105,29 +1150,22 @@ function ReviewAiScheduling() {
               </h3>
               <p className="text-gray-700 mb-4">
                 <span className="font-bold">
-                  {volunteer?.firstname} {volunteer?.lastname}
+                  {processedVolunteer?.firstname} {processedVolunteer?.lastname}
                 </span>{" "}
-                has been notified about the rejection.
+                has been notified about the rejection via email.
               </p>
-              <p className="text-sm text-gray-600 mb-4">
-                Status has been updated in the database.
-              </p>
-              <Link to="/review-application-event">
-                <button
-                  onClick={() => setShowSuccessReject(false)}
-                  className="bg-red-600 text-white font-bold py-2 px-6 rounded-lg border-2 border-red-700 hover:bg-red-700 transition-all duration-200 cursor-pointer"
-                >
-                  Back to Applications
-                </button>
-              </Link>
+              <div className="text-sm text-gray-500">
+                Auto-closing in 3 seconds...
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Success Adjust Modal */}
       {showSuccessAdjust && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
               <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1140,7 +1178,7 @@ function ReviewAiScheduling() {
               <p className="text-gray-700 mb-4">
                 The schedule for{" "}
                 <span className="font-bold">
-                  {volunteer?.firstname} {volunteer?.lastname}
+                  {processedVolunteer?.firstname} {processedVolunteer?.lastname}
                 </span>{" "}
                 has been successfully adjusted and approved.
               </p>
@@ -1152,19 +1190,15 @@ function ReviewAiScheduling() {
                   Type: {adjustedVolunteerType}
                 </p>
               </div>
-              <Link to="/review-application-event">
-                <button
-                  onClick={() => setShowSuccessAdjust(false)}
-                  className="bg-orange-600 text-white font-bold py-2 px-6 rounded-lg border-2 border-orange-700 hover:bg-orange-700 transition-all duration-200 cursor-pointer"
-                >
-                  Back to Applications
-                </button>
-              </Link>
+              <div className="text-sm text-gray-500">
+                Auto-closing in 3 seconds...
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Approve Modal */}
       {showApproveModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-900 p-6 max-w-md w-full mx-4">
@@ -1231,8 +1265,12 @@ function ReviewAiScheduling() {
         </div>
       )}
 
+      {/* Reject Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={(e) => e.target === e.currentTarget && handleCloseRejectModal()}
+        >
           <div className="bg-white rounded-2xl shadow-xl border-2 border-red-700 p-6 max-w-md w-full mx-4">
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
@@ -1272,31 +1310,71 @@ function ReviewAiScheduling() {
               </div>
             </div>
 
+            <div className="mb-4">
+              <label className="block text-emerald-900 font-bold mb-2 text-lg">
+                Reason for Rejection: <span className="text-red-700">*</span>
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Please provide a reason for rejecting this application..."
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:border-emerald-700 resize-none"
+                rows="4"
+                disabled={isSendingEmail}
+              />
+            </div>
+
             <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-700 rounded-lg p-3 mb-4">
               <p className="text-red-700 text-sm font-semibold leading-relaxed">
-                <span className="font-bold">Warning:</span> The volunteer
-                will be notified and cannot participate unless they apply
-                again.
+                <span className="font-bold">Warning:</span> The volunteer will receive an email notification with your reason.
               </p>
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={handleCloseRejectModal}
-                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 cursor-pointer"
+                disabled={isSendingEmail}
+                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmReject}
-                className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 cursor-pointer"
+                disabled={isSendingEmail}
+                className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                Yes, Reject
+                {isSendingEmail ? "Rejecting..." : "Yes, Reject"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slideIn {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
