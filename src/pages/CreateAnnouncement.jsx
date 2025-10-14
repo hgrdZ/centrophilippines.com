@@ -332,18 +332,18 @@ function CreateAnnouncement() {
     >
       <Sidebar />
 
-      <main className="flex-1 flex justify-center ml-64 p-4">
-        <div className="w-full max-w-6xl">
-          <div className="border-2 border-emerald-900 rounded-lg mb-2 p-2 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
+    <main className="flex-1 flex justify-center ml-64 p-4 sm:p-6">
+      <div className="w-full max-w-6xl rounded-2xl border-green-800 p-6 sm:p-8">
+        <div className="border-2 border-emerald-900 rounded-lg mb-2 p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
 
           <div
-            className="rounded-lg shadow-xl p-6 w-full border-4 border-green-800"
+          className="rounded-lg p-6 md:p-8 border-4 border-green-800 shadow-lg"
             style={{ backgroundColor: "#fff4d9" }}
           >
             {/* Title */}
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block mb-2 font-semibold text-lg text-green-900">Title</label>
               <input
                 type="text"
@@ -355,10 +355,10 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              <div className="flex flex-col max-w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
+              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
                   <input
                     type="datetime-local"
@@ -375,7 +375,7 @@ function CreateAnnouncement() {
               </div>
               <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
+              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
                   <select
                     value={priorityType}
@@ -394,7 +394,7 @@ function CreateAnnouncement() {
             {/* Announcement Type */}
             <div className="mb-4">
               <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type</label>
-              <div className="flex items-center border bg-white border-green-300 rounded px-3">
+            <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1">
                 <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2" />
                 <select
                   value={announcementType}
@@ -404,7 +404,7 @@ function CreateAnnouncement() {
                       setSelectedEvent(""); // Reset event selection if not "Event" type
                     }
                   }}
-                  className="w-full p-2 border-none focus:outline-none cursor-pointer"
+                className="flex-1 p-2 border-none focus:outline-none cursor-pointer bg-transparent"
                 >
                   <option value="">Select announcement type</option>
                   <option value="All">All (Organization-wide)</option>
@@ -447,22 +447,22 @@ function CreateAnnouncement() {
             </div>
 
             {/* File & Expiry Date */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-full">
+              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
                     onChange={handleFileSelection}
-                    className="w-full px-4 py-2 border-none rounded bg-white focus:outline-none cursor-pointer"
+                  className="flex-1 p-2 border-none focus:outline-none cursor-pointer bg-transparent"
                   />
                 </div>
                 
                 {/* File Preview Section */}
                 {selectedFile && (
-                  <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
                     <div className="text-center">
                       {filePreview ? (
                         // Image preview
@@ -510,14 +510,14 @@ function CreateAnnouncement() {
               </div>
               <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-full">
+              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
                   <input
                     type="date"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
                     min={new Date().toISOString().split("T")[0]}
-                    className="w-full p-2 border-none rounded bg-white focus:outline-none cursor-pointer"
+                  className="flex-1 p-2 border-none focus:outline-none cursor-pointer bg-transparent"
                   />
                 </div>
               </div>
