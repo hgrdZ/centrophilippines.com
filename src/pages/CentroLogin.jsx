@@ -4,6 +4,8 @@ import supabase from "../config/supabaseClient";
 
 function CentroLogin({ setIsAuthenticated }) {
   const navigate = useNavigate();
+
+  // ===================== STATES =====================
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -12,39 +14,40 @@ function CentroLogin({ setIsAuthenticated }) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Images from public folder (wrapped in useMemo to avoid ESLint warning)
+  // ===================== IMAGES =====================
+  // Use process.env.PUBLIC_URL for deployment-safe paths (works on Vercel, GitHub, etc.)
   const images = useMemo(
     () => [
-      "/images/volunteer1.png",
-      "/images/volunteer2.png",
-      "/images/volunteer3.png",
-      "/images/volunteer4.png",
-      "/images/volunteer5.png",
-      "/images/volunteer6.png",
-      "/images/volunteer7.png",
+      process.env.PUBLIC_URL + "/images/volunteer1.png",
+      process.env.PUBLIC_URL + "/images/volunteer2.png",
+      process.env.PUBLIC_URL + "/images/volunteer3.png",
+      process.env.PUBLIC_URL + "/images/volunteer4.png",
+      process.env.PUBLIC_URL + "/images/volunteer5.png",
+      process.env.PUBLIC_URL + "/images/volunteer6.png",
+      process.env.PUBLIC_URL + "/images/volunteer7.png",
     ],
     []
   );
 
-  const CentroLogo = "/images/CENTRO_Logo.png";
-  const LoginIcon = "/images/login.svg";
-  const PasswordIcon = "/images/password.svg";
-  const ShowPasswordIcon = "/images/showpassword.svg";
+  const CentroLogo = process.env.PUBLIC_URL + "/images/CENTRO_Logo.png";
+  const LoginIcon = process.env.PUBLIC_URL + "/images/login.svg";
+  const PasswordIcon = process.env.PUBLIC_URL + "/images/password.svg";
+  const ShowPasswordIcon = process.env.PUBLIC_URL + "/images/showpassword.svg";
 
-  // Animated image slideshow states
+  // ===================== SLIDESHOW STATES =====================
   const [currentImage, setCurrentImage] = useState(images[0]);
   const [nextImage, setNextImage] = useState(images[1]);
   const [fadeIn, setFadeIn] = useState(true);
 
-  // Smooth image transition every 10 seconds
+  // ===================== IMAGE SLIDESHOW EFFECT =====================
   useEffect(() => {
     const changeImage = () => {
-      setFadeIn(false); // start fade out
+      setFadeIn(false); // start fade-out animation
       setTimeout(() => {
         const randomIndex = Math.floor(Math.random() * images.length);
         setCurrentImage(nextImage);
         setNextImage(images[randomIndex]);
-        setFadeIn(true); // fade in next
+        setFadeIn(true); // fade-in next image
       }, 500);
     };
 
@@ -52,7 +55,7 @@ function CentroLogin({ setIsAuthenticated }) {
     return () => clearInterval(interval);
   }, [nextImage, images]);
 
-  // Load saved credentials on mount
+  // ===================== LOAD SAVED CREDENTIALS =====================
   useEffect(() => {
     const savedLoginId = localStorage.getItem("rememberedLoginId");
     const savedPassword = localStorage.getItem("rememberedPassword");
@@ -65,6 +68,7 @@ function CentroLogin({ setIsAuthenticated }) {
     }
   }, []);
 
+  // ===================== HANDLE LOGIN =====================
   const handleLogin = async () => {
     setError("");
 
@@ -93,6 +97,7 @@ function CentroLogin({ setIsAuthenticated }) {
         setError("Invalid Admin ID or Password.");
         setLoading(false);
       } else {
+        // Save credentials if "Remember Me" is checked
         if (rememberMe) {
           localStorage.setItem("rememberedLoginId", loginId);
           localStorage.setItem("rememberedPassword", password);
@@ -103,6 +108,7 @@ function CentroLogin({ setIsAuthenticated }) {
           localStorage.removeItem("rememberMe");
         }
 
+        // Simulated loading animation
         let i = 0;
         const interval = setInterval(() => {
           i += 10;
@@ -124,11 +130,13 @@ function CentroLogin({ setIsAuthenticated }) {
     }
   };
 
+  // ===================== RETURN JSX =====================
   return (
     <div className="h-screen w-screen overflow-hidden relative font-montserrat bg-white opacity-100">
       <div className="flex h-full w-full">
-        {/* LEFT SIDE - Animated Auto-Slideshow */}
+        {/* LEFT SIDE - Auto Slideshow */}
         <div className="w-1/2 relative hidden md:flex items-center justify-center overflow-hidden">
+          {/* Current Image */}
           <img
             src={currentImage}
             alt="Volunteer"
@@ -136,6 +144,8 @@ function CentroLogin({ setIsAuthenticated }) {
               fadeIn ? "opacity-100" : "opacity-0"
             }`}
           />
+
+          {/* Next Image */}
           <img
             src={nextImage}
             alt="Volunteer next"
@@ -143,20 +153,20 @@ function CentroLogin({ setIsAuthenticated }) {
               fadeIn ? "opacity-0" : "opacity-100"
             }`}
           />
+
+          {/* Overlay */}
           <div className="absolute inset-0 bg-black/20"></div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE - Login Form */}
         <div className="w-full md:w-1/2 flex flex-col items-center bg-gray-100 opacity-90 relative">
           <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center mt-12 px-2">
             <img src={CentroLogo} className="mt-28 w-64 md:w-1/2" alt="Centro Logo" />
 
-            <h2 className="text-4xl font-extrabold font-montserrat text-emerald-800 mb-3">
-              Hello, Admin!
-            </h2>
+            <h2 className="text-4xl font-extrabold text-emerald-800 mb-3">Hello, Admin!</h2>
             <p className="text-emerald-800 mb-6 text-base">Welcome to CENTRO!</p>
 
-            {/* Username */}
+            {/* Admin ID Input */}
             <div className="w-3/4 mb-4">
               <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
                 <input
@@ -170,7 +180,7 @@ function CentroLogin({ setIsAuthenticated }) {
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password Input */}
             <div className="w-3/4 mb-3">
               <div className="flex items-center bg-white rounded-xl border-2 border-gray-200 px-5 py-3 focus-within:border-emerald-700 transition-all shadow-sm">
                 <input
@@ -194,7 +204,7 @@ function CentroLogin({ setIsAuthenticated }) {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me + Forgot Password */}
             <div className="w-3/4 flex justify-between items-center mt-1 mb-6">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -203,14 +213,9 @@ function CentroLogin({ setIsAuthenticated }) {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-emerald-700 bg-white border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
                 />
-                <span className="ml-2 text-sm text-gray-700 font-medium">
-                  Remember Me
-                </span>
+                <span className="ml-2 text-sm text-gray-700 font-medium">Remember Me</span>
               </label>
-              <Link
-                to="/forgot-password"
-                className="text-sm text-gray-700 hover:underline font-medium"
-              >
+              <Link to="/forgot-password" className="text-sm text-gray-700 hover:underline font-medium">
                 Forgot Password?
               </Link>
             </div>
@@ -222,7 +227,7 @@ function CentroLogin({ setIsAuthenticated }) {
               </div>
             )}
 
-            {/* Sign In Button */}
+            {/* Login Button */}
             <button
               onClick={handleLogin}
               className="w-3/4 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-xl transition duration-300 shadow-md cursor-pointer"
