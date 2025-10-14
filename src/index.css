@@ -802,7 +802,7 @@
     border-radius: 28px;
   }
   .rounded-full {
-    border-radius: calc(infinity * 1px);
+    border-radius: calc(width * 1px);
   }
   .rounded-lg {
     border-radius: var(--radius-lg);
