@@ -16,18 +16,16 @@ function CentroLogin({ setIsAuthenticated }) {
 
   // ===================== IMAGES =====================
   // Use process.env.PUBLIC_URL for deployment-safe paths (works on Vercel, GitHub, etc.)
-  const images = useMemo(
-    () => [
-      process.env.PUBLIC_URL + "/images/volunteer1.png",
-      process.env.PUBLIC_URL + "/images/volunteer2.png",
-      process.env.PUBLIC_URL + "/images/volunteer3.png",
-      process.env.PUBLIC_URL + "/images/volunteer4.png",
-      process.env.PUBLIC_URL + "/images/volunteer5.png",
-      process.env.PUBLIC_URL + "/images/volunteer6.png",
-      process.env.PUBLIC_URL + "/images/volunteer7.png",
-    ],
-    []
-  );
+ const images = [
+  "/images/volunteer1.png",
+  "/images/volunteer2.png",
+  "/images/volunteer3.png",
+  "/images/volunteer4.png",
+  "/images/volunteer5.png",
+  "/images/volunteer6.png",
+  "/images/volunteer7.png",
+];
+
 
   const CentroLogo = process.env.PUBLIC_URL + "/images/CENTRO_Logo.png";
   const LoginIcon = process.env.PUBLIC_URL + "/images/login.svg";
