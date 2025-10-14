@@ -333,7 +333,7 @@ function CreateAnnouncement() {
       <Sidebar />
 
     <main className="flex-1 flex justify-center ml-64 p-4 sm:p-6">
-      <div className="w-full max-w-6xl rounded-2xl border-green-800 p-6 sm:p-8">
+      <div className="w-full max-w-6xl rounded-2xl border-green-800 p-2 sm:p-8">
         <div className="border-2 border-emerald-900 rounded-lg mb-2 p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
@@ -355,7 +355,7 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-2 gap-6 mb-6">
             <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
               <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
@@ -447,7 +447,7 @@ function CreateAnnouncement() {
             </div>
 
             {/* File & Expiry Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-2 gap-6 mb-8">
               <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
               <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
