@@ -333,7 +333,7 @@ function CreateAnnouncement() {
       <Sidebar />
 
     <main className="flex-1 flex justify-center ml-64 p-4 sm:p-6">
-      <div className="p-8 rounded-2xl shadow-md border border-green-200 max-w-5xl mx-auto mt-6">
+      <div className="w-full max-w-6xl rounded-2xl border-green-800 p-2 sm:p-8">
         <div className="border-2 border-emerald-900 rounded-lg mb-2 p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
@@ -355,7 +355,7 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
     <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
@@ -364,7 +364,7 @@ function CreateAnnouncement() {
                     type="datetime-local"
                     value={postDate}
                     onChange={(e) => setPostDate(e.target.value)}
-        className="w-full border border-green-300 rounded-md p-2 focus:ring-2 focus:ring-green-600 outline-none"
+                    className="w-full p-2 border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
                     style={{
                       colorScheme: 'light',
                       WebkitAppearance: 'none',
@@ -446,7 +446,7 @@ function CreateAnnouncement() {
             </div>
 
             {/* File & Expiry Date */}
-<div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
   <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
     <div className="flex items-center border bg-white border-green-300 rounded px-3 py-3 w-full">
@@ -455,7 +455,7 @@ function CreateAnnouncement() {
                     type="file"
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
                     onChange={handleFileSelection}
-        className="w-full border border-green-300 rounded-md p-2 focus:ring-2 focus:ring-green-600 outline-none file:mr-4 file:py-1 file:px-3 file:border-0 file:rounded-md file:bg-green-100 file:text-green-800 hover:file:bg-green-200"
+        className="flex-1 text-gray-700 bg-transparent border-none focus:outline-none cursor-pointer"
                   />
                 </div>
                 
@@ -516,7 +516,7 @@ function CreateAnnouncement() {
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
                     min={new Date().toISOString().split("T")[0]}
-        className="w-full border border-green-300 rounded-md p-2 focus:ring-2 focus:ring-green-600 outline-none"
+                  className="flex-1 p-2 border-none focus:outline-none cursor-pointer bg-transparent"
                   />
                 </div>
               </div>
