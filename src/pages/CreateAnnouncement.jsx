@@ -355,8 +355,8 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 w-full">
-            <div className="flex flex-col w-full">
+<div className="w-full flex flex-col md:flex-row gap-4 mb-6">
+  <div className="flex flex-col flex-1">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
               <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
@@ -373,9 +373,9 @@ function CreateAnnouncement() {
                   />
                 </div>
               </div>
-              <div className="flex flex-col w-full">
+  <div className="flex flex-col flex-1">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
+    <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
                   <select
                     value={priorityType}
@@ -447,8 +447,8 @@ function CreateAnnouncement() {
             </div>
 
             {/* File & Expiry Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4 mb-8">
-              <div className="flex flex-col w-full">
+<div className="w-full flex flex-col md:flex-row gap-4 mb-8">
+  <div className="flex flex-col flex-1">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
               <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
@@ -508,9 +508,9 @@ function CreateAnnouncement() {
                   </div>
                 )}
               </div>
-              <div className="flex flex-col w-full">
+  <div className="flex flex-col flex-1">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-              <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
+    <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
                   <input
                     type="date"
