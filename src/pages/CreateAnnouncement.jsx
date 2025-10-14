@@ -355,8 +355,8 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 w-full">
-              <div className="flex flex-col w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <div className="flex flex-col max-w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
                 <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
@@ -375,7 +375,7 @@ function CreateAnnouncement() {
               </div>
               <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-                <div className="flex items-center border bg-white border-green-300 rounded px-3 w-full">
+                <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
                   <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
                   <select
                     value={priorityType}
