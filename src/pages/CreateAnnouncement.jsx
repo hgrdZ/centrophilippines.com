@@ -401,7 +401,7 @@ function CreateAnnouncement() {
             {/* Announcement Type */}
   <div className="flex-1 min-w-[250px]">
               <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type</label>
-    <div className="flex items-center border bg-white border-green-300 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center mb-2 border bg-white border-green-300 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2" />
                 <select
                   value={announcementType}
