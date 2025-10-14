@@ -546,7 +546,7 @@ function CreateAnnouncement() {
                     onCancel: () => setModalConfig(null),
                   })
                 }
-                className="bg-green-700 text-white px-8 py-3 rounded-full border-green-800 border-2 hover:bg-green-900 disabled:opacity-50 cursor-pointer font-semibold"
+                className="bg-green-700 text-white px-6 py-2 rounded-2xl border-green-800 border-2 hover:bg-green-900 disabled:opacity-50 cursor-pointer font-semibold"
               >
                 {loading ? "Publishing..." : "Publish Announcement"}
               </button>
@@ -563,7 +563,7 @@ function CreateAnnouncement() {
                     onCancel: () => setModalConfig(null),
                   })
                 }
-                className="bg-red-600 text-white px-8 py-3 rounded-full border-red-700 border-2 hover:bg-red-700 cursor-pointer font-semibold"
+                className="bg-red-600 text-white px-6 py-2 rounded-2xl border-red-700 border-2 hover:bg-red-700 cursor-pointer font-semibold"
               >
                 Discard
               </button>

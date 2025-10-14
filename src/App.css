@@ -802,7 +802,7 @@
     border-radius: 28px;
   }
   .rounded-full {
-    border-radius: calc(100%);
+    border-radius: calc(infinity * 1px);
   }
   .rounded-lg {
     border-radius: var(--radius-lg);
@@ -1492,7 +1492,7 @@
   .after\:rounded-full {
     &::after {
       content: var(--tw-content);
-      border-radius: calc(width * 1px);
+      border-radius: calc(infinity * 1px);
     }
   }
   .after\:bg-white {
