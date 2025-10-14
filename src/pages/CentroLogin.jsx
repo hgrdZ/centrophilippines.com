@@ -15,45 +15,39 @@ function CentroLogin({ setIsAuthenticated }) {
   const [progress, setProgress] = useState(0);
 
   // ===================== IMAGES =====================
-  // Use process.env.PUBLIC_URL for deployment-safe paths (works on Vercel, GitHub, etc.)
   const images = useMemo(
     () => [
-      process.env.PUBLIC_URL + "/images/volunteer1.png",
-      process.env.PUBLIC_URL + "/images/volunteer2.png",
-      process.env.PUBLIC_URL + "/images/volunteer3.png",
-      process.env.PUBLIC_URL + "/images/volunteer4.png",
-      process.env.PUBLIC_URL + "/images/volunteer5.png",
-      process.env.PUBLIC_URL + "/images/volunteer6.png",
-      process.env.PUBLIC_URL + "/images/volunteer7.png",
+      `${process.env.PUBLIC_URL}/images/volunteer1.png`,
+      `${process.env.PUBLIC_URL}/images/volunteer2.png`,
+      `${process.env.PUBLIC_URL}/images/volunteer3.png`,
+      `${process.env.PUBLIC_URL}/images/volunteer4.png`,
+      `${process.env.PUBLIC_URL}/images/volunteer5.png`,
+      `${process.env.PUBLIC_URL}/images/volunteer6.png`,
+      `${process.env.PUBLIC_URL}/images/volunteer7.png`,
     ],
     []
   );
 
-  const CentroLogo = process.env.PUBLIC_URL + "/images/CENTRO_Logo.png";
-  const LoginIcon = process.env.PUBLIC_URL + "/images/login.svg";
-  const PasswordIcon = process.env.PUBLIC_URL + "/images/password.svg";
-  const ShowPasswordIcon = process.env.PUBLIC_URL + "/images/showpassword.svg";
+  const CentroLogo = `${process.env.PUBLIC_URL}/images/CENTRO_Logo.png`;
+  const LoginIcon = `${process.env.PUBLIC_URL}/images/login.svg`;
+  const PasswordIcon = `${process.env.PUBLIC_URL}/images/password.svg`;
+  const ShowPasswordIcon = `${process.env.PUBLIC_URL}/images/showpassword.svg`;
 
   // ===================== SLIDESHOW STATES =====================
-  const [currentImage, setCurrentImage] = useState(images[0]);
-  const [nextImage, setNextImage] = useState(images[1]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [fadeIn, setFadeIn] = useState(true);
 
   // ===================== IMAGE SLIDESHOW EFFECT =====================
   useEffect(() => {
-    const changeImage = () => {
-      setFadeIn(false); // start fade-out animation
+    const interval = setInterval(() => {
+      setFadeIn(false);
       setTimeout(() => {
-        const randomIndex = Math.floor(Math.random() * images.length);
-        setCurrentImage(nextImage);
-        setNextImage(images[randomIndex]);
-        setFadeIn(true); // fade-in next image
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+        setFadeIn(true);
       }, 500);
-    };
-
-    const interval = setInterval(changeImage, 10000);
+    }, 8000);
     return () => clearInterval(interval);
-  }, [nextImage, images]);
+  }, [images.length]);
 
   // ===================== LOAD SAVED CREDENTIALS =====================
   useEffect(() => {
@@ -97,7 +91,6 @@ function CentroLogin({ setIsAuthenticated }) {
         setError("Invalid Admin ID or Password.");
         setLoading(false);
       } else {
-        // Save credentials if "Remember Me" is checked
         if (rememberMe) {
           localStorage.setItem("rememberedLoginId", loginId);
           localStorage.setItem("rememberedPassword", password);
@@ -108,7 +101,6 @@ function CentroLogin({ setIsAuthenticated }) {
           localStorage.removeItem("rememberMe");
         }
 
-        // Simulated loading animation
         let i = 0;
         const interval = setInterval(() => {
           i += 10;
@@ -125,6 +117,7 @@ function CentroLogin({ setIsAuthenticated }) {
         }, 150);
       }
     } catch (err) {
+      console.error(err);
       setError("Something went wrong. Please try again.");
       setLoading(false);
     }
@@ -132,33 +125,21 @@ function CentroLogin({ setIsAuthenticated }) {
 
   // ===================== RETURN JSX =====================
   return (
-    <div className="h-screen w-screen overflow-hidden relative font-montserrat bg-white opacity-100">
+    <div className="h-screen w-screen overflow-hidden relative font-montserrat bg-white">
       <div className="flex h-full w-full">
-        {/* LEFT SIDE - Auto Slideshow */}
-<div className="w-1/2 relative sm:flex hidden items-center justify-center overflow-hidden">
-          {/* Current Image */}
+        {/* ✅ LEFT SIDE SLIDESHOW */}
+        <div className="hidden md:flex w-1/2 relative items-center justify-center overflow-hidden bg-gray-100">
           <img
-            src={currentImage}
+            src={images[currentIndex]}
             alt="Volunteer"
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
               fadeIn ? "opacity-100" : "opacity-0"
             }`}
           />
-
-          {/* Next Image */}
-          <img
-            src={nextImage}
-            alt="Volunteer next"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
-              fadeIn ? "opacity-0" : "opacity-100"
-            }`}
-          />
-
-          {/* Overlay */}
           <div className="absolute inset-0 bg-black/20"></div>
         </div>
 
-        {/* RIGHT SIDE - Login Form */}
+        {/* ✅ RIGHT SIDE LOGIN FORM */}
         <div className="w-full md:w-1/2 flex flex-col items-center bg-gray-100 opacity-90 relative">
           <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center mt-12 px-2">
             <img src={CentroLogo} className="mt-28 w-64 md:w-1/2" alt="Centro Logo" />
@@ -215,7 +196,10 @@ function CentroLogin({ setIsAuthenticated }) {
                 />
                 <span className="ml-2 text-sm text-gray-700 font-medium">Remember Me</span>
               </label>
-              <Link to="/forgot-password" className="text-sm text-gray-700 hover:underline font-medium">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-gray-700 hover:underline font-medium"
+              >
                 Forgot Password?
               </Link>
             </div>
@@ -238,7 +222,7 @@ function CentroLogin({ setIsAuthenticated }) {
         </div>
       </div>
 
-      {/* LOADING SCREEN */}
+      {/* ✅ LOADING SCREEN */}
       {loading && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
           <img src={CentroLogo} alt="Centro Logo" className="w-32 mb-4 animate-pulse" />
