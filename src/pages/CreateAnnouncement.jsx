@@ -356,7 +356,7 @@ function CreateAnnouncement() {
 
       {/* Post Date & Priority */}
           <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4 mb-4">
-          <div>
+          <div className="flex flex-col w-full">
           <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
           <div className="flex items-center border w-full bg-white border-green-300 rounded px-2">
             <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
@@ -373,7 +373,7 @@ function CreateAnnouncement() {
             />
           </div>
         </div>
-        <div>
+        <div className="flex flex-col w-full">
           <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
           <div className="flex items-center w-full border bg-white border-green-300 rounded px-2">
             <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
@@ -447,8 +447,8 @@ function CreateAnnouncement() {
       </div>
 
       {/* File & Expiry Date */}
-      <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-6 mb-6">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div  className="flex flex-col w-full">
           <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
           <div className="flex items-center w-full border bg-white border-green-300 rounded px-3">
             <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
@@ -505,7 +505,7 @@ function CreateAnnouncement() {
             </div>
           )}
         </div>
-        <div>
+        <div className="flex flex-col w-full">
           <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
           <div className="flex items-center border w-full bg-white border-green-300 rounded px-3">
             <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
