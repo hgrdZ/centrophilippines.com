@@ -355,40 +355,48 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="flex flex-col w-full">
-                <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
-    <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
-                  <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
-                  <input
-                    type="datetime-local"
-                    value={postDate}
-                    onChange={(e) => setPostDate(e.target.value)}
-                    className="w-full p-2 border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
-                    style={{
-                      colorScheme: 'light',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'textfield'
-                    }}
-                  />
-                </div>
-              </div>
-                <div className="flex flex-col w-full">
-                <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-                  <div className="flex items-center border bg-white border-green-300 rounded px-3 py-3 w-full">
-                  <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
-                  <select
-                    value={priorityType}
-                    onChange={(e) => setPriorityType(e.target.value)}
-                    className="flex-1 text-gray-700 bg-transparent border-none focus:outline-none cursor-pointer">
-                    <option value="">Select priority type</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+<div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+  {/* Post Date & Time */}
+  <div className="flex flex-col w-full">
+    <label className="block mb-2 font-semibold text-lg text-green-900">
+      Post Date & Time
+    </label>
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+      <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2 opacity-70" />
+      <input
+        type="datetime-local"
+        value={postDate}
+        onChange={(e) => setPostDate(e.target.value)}
+        className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+        style={{
+          colorScheme: "light",
+          WebkitAppearance: "none",
+          MozAppearance: "textfield",
+        }}
+      />
+    </div>
+  </div>
+
+  {/* Priority Type */}
+  <div className="flex flex-col w-full">
+    <label className="block mb-2 font-semibold text-lg text-green-900">
+      Priority Type
+    </label>
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+      <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2 opacity-70" />
+      <select
+        value={priorityType}
+        onChange={(e) => setPriorityType(e.target.value)}
+        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+      >
+        <option value="">Select priority type</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+  </div>
+</div>
 
             {/* Announcement Type */}
             <div className="mb-4">
@@ -445,83 +453,84 @@ function CreateAnnouncement() {
               />
             </div>
 
-            {/* File & Expiry Date */}
-<div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+           {/* File & Expiry Date */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  {/* Attach File */}
   <div className="flex flex-col w-full">
-                <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-    <div className="flex items-center border bg-white border-green-300 rounded px-3 py-3 w-full">
-                  <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
-                    onChange={handleFileSelection}
-        className="flex-1 text-gray-700 bg-transparent border-none focus:outline-none cursor-pointer"
-                  />
-                </div>
-                
-                {/* File Preview Section */}
-                {selectedFile && (
-                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                    <div className="text-center">
-                      {filePreview ? (
-                        // Image preview
-                        <div>
-                          <img 
-                            src={filePreview} 
-                            alt="Preview" 
-                            className="max-w-full max-h-32 object-contain mx-auto rounded border"
-                          />
-                          <p className="text-sm text-gray-600 mt-2 font-medium">
-                            {selectedFile.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      ) : (
-                        // File icon preview
-                        <div>
-                          {getFileIcon(selectedFile.name)}
-                          <p className="text-sm text-gray-700 font-medium">
-                            {selectedFile.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedFile(null);
-                          setFilePreview(null);
-                          // Reset the file input
-                          const fileInput = document.querySelector('input[type="file"]');
-                          if (fileInput) fileInput.value = '';
-                        }}
-                        className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium"
-                      >
-                        Remove File
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col w-full">
-              <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-    <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
-                  <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
-                  <input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                  className="flex-1 p-2 border-none focus:outline-none cursor-pointer bg-transparent"
-                  />
-                </div>
-              </div>
-            </div>
+    <label className="block mb-2 font-semibold text-lg text-green-900">
+      Attach File (Optional)
+    </label>
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+      <img src={FileIcon} alt="File" className="w-5 h-5 mr-2 opacity-70" />
+      <input
+        type="file"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
+        onChange={handleFileSelection}
+        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+      />
+    </div>
 
+    {/* File Preview */}
+    {selectedFile && (
+      <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+        {filePreview ? (
+          <div>
+            <img
+              src={filePreview}
+              alt="Preview"
+              className="max-w-full max-h-32 object-contain mx-auto rounded border"
+            />
+            <p className="text-sm text-gray-600 mt-2 font-medium">
+              {selectedFile.name}
+            </p>
+            <p className="text-xs text-gray-500">
+              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+            </p>
+          </div>
+        ) : (
+          <div>
+            {getFileIcon(selectedFile.name)}
+            <p className="text-sm text-gray-700 font-medium">
+              {selectedFile.name}
+            </p>
+            <p className="text-xs text-gray-500">
+              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+            </p>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedFile(null);
+            setFilePreview(null);
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) fileInput.value = "";
+          }}
+          className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium"
+        >
+          Remove File
+        </button>
+      </div>
+    )}
+  </div>
+
+  {/* Expiry Date */}
+  <div className="flex flex-col w-full">
+    <label className="block mb-2 font-semibold text-lg text-green-900">
+      Expiry Date (Optional)
+    </label>
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+      <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2 opacity-70" />
+      <input
+        type="date"
+        value={expiryDate}
+        onChange={(e) => setExpiryDate(e.target.value)}
+        min={new Date().toISOString().split("T")[0]}
+        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+      />
+    </div>
+  </div>
+</div>
             {/* Buttons with Confirmation */}
             <div className="flex flex-wrap gap-6 justify-center text-lg pb-6">
               <button
