@@ -355,13 +355,13 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-<div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div className="w-full flex flex-wrap gap-6 mb-6">
   {/* Post Date & Time */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[250px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Post Date & Time
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2 opacity-70" />
       <input
         type="datetime-local"
@@ -378,11 +378,11 @@ function CreateAnnouncement() {
   </div>
 
   {/* Priority Type */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[200px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Priority Type
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2 opacity-70" />
       <select
         value={priorityType}
@@ -399,9 +399,9 @@ function CreateAnnouncement() {
 </div>
 
             {/* Announcement Type */}
-            <div className="mb-4">
+  <div className="flex-1 min-w-[250px]">
               <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type</label>
-            <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1">
+    <div className="flex items-center border bg-white border-green-300 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2" />
                 <select
                   value={announcementType}
@@ -411,7 +411,7 @@ function CreateAnnouncement() {
                       setSelectedEvent(""); // Reset event selection if not "Event" type
                     }
                   }}
-                className="flex-1 p-2 border-none focus:outline-none cursor-pointer bg-transparent"
+        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
                 >
                   <option value="">Select announcement type</option>
                   <option value="All">All (Organization-wide)</option>
@@ -454,13 +454,13 @@ function CreateAnnouncement() {
             </div>
 
            {/* File & Expiry Date */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<div className="w-full flex flex-wrap gap-6 mb-8">
   {/* Attach File */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[280px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Attach File (Optional)
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={FileIcon} alt="File" className="w-5 h-5 mr-2 opacity-70" />
       <input
         type="file"
@@ -515,11 +515,11 @@ function CreateAnnouncement() {
   </div>
 
   {/* Expiry Date */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[250px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Expiry Date (Optional)
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2 opacity-70" />
       <input
         type="date"
