@@ -617,12 +617,12 @@ function CreateEvent() {
       </div>
 
       {/* Date & Time Container */}
-      <div className="mb-4 flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+<div className="mb-4 flex flex-col md:flex-row items-start md:items-center gap-6">
+  <div className="flex items-center w-full md:w-1/2">
+          <label className="block font-semibold text-lg text-green-800 w-32">
             Date
           </label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center border bg-white border-green-300 rounded px-3 flex-1">
             <img src={DateIcon} alt="Date" className="w-5 h-5 mr-2" />
             <input
               type="date"
@@ -634,11 +634,11 @@ function CreateEvent() {
           </div>
         </div>
 
-        <div className="flex-1">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+        <div className="flex items-center w-full md:w-1/2">
+          <label className="block font-semibold text-lg text-green-800 w-32">
             Time
           </label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center border bg-white border-green-300 rounded px-3 flex-1">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={startTime}
@@ -714,9 +714,9 @@ function CreateEvent() {
       </div>
 
       {/* Volunteers Limit and Call Time */}
-      <div className="mb-4 flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+      <div className="mb-4 flex flex-col md:flex-row items-start md:items-center gap-6">
+        <div className="flex items-center w-full md:w-1/2">
+          <label className="block font-semibold text-lg text-green-800 w-48">
             Volunteers Limit
           </label>
           <input
@@ -725,15 +725,15 @@ function CreateEvent() {
             value={volunteersLimit}
             onChange={(e) => setVolunteersLimit(e.target.value)}
             min="1"
-            className="w-full px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer"
+            className="flex-1 px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer"
           />
         </div>
 
-        <div className="flex-1">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+        <div className="flex items-center w-full md:w-1/2">
+          <label className="block font-semibold text-lg text-green-800 w-32">
             Call Time
           </label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center border bg-white border-green-300 rounded px-3 flex-1">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={callTime}
@@ -786,8 +786,8 @@ function CreateEvent() {
       </div>
 
       {/* Upload Poster & Volunteer Opportunities */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
+      <div className="mb-6 flex flex-col md:flex-row items-start md:items-stretch gap-6">
+        <div className="w-full md:w-1/2">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Upload Event Poster/Image
           </label>
@@ -835,11 +835,11 @@ function CreateEvent() {
           )}
         </div>
 
-        <div>
+        <div className="w-full md:w-1/2">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Volunteer Opportunities
           </label>
-          <div className="border bg-white border-green-300 rounded p-3">
+          <div className="border bg-white border-green-300 rounded p-3 h-full">
             <div className="flex items-center mb-2">
               <img
                 src={OpportunitiesIcon}
@@ -1076,7 +1076,7 @@ function CreateEvent() {
         <div className="flex gap-3">
           <button
             onClick={goToStep1}
-            className="bg-cyan-500 text-white px-6 py-2 rounded-full hover:bg-cyan-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             Edit
           </button>
@@ -1090,7 +1090,7 @@ function CreateEvent() {
               },
               onCancel: () => setModalConfig(null),
             })}
-            className="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             Discard
           </button>
