@@ -355,7 +355,7 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
               <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
@@ -447,7 +447,7 @@ function CreateAnnouncement() {
             </div>
 
             {/* File & Expiry Date */}
-          <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               <div className="flex flex-col w-full">
                 <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
               <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1 w-full">
