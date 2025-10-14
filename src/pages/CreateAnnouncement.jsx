@@ -358,7 +358,7 @@ function CreateAnnouncement() {
       <div className="grid grid-cols-1 md:grid-cols-2 w-full gap-4 mb-4">
         <div>
           <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-2">
+          <div className="flex items-center border w-full bg-white border-green-300 rounded px-2">
             <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2" />
             <input
               type="datetime-local"
@@ -375,7 +375,7 @@ function CreateAnnouncement() {
         </div>
         <div>
           <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-          <div className="flex items-center w-full border bg-white border-green-300 rounded px-2">
+          <div className="flex items-center w-1/2 border bg-white border-green-300 rounded px-2">
             <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
             <select
               value={priorityType}
@@ -450,13 +450,13 @@ function CreateAnnouncement() {
       <div className="grid grid-cols-1 lg:grid-cols-2 w-full gap-6 mb-6">
         <div>
           <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-          <div className="flex items-center w-full border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center w-1/2 border bg-white border-green-300 rounded px-3">
             <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
             <input
               type="file"
               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"
               onChange={handleFileSelection}
-              className="w-full px-4 py-2 border-none rounded bg-white focus:outline-none cursor-pointer"
+              className="w-1/2 px-4 py-2 border-none rounded bg-white focus:outline-none cursor-pointer"
             />
           </div>
           
@@ -507,7 +507,7 @@ function CreateAnnouncement() {
         </div>
         <div>
           <label className="block mb-2 font-semibold text-lg text-green-900">Expiry Date (Optional)</label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center border w-1/2 bg-white border-green-300 rounded px-3">
             <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2" />
             <input
               type="date"
