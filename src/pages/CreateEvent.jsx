@@ -786,18 +786,18 @@ function CreateEvent() {
       </div>
 
       {/* Upload Poster & Volunteer Opportunities */}
-<div className="mb-8 flex flex-col md:flex-row gap-6">
-  <div className="flex-1">
+<div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="flex flex-col">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Upload Event Poster/Image
           </label>
-          <div className="flex items-center border bg-white border-gray-300 rounded px-3">
+    <div className="flex items-center border bg-white border-gray-300 rounded px-3">
             <img src={FileIcon} alt="Upload" className="w-5 h-5 mr-2" />
             <input
               type="file"
               accept={supportedImageTypes.join(',')}
               onChange={handleFileSelect}
-      className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+        className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <p className="text-xs text-green-700 mt-1">
@@ -835,11 +835,11 @@ function CreateEvent() {
           )}
         </div>
 
-  <div className="flex-1">
+  <div className="flex flex-col">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Volunteer Opportunities
           </label>
-          <div className="border bg-white border-gray-300 rounded p-3">
+    <div className="border bg-white border-gray-300 rounded p-3 flex-1">
             <div className="flex items-center mb-2">
               <img
                 src={OpportunitiesIcon}
@@ -848,9 +848,10 @@ function CreateEvent() {
               />
               <span className="text-sm font-medium">Select all that apply:</span>
             </div>
-            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+      <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
               {opportunityOptions.map((option) => (
-                <label key={option} className="flex items-center text-sm cursor-pointer group hover:bg-green-50 p-2 rounded transition-colors">
+                <label key={option} 
+            className="flex items-center text-sm cursor-pointer group hover:bg-green-50 p-2 rounded transition-colors">
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
