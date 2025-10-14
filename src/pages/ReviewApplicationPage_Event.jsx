@@ -344,9 +344,9 @@ export default function ReviewApplicationEventPage() {
             )}
 
             {pendingApplications.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
                 {/* Applicant List - 2 columns out of 3 */}
-                <div className="md:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+                <div className="md:col-span-2 bg-white rounded-lg w-full h-full shadow overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
                     <h3 className="text-lg font-semibold text-emerald-900">
                       Applicant List
@@ -436,7 +436,7 @@ export default function ReviewApplicationEventPage() {
                 </div>
 
                 {/* Profile Card - 1 column out of 3 */}
-                <div className="md:col-span-1 bg-white rounded-lg shadow p-4 flex flex-col" style={{ height: "900px" }}>
+<div className="bg-white rounded-lg shadow p-4 flex flex-col w-full h-full">
                   {selectedVolunteer ? (
                     <>
                       <div className="overflow-y-auto flex-1 pr-2">
