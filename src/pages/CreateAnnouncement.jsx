@@ -333,7 +333,7 @@ function CreateAnnouncement() {
       <Sidebar />
 
       <main className="flex-1 ml-64 p-6 flex justify-center items-start">
-  <div className="w-full max-w-5xl mx-auto space-y-4">
+  <div className="w-full mx-auto space-y-4">
     <div className="border-2 border-emerald-900 rounded-lg p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
       CREATE ANNOUNCEMENT
     </div>
@@ -355,7 +355,7 @@ function CreateAnnouncement() {
       </div>
 
       {/* Post Date & Priority */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 w-max-full gap-4 mb-4">
         <div>
           <label className="block mb-2 font-semibold text-lg text-green-900">Post Date & Time</label>
           <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1">
@@ -364,7 +364,7 @@ function CreateAnnouncement() {
               type="datetime-local"
               value={postDate}
               onChange={(e) => setPostDate(e.target.value)}
-              className="w-full p-2 border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+              className="w-full p-2 border-none focus:outline-none w-max-full cursor-pointer text-gray-700 bg-transparent"
               style={{
                 colorScheme: 'light',
                 WebkitAppearance: 'none',
@@ -375,7 +375,7 @@ function CreateAnnouncement() {
         </div>
         <div>
           <label className="block mb-2 font-semibold text-lg text-green-900">Priority Type</label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center w-max-full border bg-white border-green-300 rounded px-3">
             <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2" />
             <select
               value={priorityType}
@@ -447,10 +447,10 @@ function CreateAnnouncement() {
       </div>
 
       {/* File & Expiry Date */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 w-max-full gap-6 mb-6">
         <div>
           <label className="block mb-2 font-semibold text-lg text-green-900">Attach File (Optional)</label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center w-max-full border bg-white border-green-300 rounded px-3">
             <img src={FileIcon} alt="File" className="w-5 h-5 mr-2" />
             <input
               type="file"
@@ -462,7 +462,7 @@ function CreateAnnouncement() {
           
           {/* File Preview Section */}
           {selectedFile && (
-            <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="mt-4 p-4 bg-gray-50 w-max-full border border-gray-200 rounded-lg">
               <div className="text-center">
                 {filePreview ? (
                   <div>
