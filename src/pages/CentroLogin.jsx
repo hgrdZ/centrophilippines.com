@@ -5,7 +5,7 @@ import supabase from "../config/supabaseClient";
 function CentroLogin({ setIsAuthenticated }) {
   const navigate = useNavigate();
 
-  // ===================== STATES =====================
+  // States
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -14,30 +14,30 @@ function CentroLogin({ setIsAuthenticated }) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // ===================== IMAGES =====================
+  // Images
   const images = useMemo(
     () => [
-      `${process.env.PUBLIC_URL}/images/volunteer1.png`,
-      `${process.env.PUBLIC_URL}/images/volunteer2.png`,
-      `${process.env.PUBLIC_URL}/images/volunteer3.png`,
-      `${process.env.PUBLIC_URL}/images/volunteer4.png`,
-      `${process.env.PUBLIC_URL}/images/volunteer5.png`,
-      `${process.env.PUBLIC_URL}/images/volunteer6.png`,
-      `${process.env.PUBLIC_URL}/images/volunteer7.png`,
+      "/images/volunteer1.png",
+      "/images/volunteer2.png",
+      "/images/volunteer3.png",
+      "/images/volunteer4.png",
+      "/images/volunteer5.png",
+      "/images/volunteer6.png",
+      "/images/volunteer7.png",
     ],
     []
   );
 
-  const CentroLogo = `${process.env.PUBLIC_URL}/images/CENTRO_Logo.png`;
-  const LoginIcon = `${process.env.PUBLIC_URL}/images/login.svg`;
-  const PasswordIcon = `${process.env.PUBLIC_URL}/images/password.svg`;
-  const ShowPasswordIcon = `${process.env.PUBLIC_URL}/images/showpassword.svg`;
+  const CentroLogo = "/images/CENTRO_Logo.png";
+  const LoginIcon = "/images/login.svg";
+  const PasswordIcon = "/images/password.svg";
+  const ShowPasswordIcon = "/images/showpassword.svg";
 
-  // ===================== SLIDESHOW STATES =====================
+  // Slideshow states
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fadeIn, setFadeIn] = useState(true);
 
-  // ===================== IMAGE SLIDESHOW EFFECT =====================
+  // Image slideshow
   useEffect(() => {
     const interval = setInterval(() => {
       setFadeIn(false);
@@ -49,7 +49,7 @@ function CentroLogin({ setIsAuthenticated }) {
     return () => clearInterval(interval);
   }, [images.length]);
 
-  // ===================== LOAD SAVED CREDENTIALS =====================
+  // Load remembered credentials
   useEffect(() => {
     const savedLoginId = localStorage.getItem("rememberedLoginId");
     const savedPassword = localStorage.getItem("rememberedPassword");
@@ -62,10 +62,9 @@ function CentroLogin({ setIsAuthenticated }) {
     }
   }, []);
 
-  // ===================== HANDLE LOGIN =====================
+  // Handle login
   const handleLogin = async () => {
     setError("");
-
     if (!loginId || !password) {
       setError("Both Admin ID and Password are required.");
       return;
@@ -123,12 +122,12 @@ function CentroLogin({ setIsAuthenticated }) {
     }
   };
 
-  // ===================== RETURN JSX =====================
+  // ===================== JSX =====================
   return (
     <div className="h-screen w-screen overflow-hidden relative font-montserrat bg-white">
-      <div className="flex h-full w-full">
-        {/* ✅ LEFT SIDE SLIDESHOW */}
-        <div className="hidden md:flex w-1/2 relative items-center justify-center overflow-hidden bg-gray-100">
+      <div className="flex h-full w-full flex-row">
+        {/* ✅ LEFT SIDE (IMAGE SLIDESHOW) */}
+        <div className="w-1/2 relative flex items-center justify-center overflow-hidden bg-gray-100">
           <img
             src={images[currentIndex]}
             alt="Volunteer"
@@ -139,12 +138,12 @@ function CentroLogin({ setIsAuthenticated }) {
           <div className="absolute inset-0 bg-black/20"></div>
         </div>
 
-        {/* ✅ RIGHT SIDE LOGIN FORM */}
-        <div className="w-full md:w-1/2 flex flex-col items-center bg-gray-100 opacity-90 relative">
-          <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center mt-12 px-2">
-            <img src={CentroLogo} className="mt-28 w-64 md:w-1/2" alt="Centro Logo" />
+        {/* ✅ RIGHT SIDE (LOGIN FORM) */}
+        <div className="w-1/2 flex flex-col items-center bg-gray-100 relative">
+          <div className="w-full flex flex-col items-center mt-20 px-4">
+            <img src={CentroLogo} className="w-64 md:w-1/2 mb-8" alt="Centro Logo" />
 
-            <h2 className="text-4xl font-extrabold text-emerald-800 mb-3">Hello, Admin!</h2>
+            <h2 className="text-4xl font-extrabold text-emerald-800 mb-2">Hello, Admin!</h2>
             <p className="text-emerald-800 mb-6 text-base">Welcome to CENTRO!</p>
 
             {/* Admin ID Input */}
@@ -204,7 +203,7 @@ function CentroLogin({ setIsAuthenticated }) {
               </Link>
             </div>
 
-            {/* Error Message */}
+            {/* Error */}
             {error && (
               <div className="w-3/4 mb-4 text-center bg-red-500 text-white text-sm font-semibold py-2 rounded-xl">
                 {error}
@@ -222,7 +221,7 @@ function CentroLogin({ setIsAuthenticated }) {
         </div>
       </div>
 
-      {/* ✅ LOADING SCREEN */}
+      {/* ✅ LOADING OVERLAY */}
       {loading && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
           <img src={CentroLogo} alt="Centro Logo" className="w-32 mb-4 animate-pulse" />
