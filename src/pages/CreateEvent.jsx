@@ -617,12 +617,12 @@ function CreateEvent() {
       </div>
 
       {/* Date & Time Container */}
-<div className="mb-4 flex flex-col md:flex-row items-start md:items-center gap-6">
-  <div className="flex items-center w-full md:w-1/2">
-          <label className="block font-semibold text-lg text-green-800 w-32">
+<div className="mb-6 flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <label className="block font-semibold text-lg text-green-800 mb-1">
             Date
           </label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3 flex-1">
+    <div className="flex items-center border bg-white  border-gray-300 rounded px-3">
             <img src={DateIcon} alt="Date" className="w-5 h-5 mr-2" />
             <input
               type="date"
@@ -634,16 +634,16 @@ function CreateEvent() {
           </div>
         </div>
 
-        <div className="flex items-center w-full md:w-1/2">
-          <label className="block font-semibold text-lg text-green-800 w-32">
+        <div className="flex-1">
+          <label className="block font-semibold text-lg text-green-800 mb-1">
             Time
           </label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3 flex-1">
+    <div className="flex items-center border bg-white border-gray-300 rounded px-3">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-1/2 p-2 border-r border-green-300 focus:outline-none cursor-pointer"
+              className="w-1/2 p-2 border-r border-gray-300 focus:outline-none cursor-pointer"
             >
               <option value="">Start Time</option>
               {timeOptions.map((time) => (
@@ -714,9 +714,9 @@ function CreateEvent() {
       </div>
 
       {/* Volunteers Limit and Call Time */}
-      <div className="mb-4 flex flex-col md:flex-row items-start md:items-center gap-6">
-        <div className="flex items-center w-full md:w-1/2">
-          <label className="block font-semibold text-lg text-green-800 w-48">
+<div className="mb-6 flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <label className="block font-semibold text-lg text-green-800 mb-1">
             Volunteers Limit
           </label>
           <input
@@ -725,15 +725,15 @@ function CreateEvent() {
             value={volunteersLimit}
             onChange={(e) => setVolunteersLimit(e.target.value)}
             min="1"
-            className="flex-1 px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer"
+      className="w-full px-4 py-2 rounded bg-white  border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
 
-        <div className="flex items-center w-full md:w-1/2">
-          <label className="block font-semibold text-lg text-green-800 w-32">
+        <div className="flex-1">
+    <label className="block font-semibold text-lg text-green-800 mb-1">
             Call Time
           </label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3 flex-1">
+    <div className="flex items-center border bg-white border-gray-300 rounded px-3">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={callTime}
@@ -786,18 +786,18 @@ function CreateEvent() {
       </div>
 
       {/* Upload Poster & Volunteer Opportunities */}
-      <div className="mb-6 flex flex-col md:flex-row items-start md:items-stretch gap-6">
-        <div className="w-full md:w-1/2">
+<div className="mb-8 flex flex-col md:flex-row gap-6">
+  <div className="flex-1">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Upload Event Poster/Image
           </label>
-          <div className="flex items-center border bg-white border-green-300 rounded px-3">
+          <div className="flex items-center border bg-white border-gray-300 rounded px-3">
             <img src={FileIcon} alt="Upload" className="w-5 h-5 mr-2" />
             <input
               type="file"
               accept={supportedImageTypes.join(',')}
               onChange={handleFileSelect}
-              className="w-full p-2 border-none focus:outline-none cursor-pointer"
+      className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <p className="text-xs text-green-700 mt-1">
@@ -835,11 +835,11 @@ function CreateEvent() {
           )}
         </div>
 
-        <div className="w-full md:w-1/2">
+  <div className="flex-1">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Volunteer Opportunities
           </label>
-          <div className="border bg-white border-green-300 rounded p-3 h-full">
+          <div className="border bg-white border-gray-300 rounded p-3">
             <div className="flex items-center mb-2">
               <img
                 src={OpportunitiesIcon}
