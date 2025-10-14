@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import supabase from "../config/supabaseClient";
 
@@ -12,16 +12,19 @@ function CentroLogin({ setIsAuthenticated }) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Images from public folder
-  const images = [
-    "/images/volunteer1.png",
-    "/images/volunteer2.png",
-    "/images/volunteer3.png",
-    "/images/volunteer4.png",
-    "/images/volunteer5.png",
-    "/images/volunteer6.png",
-    "/images/volunteer7.png",
-  ];
+  // Images from public folder (wrapped in useMemo to avoid ESLint warning)
+  const images = useMemo(
+    () => [
+      "/images/volunteer1.png",
+      "/images/volunteer2.png",
+      "/images/volunteer3.png",
+      "/images/volunteer4.png",
+      "/images/volunteer5.png",
+      "/images/volunteer6.png",
+      "/images/volunteer7.png",
+    ],
+    []
+  );
 
   const CentroLogo = "/images/CENTRO_Logo.png";
   const LoginIcon = "/images/login.svg";
