@@ -568,7 +568,7 @@ const SettingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-base font-semibold text-gray-900 mb-2">
+                <label className="block text-lg font-semibold text-gray-900 mb-2">
                   Preferred Volunteering Types
                 </label>
                 {editMode ? (
@@ -577,7 +577,7 @@ const SettingsPage = () => {
                       type="text"
                       value={ngoInfo.preferred_volunteering}
                       onChange={(e) => handleInputChange('preferred_volunteering', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="Enter types separated by dash (e.g., Education - Healthcare - Environment)"
                     />
                     <p className="text-sm text-gray-500 mt-1">
@@ -587,7 +587,11 @@ const SettingsPage = () => {
                 ) : (
                   <div className="text-gray-700">
                     {ngoInfo.preferred_volunteering ? (
-                      <p>{ngoInfo.preferred_volunteering}</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        {ngoInfo.preferred_volunteering.split(',').map((type, index) => (
+                          <li key={index}>{type.trim()}</li>
+                        ))}
+                      </ul>
                     ) : (
                       <p>Not specified</p>
                     )}
