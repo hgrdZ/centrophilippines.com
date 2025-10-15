@@ -718,7 +718,7 @@ function ReviewAiScheduling() {
                   CENTRO<span className="text-yellow-500">suggests</span>
                 </h3>
                 <p className="text-center text-emerald-800 font-semibold mb-6 text-lg">
-                  Event ID: {eventDetails.event_id}
+                  {eventDetails.event_id}
                 </p>
 
                 {isLoading ? (
