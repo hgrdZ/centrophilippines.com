@@ -729,9 +729,10 @@ function ReviewAiScheduling() {
                   </div>
                 ) : aiSuggestions ? (
                   <>
-                    <div className="flex flex-col md:flex-row justify-between items-start mb-8">
-                      <div className="md:w-2/3 w-full">
-                        <div>
+                    <div className="flex justify-between items-start mb-8">
+                      {/* Left side - Main content */}
+                      <div className="flex-1 pr-6">
+                        <div className="mb-6">
                           <p className="font-bold text-lg text-emerald-900">
                             Recommended Time &amp; Duration
                           </p>
@@ -743,7 +744,7 @@ function ReviewAiScheduling() {
                           </p>
                         </div>
 
-                        <div className="mt-6">
+                        <div className="mb-6">
                           <p className="font-bold text-lg text-emerald-900">
                             Matching Volunteer Types
                           </p>
@@ -757,7 +758,7 @@ function ReviewAiScheduling() {
                         </div>
 
                         {aiSuggestions.reasoning && (
-                          <div className="mt-6">
+                          <div className="mb-6">
                             <p className="font-bold text-lg text-emerald-900">
                               AI Analysis
                             </p>
@@ -768,7 +769,8 @@ function ReviewAiScheduling() {
                         )}
                       </div>
 
-                      <div className="md:w-1/3 w-full flex flex-col gap-4 items-end mt-4 md:mt-0">
+                      {/* Right side - Stats boxes stacked */}
+                      <div className="flex flex-col gap-4 flex-shrink-0">
                         <div className="border-yellow-400 border-2 bg-gray-100 rounded-xl shadow px-6 py-6 w-56 text-center">
                           <p className="text-sm font-semibold text-emerald-800">
                             Compatibility Score
