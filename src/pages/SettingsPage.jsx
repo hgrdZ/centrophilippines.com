@@ -346,7 +346,7 @@ const SettingsPage = () => {
     };
 
     return (
-      <div className={`fixed top-4 right-4 z-50 p-4 border-l-4 rounded-lg shadow-lg max-w-md ${alertColors[type]}`}>
+      <div className={`fixed top-4 right-4 z-[99999] p-4 border-l-4 rounded-lg shadow-lg max-w-md ${alertColors[type]}`}>
         <div className="flex items-center justify-between">
           <p className="font-medium">{message}</p>
           <button
@@ -365,59 +365,62 @@ const SettingsPage = () => {
   return (
     <>
       <div
-        className="flex min-h-screen bg-no-repeat bg-center"
+        className="flex min-h-screen bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${CentroAdminBg})`,
-          backgroundSize: "100% 100%",
         }}
       >
         <Sidebar activeButton="Settings" />
 
-        <main className="flex-1 ml-64 p-10 overflow-y-auto">
-          <div className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-5xl mx-auto p-8">
+        <main className="flex-1 ml-64 p-6 sm:p-8 lg:p-10 overflow-y-auto">
+          <div className="bg-white shadow-xl rounded-3xl w-full max-w-6xl mx-auto p-6 sm:p-8">
             
-            {/* Action Buttons */}
-            <div className="absolute top-6 right-6 flex gap-3">
-              {editMode ? (
-                <>
+            {/* Header with Action Buttons */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-gray-200">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Organization Settings</h1>
+              
+              <div className="flex gap-3">
+                {editMode ? (
+                  <>
+                    <button
+                      onClick={() => setShowSaveChangesConfirm(true)}
+                      disabled={loading || logoUploading}
+                      className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-5 py-2.5 rounded-full transition-colors text-sm"
+                    >
+                      {loading ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={() => setShowCancelEditConfirm(true)}
+                      disabled={loading || logoUploading}
+                      className="bg-gray-500 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-5 py-2.5 rounded-full transition-colors text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={() => setShowSaveChangesConfirm(true)}
-                    disabled={loading || logoUploading}
-                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
+                    onClick={() => setShowEditProfileConfirm(true)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-full transition-colors text-sm"
                   >
-                    {loading ? "Saving..." : "Save Changes"}
+                    Edit Profile
                   </button>
-                  <button
-                    onClick={() => setShowCancelEditConfirm(true)}
-                    disabled={loading || logoUploading}
-                    className="bg-gray-500 hover:bg-gray-600 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setShowEditProfileConfirm(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
-                >
-                  Edit Profile
-                </button>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* Header row */}
-            <div className="grid grid-cols-12 gap-8 items-start">
-              {/* Logo */}
-              <div className="col-span-12 md:col-span-4">
-                <div className="rounded-xl border-4 border-emerald-700/70 px-4 py-3 w-full flex items-center justify-center bg-white min-h-[200px]">
+            {/* Logo and Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* Logo Section */}
+              <div className="flex flex-col items-center">
+                <div className="w-full aspect-square rounded-xl border-4 border-emerald-700 p-4 bg-white flex items-center justify-center overflow-hidden">
                   {ngoInfo.ngo_logo ? (
                     <img
                       src={ngoInfo.ngo_logo}
                       alt="Organization Logo"
-                      className="w-full h-auto object-contain max-h-48"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
-                    <span className="text-gray-500">No Logo</span>
+                    <span className="text-gray-400 text-center">No Logo</span>
                   )}
                 </div>
                 
@@ -429,25 +432,23 @@ const SettingsPage = () => {
                   className="hidden"
                 />
                 
-                <div className="mt-3 flex justify-center">
-                  <button
-                    onClick={() => setShowUpdateLogoConfirm(true)}
-                    disabled={logoUploading || loading}
-                    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-full transition-colors cursor-pointer"
-                  >
-                    {logoUploading ? "Uploading..." : "Update Logo"}
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowUpdateLogoConfirm(true)}
+                  disabled={logoUploading || loading}
+                  className="mt-4 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-full transition-colors text-sm w-full"
+                >
+                  {logoUploading ? "Uploading..." : "Update Logo"}
+                </button>
                 
                 {selectedFile && (
-                  <div className="mt-2 text-center text-sm text-gray-600">
+                  <div className="mt-2 text-center text-xs text-gray-600">
                     Selected: {selectedFile.name}
                   </div>
                 )}
               </div>
 
-              {/* Organization Info */}
-              <div className="col-span-12 md:col-span-8 space-y-4">
+              {/* Basic Info Section */}
+              <div className="md:col-span-2 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Organization Name
@@ -457,10 +458,10 @@ const SettingsPage = () => {
                       type="text"
                       value={ngoInfo.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   ) : (
-                    <p className="text-xl font-semibold text-emerald-900">
+                    <p className="text-lg font-semibold text-emerald-900">
                       {ngoInfo.name || "Not specified"}
                     </p>
                   )}
@@ -470,7 +471,7 @@ const SettingsPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Organization Code
                   </label>
-                  <p className="text-lg text-gray-700 font-mono bg-gray-100 px-3 py-2 rounded-lg">
+                  <p className="text-base text-gray-700 font-mono bg-gray-100 px-3 py-2 rounded-lg">
                     {ngoInfo.ngo_code || "Not specified"}
                   </p>
                 </div>
@@ -484,12 +485,10 @@ const SettingsPage = () => {
                       type="email"
                       value={ngoInfo.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   ) : (
-                    <p className="text-gray-700">
-                      {ngoInfo.email || "Not specified"}
-                    </p>
+                    <p className="text-gray-700">{ngoInfo.email || "Not specified"}</p>
                   )}
                 </div>
 
@@ -502,21 +501,19 @@ const SettingsPage = () => {
                       type="tel"
                       value={ngoInfo.phone_number}
                       onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   ) : (
-                    <p className="text-gray-700">
-                      {ngoInfo.phone_number || "Not specified"}
-                    </p>
+                    <p className="text-gray-700">{ngoInfo.phone_number || "Not specified"}</p>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Additional Information */}
-            <div className="mt-8 space-y-6">
+            <div className="space-y-6 mb-8">
               <div>
-                <label className="block text-lg font-semibold text-gray-900 mb-2">
+                <label className="block text-base font-semibold text-gray-900 mb-2">
                   Organization Description
                 </label>
                 {editMode ? (
@@ -524,7 +521,7 @@ const SettingsPage = () => {
                     value={ngoInfo.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Enter organization description..."
                   />
                 ) : (
@@ -535,7 +532,7 @@ const SettingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-lg font-semibold text-gray-900 mb-2">
+                <label className="block text-base font-semibold text-gray-900 mb-2">
                   Office Address
                 </label>
                 {editMode ? (
@@ -543,7 +540,7 @@ const SettingsPage = () => {
                     value={ngoInfo.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Enter complete address..."
                   />
                 ) : (
@@ -554,7 +551,7 @@ const SettingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-lg font-semibold text-gray-900 mb-2">
+                <label className="block text-base font-semibold text-gray-900 mb-2">
                   City/Location
                 </label>
                 {editMode ? (
@@ -562,18 +559,16 @@ const SettingsPage = () => {
                     type="text"
                     value={ngoInfo.ngo_location}
                     onChange={(e) => handleInputChange('ngo_location', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Enter city or location..."
                   />
                 ) : (
-                  <p className="text-gray-700">
-                    {ngoInfo.ngo_location || "Not specified"}
-                  </p>
+                  <p className="text-gray-700">{ngoInfo.ngo_location || "Not specified"}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-lg font-semibold text-gray-900 mb-2">
+                <label className="block text-base font-semibold text-gray-900 mb-2">
                   Preferred Volunteering Types
                 </label>
                 {editMode ? (
@@ -582,7 +577,7 @@ const SettingsPage = () => {
                       type="text"
                       value={ngoInfo.preferred_volunteering}
                       onChange={(e) => handleInputChange('preferred_volunteering', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="Enter types separated by dash (e.g., Education - Healthcare - Environment)"
                     />
                     <p className="text-sm text-gray-500 mt-1">
@@ -592,11 +587,7 @@ const SettingsPage = () => {
                 ) : (
                   <div className="text-gray-700">
                     {ngoInfo.preferred_volunteering ? (
-                      <ul className="list-disc list-inside space-y-1">
-                        {ngoInfo.preferred_volunteering.split(',').map((type, index) => (
-                          <li key={index}>{type.trim()}</li>
-                        ))}
-                      </ul>
+                      <p>{ngoInfo.preferred_volunteering}</p>
                     ) : (
                       <p>Not specified</p>
                     )}
@@ -605,10 +596,11 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Notification + Management */}
-            <div className="grid grid-cols-12 gap-12 mt-8">
-              <div className="col-span-12 md:col-span-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+            {/* Settings Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              {/* Notification Settings */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Notification Settings
                 </h3>
                 <div className="space-y-4">
@@ -617,10 +609,7 @@ const SettingsPage = () => {
                     { key: 'weeklySummary', label: 'Weekly Summary' },
                     { key: 'eventReminders', label: 'Event Reminders' }
                   ].map((item) => (
-                    <div
-                      key={item.key}
-                      className="flex items-center justify-between"
-                    >
+                    <div key={item.key} className="flex items-center justify-between py-2">
                       <span className="text-gray-700">{item.label}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -629,9 +618,8 @@ const SettingsPage = () => {
                           checked={notifications[item.key]}
                           onChange={() => handleNotificationChange(item.key)}
                         />
-                        <div className="w-11 h-6 bg-gray-300 rounded-full transition peer-checked:bg-emerald-600 relative
-                           after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:bg-white after:rounded-full after:transition-all
-                           peer-checked:after:translate-x-5">
+                        <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-emerald-600 transition-colors relative">
+                          <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                         </div>
                       </label>
                     </div>
@@ -639,8 +627,9 @@ const SettingsPage = () => {
                 </div>
               </div>
 
-              <div className="col-span-12 md:col-span-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              {/* Management Options */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Management Options
                 </h3>
                 <div className="space-y-4">
@@ -649,10 +638,7 @@ const SettingsPage = () => {
                     { key: 'adminNotification', label: 'Admin Notification' },
                     { key: 'autoBackUp', label: 'Auto Back Up' }
                   ].map((item) => (
-                    <div 
-                      key={item.key} 
-                      className="flex items-center justify-between"
-                    >
+                    <div key={item.key} className="flex items-center justify-between py-2">
                       <span className="text-gray-700">{item.label}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -661,9 +647,8 @@ const SettingsPage = () => {
                           checked={management[item.key]}
                           onChange={() => handleManagementChange(item.key)}
                         />
-                        <div className="w-11 h-6 bg-gray-300 rounded-full transition peer-checked:bg-emerald-600 relative
-                           after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:bg-white after:rounded-full after:transition-all
-                           peer-checked:after:translate-x-5">
+                        <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-emerald-600 transition-colors relative">
+                          <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                         </div>
                       </label>
                     </div>
@@ -672,12 +657,12 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Data & Security */}
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+            {/* Security */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Data &amp; Security
               </h3>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <span className="text-gray-700">Two-factor Authentication</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -686,9 +671,8 @@ const SettingsPage = () => {
                     checked={twoFactorAuth}
                     onChange={handleTwoFactorToggle}
                   />
-                  <div className="w-11 h-6 bg-gray-300 rounded-full transition peer-checked:bg-emerald-600 relative
-                     after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:bg-white after:rounded-full after:transition-all
-                     peer-checked:after:translate-x-5">
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-emerald-600 transition-colors relative">
+                    <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                   </div>
                 </label>
               </div>
@@ -700,36 +684,30 @@ const SettingsPage = () => {
       {/* Edit Profile Confirmation Modal */}
       {showEditProfileConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 flex items-center justify-center z-[9999] animate-fadeIn"
           onClick={handleBackdropClick}
-          style={{ zIndex: 99999999 }}
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-emerald-700">
-            <div className="flex justify-center mb-4">
-              <div className="rounded-full flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
-                  Edit Profile
-                </h2>
-              </div>
-            </div>
-
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-scaleIn border-2 border-emerald-700">
             <div className="text-center">
-              <p className="text-gray-600 mb-8 text-lg mt-4 font-montserrat">
+              <h2 className="text-2xl font-bold text-emerald-700 mb-4">
+                Edit Profile
+              </h2>
+              <p className="text-gray-600 mb-6">
                 Are you sure you want to edit your organization information? You'll be able to modify all organization details.
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleEditProfile}
-                  className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-medium border-2 border-emerald-600 hover:bg-emerald-700 transition-colors"
                 >
                   Start Editing
                 </button>
                 <button
                   onClick={() => setShowEditProfileConfirm(false)}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-emerald-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-2.5 rounded-lg font-medium border-2 border-gray-300 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -742,36 +720,30 @@ const SettingsPage = () => {
       {/* Update Logo Confirmation Modal */}
       {showUpdateLogoConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 flex items-center justify-center z-[9999] animate-fadeIn"
           onClick={handleBackdropClick}
-          style={{ zIndex: 99999999 }}
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-emerald-700">
-            <div className="flex justify-center mb-4">
-              <div className=" flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
-                  Update Logo
-                </h2>
-              </div>
-            </div>
-
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-scaleIn border-2 border-emerald-700">
             <div className="text-center">
-              <p className="text-gray-600 mb-8 text-lg mt-4 font-montserrat">
+              <h2 className="text-2xl font-bold text-emerald-700 mb-4">
+                Update Logo
+              </h2>
+              <p className="text-gray-600 mb-6">
                 Please select a new logo file. Supported formats: JPEG, PNG, GIF, WebP. Maximum file size: 5MB.
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleUpdateLogo}
-                  className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-medium border-2 border-emerald-600 hover:bg-emerald-700 transition-colors"
                 >
                   Select Logo
                 </button>
                 <button
                   onClick={() => setShowUpdateLogoConfirm(false)}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-emerald-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-2.5 rounded-lg font-medium border-2 border-gray-300 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -784,36 +756,30 @@ const SettingsPage = () => {
       {/* Save Changes Confirmation Modal */}
       {showSaveChangesConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 flex items-center justify-center z-[9999] animate-fadeIn"
           onClick={handleBackdropClick}
-          style={{ zIndex: 99999999 }}
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-green-700">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-green-700 mb-2 font-montserrat">
-                  Save Changes
-                </h2>
-              </div>
-            </div>
-
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-scaleIn border-2 border-green-700">
             <div className="text-center">
-              <p className="text-gray-600 mb-8 text-lg mt-4 font-montserrat">
+              <h2 className="text-2xl font-bold text-green-700 mb-4">
+                Save Changes
+              </h2>
+              <p className="text-gray-600 mb-6">
                 Are you sure you want to save all changes to your organization information? This will update your profile in the database.
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleSaveChanges}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-green-600 hover:bg-green-700 hover:border-green-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium border-2 border-green-600 hover:bg-green-700 transition-colors"
                 >
                   Yes, Save
                 </button>
                 <button
                   onClick={() => setShowSaveChangesConfirm(false)}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-green-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-2.5 rounded-lg font-medium border-2 border-gray-300 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -826,36 +792,30 @@ const SettingsPage = () => {
       {/* Cancel Edit Confirmation Modal */}
       {showCancelEditConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 flex items-center justify-center z-[9999] animate-fadeIn"
           onClick={handleBackdropClick}
-          style={{ zIndex: 99999999 }}
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-700">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-red-700 mb-2 font-montserrat">
-                  Cancel Editing
-                </h2>
-              </div>
-            </div>
-
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-scaleIn border-2 border-red-700">
             <div className="text-center">
-              <p className="text-gray-600 mb-8 text-lg mt-4 font-montserrat">
+              <h2 className="text-2xl font-bold text-red-700 mb-4">
+                Cancel Editing
+              </h2>
+              <p className="text-gray-600 mb-6">
                 Are you sure you want to cancel editing? All unsaved changes will be lost.
               </p>
 
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleCancelEdit}
-                  className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-red-600 hover:bg-red-700 hover:border-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-red-600 text-white px-6 py-2.5 rounded-lg font-medium border-2 border-red-600 hover:bg-red-700 transition-colors"
                 >
                   Yes, Cancel
                 </button>
                 <button
                   onClick={() => setShowCancelEditConfirm(false)}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-red-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-2.5 rounded-lg font-medium border-2 border-gray-300 hover:bg-gray-50 transition-colors"
                 >
                   Keep Editing
                 </button>
