@@ -238,7 +238,7 @@ export default function ReviewApplicationPage() {
     const volunteerFullName = selectedVolunteer.firstname && selectedVolunteer.lastname
       ? `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`
       : selectedVolunteer.name || 'Volunteer';
-      
+
       const { error: deleteError } = await supabase
         .from("Volunteer_Application")
         .delete()
@@ -399,9 +399,9 @@ export default function ReviewApplicationPage() {
 
           {/* Volunteers List */}
           {pendingApplications.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Table */}
-              <div className="md:col-span-2 bg-white rounded-lg shadow overflow-x-auto">
+<div className="w-full flex flex-wrap gap-6 mb-6">
+  {/* Table */}
+  <div className="flex-1 min-w-full bg-white rounded-lg shadow overflow-hidden">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-emerald-700 text-lg text-white">
@@ -433,7 +433,7 @@ export default function ReviewApplicationPage() {
               </div>
 
               {/* Profile Card */}
-              <div className="bg-white rounded-lg shadow p-4 flex flex-col justify-between h-full">
+  <div className="flex-1 min-w-[300px] max-w-[400px] bg-white rounded-lg shadow p-6 flex flex-col" style={{ minWidth: "300px", maxWidth: "400px" }}>
                 {selectedVolunteer ? (
                   <>
                     <div>
