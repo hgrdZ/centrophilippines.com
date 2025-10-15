@@ -235,7 +235,10 @@ export default function ReviewApplicationPage() {
         setShowRejectModal(false);
         return;
       }
-
+    const volunteerFullName = selectedVolunteer.firstname && selectedVolunteer.lastname
+      ? `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`
+      : selectedVolunteer.name || 'Volunteer';
+      
       const { error: deleteError } = await supabase
         .from("Volunteer_Application")
         .delete()
@@ -251,6 +254,7 @@ export default function ReviewApplicationPage() {
       // Send rejection email
       try {
         console.log("🔵 Attempting to send rejection email...");
+        console.log('📝 Volunteer Full Name:', volunteerFullName);
         console.log("📧 Recipient:", selectedVolunteer.email);
         console.log("🏢 NGO Name:", ngoName);
         console.log("📝 Reason:", rejectReason);
@@ -262,6 +266,7 @@ export default function ReviewApplicationPage() {
           },
           body: JSON.stringify({
             recipientEmail: selectedVolunteer.email,
+            volunteerName: `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`,
             ngoName: ngoName,
             reason: rejectReason,
           })
