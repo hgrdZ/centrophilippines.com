@@ -102,7 +102,7 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
             "user_id, firstname, lastname, email, profile_picture, preferred_volunteering, contact_number, location"
           )
           .eq("user_id", eventUser.user_id)
-          .single();
+          .maybeSingle();
 
         if (userError) {
           console.error("Error fetching volunteer details:", userError);
@@ -159,7 +159,7 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
   const generateAiSuggestions = async (volunteerData, eventData) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BACKEND_API_URL}/api/ai/generate-suggestions`, {
+      const response = await fetch(`${BACKEND_API_URL}/api/generate-suggestions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -561,7 +561,7 @@ const handleNextApplicant = () => {
         .from("NGO_Information")
         .select("name")
         .eq("admin_id", adminData.NGO_Information.admin_id)
-        .single();
+        .maybeSingle();
 
       const ngoName = ngoData?.name || adminData.NGO_Information.name || "Centro Organization";
 
