@@ -16,7 +16,8 @@ const SettingsPage = () => {
     email: "",
     ngo_location: "",
     ngo_logo: "",
-    ngo_code: ""
+    ngo_code: "",
+    preferred_volunteering: ""
   });
 
   // State for edit mode and loading
@@ -82,7 +83,8 @@ const SettingsPage = () => {
               email: data.email || "",
               ngo_location: data.ngo_location || "",
               ngo_logo: data.ngo_logo || "",
-              ngo_code: data.ngo_code || ""
+              ngo_code: data.ngo_code || "",
+              preferred_volunteering: data.preferred_volunteering || ""
             });
           }
         } catch (err) {
@@ -225,7 +227,8 @@ const SettingsPage = () => {
           phone_number: ngoInfo.phone_number.trim(),
           email: ngoInfo.email.trim(),
           ngo_location: ngoInfo.ngo_location.trim(),
-          ngo_logo: logoUrl
+          ngo_logo: logoUrl,
+          preferred_volunteering: ngoInfo.preferred_volunteering.trim()
         })
         .eq("admin_id", adminData.admin_id);
 
@@ -285,7 +288,8 @@ const SettingsPage = () => {
           email: data.email || "",
           ngo_location: data.ngo_location || "",
           ngo_logo: data.ngo_logo || "",
-          ngo_code: data.ngo_code || ""
+          ngo_code: data.ngo_code || "",
+          preferred_volunteering: data.preferred_volunteering || ""
         });
       }
     } catch (err) {
@@ -565,6 +569,38 @@ const SettingsPage = () => {
                   <p className="text-gray-700">
                     {ngoInfo.ngo_location || "Not specified"}
                   </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-lg font-semibold text-gray-900 mb-2">
+                  Preferred Volunteering Types
+                </label>
+                {editMode ? (
+                  <>
+                    <input
+                      type="text"
+                      value={ngoInfo.preferred_volunteering}
+                      onChange={(e) => handleInputChange('preferred_volunteering', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Enter types separated by dash (e.g., Education - Healthcare - Environment)"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Separate different types with a dash (-)
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-gray-700">
+                    {ngoInfo.preferred_volunteering ? (
+                      <ul className="list-disc list-inside space-y-1">
+                        {ngoInfo.preferred_volunteering.split(',').map((type, index) => (
+                          <li key={index}>{type.trim()}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>Not specified</p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
