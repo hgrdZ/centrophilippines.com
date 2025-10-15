@@ -645,7 +645,7 @@ function ReviewAiScheduling() {
           </div>
 
           <div className="flex flex-1">
-            <div className="w-1/2 border-r-4 px-8 py-6 overflow-y-auto">
+            <div className="w-1/2 border-r-4 px-8 py-6 overflow-y-auto flex flex-col justify-center">
               <div className="flex items-center gap-4 mb-6">
                 <img
                   src={
@@ -772,20 +772,20 @@ function ReviewAiScheduling() {
 
                       {/* Right side - Stats boxes stacked */}
                       <div className="flex flex-col gap-4 flex-shrink-0">
-                        <div className="border-yellow-400 border-2 bg-white rounded-xl shadow w-36 h-32 flex flex-col items-center justify-center text-center p-4">
+                        <div className="border-yellow-400 border-2 bg-white rounded-xl shadow w-52 h-52 flex flex-col items-center justify-center text-center p-4">
                           <p className="text-base font-semibold text-emerald-800 mb-3">
                             Compatibility<br/>Score
                           </p>
-                          <p className="text-4xl font-extrabold text-yellow-500">
+                          <p className="text-5xl font-extrabold text-yellow-500">
                             {aiSuggestions.compatibilityScore}%
                           </p>
                         </div>
 
-                        <div className="border-blue-400 border-2 bg-white rounded-xl shadow w-36 h-32 flex flex-col items-center justify-center text-center p-4">
+                        <div className="border-blue-400 border-2 bg-white rounded-xl shadow w-52 h-52 flex flex-col items-center justify-center text-center p-4">
                           <p className="text-base font-semibold text-emerald-800 mb-3">
                             Accepted<br/>Volunteers
                           </p>
-                          <p className="text-4xl font-extrabold text-blue-500">
+                          <p className="text-5xl font-extrabold text-blue-500">
                             {acceptedVolunteersCount}/{eventDetails.volunteers_limit}
                           </p>
                         </div>
