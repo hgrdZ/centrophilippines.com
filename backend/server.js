@@ -1,76 +1,65 @@
-require('dotenv').config(); // Load environment variables
 const express = require('express');
 const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-
-// Import all your email route files
-const emailRoutes = require('./routes/email');
-const emailRejectOrgRoutes = require('./routes/email_reject_org');
-const emailRejectEventRoutes = require('./routes/email_reject_event');
-const aiRoutes = require('./routes/ai-routes'); // NEW: AI routes
+require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Configure CORS to allow requests from React (frontend)
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // React dev server port
-  credentials: true
-}));
-
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting for AI endpoints (optional but recommended)
-const aiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Limit each IP to 50 AI requests per windowMs
-  message: 'Too many AI requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Import Vercel serverless functions as Express routes
+const generateSuggestions = require('../api/generate-suggestions');
+const sendRejectEvent = require('../api/send-reject-event');
+const sendRejectOrg = require('../api/send-reject-org');
+const sendRemovalNotification = require('../api/send-removal-notification');
 
-// Use your email route files
-app.use(emailRoutes);
-app.use('/api', emailRejectOrgRoutes);
-app.use('/api', emailRejectEventRoutes);
+// Wrapper function to convert Vercel serverless to Express middleware
+const wrapServerless = (handler) => {
+  return async (req, res) => {
+    try {
+      await handler(req, res);
+    } catch (error) {
+      console.error('Error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          success: false, 
+          error: 'Internal server error' 
+        });
+      }
+    }
+  };
+};
 
-// NEW: AI routes with rate limiting
-app.use('/api/ai', aiLimiter, aiRoutes);
+// Mount routes
+app.post('/api/generate-suggestions', wrapServerless(generateSuggestions));
+app.post('/api/send-reject-event', wrapServerless(sendRejectEvent));
+app.post('/api/send-reject-org', wrapServerless(sendRejectOrg));
+app.post('/api/send-removal-notification', wrapServerless(sendRemovalNotification));
 
-// Test route
-app.get('/', (req, res) => {
-  res.json({ message: 'Centro Backend API is running!' });
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
     status: 'OK', 
-    message: 'Server is healthy',
-    timestamp: new Date().toISOString()
+    message: 'Server is running',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// Error handling middleware helllloooooo
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: 'Internal server error',
-    message: err.message || 'Something went wrong'
+// Start server (only if not in Vercel environment)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📧 Email service ready`);
+    console.log(`🤖 AI service ready`);
+    console.log(`\nAvailable endpoints:`);
+    console.log(`  POST /api/generate-suggestions`);
+    console.log(`  POST /api/send-reject-event`);
+    console.log(`  POST /api/send-reject-org`);
+    console.log(`  POST /api/send-removal-notification`);
+    console.log(`  GET  /api/health`);
   });
-});
+}
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✓ Server running on http://localhost:${PORT}`);
-  console.log(`📧 Email routes: Active`);
-  console.log(`🤖 AI routes: http://localhost:${PORT}/api/ai/generate-suggestions`);
-  
-  // Check if OpenAI API key is configured
-  if (!process.env.OPENAI_API_KEY) {
-    console.warn('⚠️  WARNING: OPENAI_API_KEY is not set in environment variables!');
-    console.warn('   Add OPENAI_API_KEY to your .env file to enable AI features.');
-  } else {
-    console.log('✅ OpenAI API key is configured');
-  }
-});
+module.exports = app;
