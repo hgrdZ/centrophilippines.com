@@ -75,6 +75,7 @@ function AddNGOPage() {
     email: "",
     location: "",
     logo: null,
+    preferredVolunteering: [],
   });
 
   // Supported image formats
@@ -88,6 +89,18 @@ function AddNGOPage() {
     'image/bmp'
   ];
 
+  // Preferred volunteering options
+  const volunteeringOptions = [
+    "Education & Youth Development",
+    "Healthcare & Medical Aid",
+    "Environmental Conservation",
+    "Disaster Relief & Emergency Response",
+    "Community Development",
+    "Administrative & Technical Support",
+    "Human Rights & Advocacy",
+    "Animal Welfare"
+  ];
+
   const supportedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
 
   // Handle close/back navigation with confirmation
@@ -96,6 +109,7 @@ function AddNGOPage() {
     const hasFormData = Object.entries(formData).some(([key, value]) => {
       if (key === 'adminType') return value !== 'admin'; // Default value
       if (key === 'logo') return value !== null;
+      if (key === 'preferredVolunteering') return value.length > 0;
       return value.trim() !== '';
     });
 
@@ -176,6 +190,23 @@ function AddNGOPage() {
     } else {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     }
+  };
+
+  // Handle preferred volunteering selection
+  const handleVolunteeringChange = (option) => {
+    setFormData(prev => {
+      if (prev.preferredVolunteering.includes(option)) {
+        return {
+          ...prev,
+          preferredVolunteering: prev.preferredVolunteering.filter(item => item !== option)
+        };
+      } else {
+        return {
+          ...prev,
+          preferredVolunteering: [...prev.preferredVolunteering, option]
+        };
+      }
+    });
   };
 
   // Upload logo to Supabase Storage
@@ -342,6 +373,7 @@ function AddNGOPage() {
     if (!formData.phone.trim()) missingFields.push("Phone Number");
     if (!formData.email.trim()) missingFields.push("Official Email");
     if (!formData.location.trim()) missingFields.push("NGO Location");
+    if (formData.preferredVolunteering.length === 0) missingFields.push("Preferred Volunteering Types");
 
     if (missingFields.length > 0) {
       setModalConfig({
@@ -448,7 +480,8 @@ function AddNGOPage() {
         ngo_location: formData.location.trim(),
         created_at: new Date().toISOString().split('T')[0],
         ngo_logo: logoUrl,
-        ngo_code: formData.ngoCode.toUpperCase()
+        ngo_code: formData.ngoCode.toUpperCase(),
+        preferred_volunteering: formData.preferredVolunteering.join(",")
       };
 
       const { error: ngoError } = await supabase
@@ -796,6 +829,40 @@ function AddNGOPage() {
                 />
               </div>
             </div>
+            
+            {/* Preferred Volunteering Types */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preferred Volunteering Types *
+              </label>
+              <div className="border rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {volunteeringOptions.map((option) => (
+                    <label 
+                      key={option} 
+                      className="flex items-center p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.preferredVolunteering.includes(option)}
+                        onChange={() => handleVolunteeringChange(option)}
+                        disabled={loading || logoUploading}
+                        className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                      />
+                      <span className="ml-3 text-sm text-gray-700">{option}</span>
+                    </label>
+                  ))}
+                </div>
+                {formData.preferredVolunteering.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-emerald-200">
+                    <p className="text-xs text-emerald-700 font-medium">
+                      Selected: {formData.preferredVolunteering.join(", ")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
 
             {/* Submit */}
             <div className="md:col-span-2">
