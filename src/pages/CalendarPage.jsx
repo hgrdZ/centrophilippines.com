@@ -7,7 +7,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [highlightedDate, setHighlightedDate] = useState(null); // New state for highlighting
+  const [highlightedDate, setHighlightedDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState({});
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,6 @@ export default function CalendarPage() {
   // Auto-select today's date when page loads or when switching to current month
   useEffect(() => {
     if (todayDate && year === todayDate.year && month === todayDate.month) {
-      // Only auto-select if no date is currently selected
       if (!selectedDate && !highlightedDate) {
         handleDateClick(todayDate.day);
       }
@@ -150,13 +149,11 @@ export default function CalendarPage() {
     fetchEvents();
   }, []);
 
-  // Reset highlighted date when month changes, but keep today selected if it's in the current month
+  // Reset highlighted date when month changes
   useEffect(() => {
     if (todayDate && year === todayDate.year && month === todayDate.month) {
-      // Keep today highlighted when navigating to current month
       setHighlightedDate(todayDate.day);
       setSelectedDate(todayDate.day);
-      // Auto-select today's events
       const dayEvents = getEventsForDay(todayDate.day);
       if (dayEvents.length === 1) {
         setSelectedEvent({ day: todayDate.day, ...dayEvents[0] });
@@ -183,7 +180,6 @@ export default function CalendarPage() {
         });
       }
     } else {
-      // Reset when not in current month
       setHighlightedDate(null);
       setSelectedDate(null);
       setSelectedEvent(null);
@@ -220,13 +216,11 @@ export default function CalendarPage() {
 
   const handleAlert = (msg) => alert(`Placeholder: ${msg}`);
 
-  // Get events for a specific day
   const getEventsForDay = (day) => {
     const key = `${year}-${month}-${day}`;
     return events[key] || [];
   };
 
-  // Enhanced click handler for date highlighting
   const handleDateClick = (day) => {
     if (!day) return;
     
@@ -237,10 +231,8 @@ export default function CalendarPage() {
     if (dayEvents.length === 1) {
       setSelectedEvent({ day, ...dayEvents[0] });
     } else if (dayEvents.length > 1) {
-      // If multiple events, show the first one by default
       setSelectedEvent({ day, ...dayEvents[0] });
     } else {
-      // No events for this day, but still show the date selection
       setSelectedEvent({
         day,
         name: "No Events Scheduled",
@@ -264,7 +256,7 @@ export default function CalendarPage() {
 
   const handleEventClick = (day, event) => {
     setSelectedDate(day);
-    setHighlightedDate(day); // Also highlight when clicking on events
+    setHighlightedDate(day);
     setSelectedEvent({ day, ...event });
     setShowEventSelector(false);
   };
@@ -274,7 +266,6 @@ export default function CalendarPage() {
     setShowEventSelector(false);
   };
 
-  // Check if a day has events matching the search query
   const getMatchingEvents = (day) => {
     const dayEvents = getEventsForDay(day);
     if (!searchQuery) return dayEvents;
@@ -286,7 +277,6 @@ export default function CalendarPage() {
     );
   };
 
-  // Check if a day is today
   const isToday = (day) => {
     return todayDate && 
            year === todayDate.year && 
@@ -294,7 +284,6 @@ export default function CalendarPage() {
            day === todayDate.day;
   };
 
-  // Function to determine cell styling based on highlight, today, and event status
   const getDayCellClasses = (day) => {
     if (!day) return "bg-white rounded-md border-[6px] border-emerald-800 p-2 h-24";
     
@@ -304,16 +293,12 @@ export default function CalendarPage() {
     let baseClasses = "rounded-md border-[6px] p-2 h-24 cursor-pointer transition-all duration-200";
     
     if (isHighlighted && isTodayCell) {
-      // Today and highlighted - special styling
       baseClasses += " bg-emerald-200 border-emerald-600 shadow-lg transform scale-105 ring-2 ring-emerald-400";
     } else if (isHighlighted) {
-      // Highlighted but not today
       baseClasses += " bg-white border-emerald-600 shadow-lg transform scale-105";
     } else if (isTodayCell) {
-      // Today but not highlighted - light emerald background
       baseClasses += " bg-emerald-100 border-emerald-500 shadow-md";
     } else {
-      // Regular day
       baseClasses += " bg-white border-emerald-800 hover:bg-gray-50";
     }
     
@@ -441,7 +426,7 @@ export default function CalendarPage() {
                                   e.stopPropagation();
                                   handleEventClick(day, event);
                                 }}
-                                className={`block text-xs px-2 py-0.5 rounded cursor-pointer transition-colors w-full truncate  ${
+                                className={`block text-xs px-2 py-0.5 rounded cursor-pointer transition-colors w-full truncate ${
                                   highlightedDate === day 
                                     ? 'bg-emerald-700 text-white font-bold hover:bg-emerald-800' 
                                     : isTodayCell
@@ -478,124 +463,128 @@ export default function CalendarPage() {
         {/* Event Details */}
         <section className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
           {selectedEvent ? (
-            <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-              <div className="flex-1">
-                {/* Date and Event Title - Now at the top */}
-                <div className="mb-6">
-                  <h3 className="text-3xl font-extrabold text-emerald-800 mb-2 text-center">
-                    {monthNames[month]} {selectedEvent.day}, {year} (
-                    {new Date(year, month, selectedEvent.day).toLocaleDateString('en-US', { weekday: 'long' })}
-                    {isToday(selectedEvent.day) && (
-                      <span className="ml-2 text-lg bg-emerald-600 text-white px-2 py-1 rounded">
-                        Today
-                      </span>
-                    )}
-                    )
-                  </h3>
-                  <h4 className="text-3xl font-bold text-emerald-700 mb-2">{selectedEvent.name}</h4>
-                  <p className="text-gray-800 text-lg mb-4">{selectedEvent.description}</p>
+            <div className="space-y-6">
+              {/* Date and Event Title */}
+              <div className="mb-6">
+                <h3 className="text-3xl font-extrabold text-emerald-800 mb-2 text-center">
+                  {monthNames[month]} {selectedEvent.day}, {year} (
+                  {new Date(year, month, selectedEvent.day).toLocaleDateString('en-US', { weekday: 'long' })}
+                  {isToday(selectedEvent.day) && (
+                    <span className="ml-2 text-lg bg-emerald-600 text-white px-2 py-1 rounded">
+                      Today
+                    </span>
+                  )}
+                  )
+                </h3>
+                <h4 className="text-3xl font-bold text-emerald-700 mb-2">{selectedEvent.name}</h4>
+                <p className="text-gray-800 text-lg mb-4">{selectedEvent.description}</p>
+              </div>
 
-                </div>
-                
+              {/* Main Content with Volunteer Counter */}
+              <div className="relative">
+                {/* Interested Volunteers Box - Positioned in upper right */}
                 {selectedEvent.name !== "No Events Scheduled" && (
-                  <div className="text-left">
-                    <div className="flex gap-6">
-                      {/* Event Image - Now larger and positioned below title */}
-                      {selectedEvent.image && (
-                        <div className="w-50 h-70 object-cover rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                          <img 
-                            src={selectedEvent.image} 
-                            alt={selectedEvent.name}
-                            className="w-full h-full object-cover rounded-lg shadow-lg"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                          <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center shadow-lg" style={{display: 'none'}}>
-                            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                  <div className="absolute top-0 right-0 w-64 bg-emerald-700 text-white rounded-xl p-8 text-center shadow-lg z-10">
+                    <p className="text-xl font-semibold">Interested Volunteers</p>
+                    <p className="mt-2 text-6xl font-extrabold text-emerald-200">{selectedEvent.volunteers}</p>
+                  </div>
+                )}
+
+                {/* Event Content - With right padding to prevent overlap */}
+                <div className={selectedEvent.name !== "No Events Scheduled" ? "pr-72" : ""}>
+                  {selectedEvent.name !== "No Events Scheduled" && (
+                    <div className="text-left">
+                      <div className="flex gap-6">
+                        {/* Event Image */}
+                        {selectedEvent.image && (
+                          <div className="w-80 h-60 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <img 
+                              src={selectedEvent.image} 
+                              alt={selectedEvent.name}
+                              className="w-full h-full object-cover rounded-lg shadow-lg"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center shadow-lg" style={{display: 'none'}}>
+                              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
                           </div>
+                        )}
+
+                        {/* Event Details */}
+                        {(selectedEvent.time || selectedEvent.location) && (
+                          <div className="flex-1">
+                            <div className="space-y-2 text-md text-gray-700">
+                              {selectedEvent.time && <p><span className="font-medium text-lg">Time:</span> {selectedEvent.time}</p>}
+                              {selectedEvent.duration && <p><span className="font-medium text-lg">Duration:</span> {selectedEvent.duration}</p>}
+                              {selectedEvent.location && <p><span className="font-medium text-lg">Location:</span> {selectedEvent.location}</p>}
+                              {selectedEvent.callTime && (
+                                <p><span className="font-medium text-lg">Call Time:</span> {selectedEvent.callTime}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedEvent.objectives.length > 0 && (
+                        <div className="mt-6">
+                          <p className="font-semibold text-xl text-gray-800 mb-2">Objectives:</p>
+                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                            {selectedEvent.objectives.map((obj, idx) => (
+                              <li key={idx}>{obj.trim()}</li>
+                            ))}
+                          </ul>
                         </div>
                       )}
 
-                      {/* Event Content */}
-                      {(selectedEvent.time || selectedEvent.location) && (
-                        <div className="flex-1">
-                          <div className="space-y-2 text-md text-gray-700">
-                            {selectedEvent.time && <p><span className="font-medium text-lg">Time:</span> {selectedEvent.time}</p>}
-                            {selectedEvent.duration && <p><span className="font-medium text-lg">Duration:</span> {selectedEvent.duration}</p>}
-                            {selectedEvent.location && <p><span className="font-medium text-lg">Location:</span> {selectedEvent.location}</p>}
-                            {selectedEvent.callTime && (
-                              <p><span className="font-medium text-lg">Call Time:</span> {selectedEvent.callTime}</p>
-                            )}
-                          </div>
+                      {selectedEvent.opportunities.length > 0 && (
+                        <div className="mt-6">
+                          <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Opportunities:</p>
+                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                            {selectedEvent.opportunities.map((opp, idx) => (
+                              <li key={idx}>{opp.trim()}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {(selectedEvent.whatExpected || selectedEvent.whatExpectedItems?.length > 0) && (
+                        <div className="mt-6">
+                          <p className="font-semibold text-xl text-gray-800 mb-2">What to Expect:</p>
+                          {selectedEvent.whatExpectedItems?.length > 0 ? (
+                            <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                              {selectedEvent.whatExpectedItems.map((item, idx) => (
+                                <li key={idx}>{item.trim()}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-700 leading-relaxed">{selectedEvent.whatExpected}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {(selectedEvent.guidelines || selectedEvent.guidelinesItems?.length > 0) && (
+                        <div className="mt-6">
+                          <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Guidelines:</p>
+                          {selectedEvent.guidelinesItems?.length > 0 ? (
+                            <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                              {selectedEvent.guidelinesItems.map((item, idx) => (
+                                <li key={idx}>{item.trim()}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-700 leading-relaxed">{selectedEvent.guidelines}</p>
+                          )}
                         </div>
                       )}
                     </div>
-
-                    {selectedEvent.objectives.length > 0 && (
-                      <div className="mt-6">
-                        <p className="font-semibold text-xl text-gray-800 mb-2">Objectives:</p>
-                        <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                          {selectedEvent.objectives.map((obj, idx) => (
-                            <li key={idx}>{obj.trim()}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {selectedEvent.opportunities.length > 0 && (
-                      <div className="mt-6">
-                        <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Opportunities:</p>
-                        <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                          {selectedEvent.opportunities.map((opp, idx) => (
-                            <li key={idx}>{opp.trim()}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {(selectedEvent.whatExpected || selectedEvent.whatExpectedItems?.length > 0) && (
-                      <div className="mt-6">
-                        <p className="font-semibold text-xl text-gray-800 mb-2">What to Expect:</p>
-                        {selectedEvent.whatExpectedItems?.length > 0 ? (
-                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                            {selectedEvent.whatExpectedItems.map((item, idx) => (
-                              <li key={idx}>{item.trim()}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-gray-700 leading-relaxed">{selectedEvent.whatExpected}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {(selectedEvent.guidelines || selectedEvent.guidelinesItems?.length > 0) && (
-                      <div className="mt-6">
-                        <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Guidelines:</p>
-                        {selectedEvent.guidelinesItems?.length > 0 ? (
-                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                            {selectedEvent.guidelinesItems.map((item, idx) => (
-                              <li key={idx}>{item.trim()}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-gray-700 leading-relaxed">{selectedEvent.guidelines}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {selectedEvent.name !== "No Events Scheduled" && (
-                <div className="w-64 bg-emerald-700 text-white rounded-xl p-14 text-center">
-                  <p className="text-xl font-semibold">Interested Volunteers</p>
-                  <p className="mt-2 text-6xl font-extrabold text-emerald-200">{selectedEvent.volunteers}</p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <div className="h-48 flex items-center justify-center text-gray-400 text-xl">
