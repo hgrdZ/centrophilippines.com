@@ -29,27 +29,25 @@ function ReviewAiScheduling() {
   const navigate = useNavigate();
 
   const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
-  const EMAIL_API_URL = 'http://localhost:5000';
 
-  useEffect(() => {
-    if (
-      location.state &&
-      location.state.volunteer &&
-      location.state.eventDetails
-    ) {
-      const { volunteer: selectedVolunteer, eventDetails: selectedEvent } =
-        location.state;
-      setVolunteer(selectedVolunteer);
-      setEventDetails(selectedEvent);
-      fetchEventVolunteers(selectedEvent.event_id);
-      fetchAcceptedVolunteersCount(selectedEvent.event_id);
-      generateAiSuggestions(selectedVolunteer, selectedEvent);
-    } else {
-      navigate("/review-application-event");
-    }
-  }, [location.state, navigate]);
+useEffect(() => {
+  if (
+    location.state &&
+    location.state.volunteer &&
+    location.state.eventDetails
+  ) {
+    const { volunteer: selectedVolunteer, eventDetails: selectedEvent } =
+      location.state;
+    setVolunteer(selectedVolunteer);
+    setEventDetails(selectedEvent);
+    fetchEventVolunteers(selectedEvent.event_id, selectedVolunteer);
+    fetchAcceptedVolunteersCount(selectedEvent.event_id);
+    generateAiSuggestions(selectedVolunteer, selectedEvent);
+  } else {
+    navigate("/review-application-event");
+  }
+}, [location.state, navigate]);
 
-  // Auto-hide success modals after 3 seconds
   useEffect(() => {
     if (showSuccessApprove || showSuccessReject || showSuccessAdjust) {
       const timer = setTimeout(() => {
@@ -81,56 +79,81 @@ function ReviewAiScheduling() {
     }
   };
 
-  const fetchEventVolunteers = async (eventId) => {
-    try {
-      const { data: eventUsers, error } = await supabase
-        .from("Event_User")
-        .select(
-          "user_id, event_id, status, days_available, time_availability, busy_hours"
-        )
-        .eq("event_id", eventId)
-        .eq("status", "PENDING");
+const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
+  try {
+    const { data: eventUsers, error } = await supabase
+      .from("Event_User")
+      .select(
+        "user_id, event_id, status, days_available, time_availability, busy_hours"
+      )
+      .eq("event_id", eventId)
+      .eq("status", "PENDING");
 
-      if (error) {
-        console.error("Error fetching event volunteers:", error);
-        return;
-      }
-
-      const volunteersWithDetails = await Promise.all(
-        eventUsers.map(async (eventUser) => {
-          const { data: volunteerData, error: userError } = await supabase
-            .from("LoginInformation")
-            .select(
-              "user_id, firstname, lastname, email, profile_picture, preferred_volunteering, contact_number"
-            )
-            .eq("user_id", eventUser.user_id)
-            .single();
-
-          if (userError) {
-            console.error("Error fetching volunteer details:", userError);
-            return null;
-          }
-
-          return {
-            ...volunteerData,
-            days_available: eventUser.days_available,
-            time_availability: eventUser.time_availability,
-            busy_hours: eventUser.busy_hours,
-            event_id: eventUser.event_id,
-          };
-        })
-      );
-
-      const filteredVolunteers = volunteersWithDetails.filter((v) => v !== null);
-      setAllVolunteers(filteredVolunteers);
-
-      const currentIndex = filteredVolunteers.findIndex(
-        (v) => v.user_id === volunteer?.user_id
-      );
-      setCurrentVolunteerIndex(currentIndex >= 0 ? currentIndex : 0);
-    } catch (error) {
-      console.error("Error in fetchEventVolunteers:", error);
+    if (error) {
+      console.error("Error fetching event volunteers:", error);
+      return;
     }
+
+    const volunteersWithDetails = await Promise.all(
+      eventUsers.map(async (eventUser) => {
+        const { data: volunteerData, error: userError } = await supabase
+          .from("LoginInformation")
+          .select(
+            "user_id, firstname, lastname, email, profile_picture, preferred_volunteering, contact_number, location"
+          )
+          .eq("user_id", eventUser.user_id)
+          .single();
+
+        if (userError) {
+          console.error("Error fetching volunteer details:", userError);
+          return null;
+        }
+
+        return {
+          ...volunteerData,
+          days_available: eventUser.days_available,
+          time_availability: eventUser.time_availability,
+          busy_hours: eventUser.busy_hours,
+          event_id: eventUser.event_id,
+        };
+      })
+    );
+
+    const filteredVolunteers = volunteersWithDetails.filter((v) => v !== null);
+    setAllVolunteers(filteredVolunteers);
+
+    // CHANGED: Use parameter instead of state
+    const currentIndex = filteredVolunteers.findIndex(
+      (v) => v.user_id === selectedVolunteer?.user_id
+    );
+    setCurrentVolunteerIndex(currentIndex >= 0 ? currentIndex : 0);
+  } catch (error) {
+    console.error("Error in fetchEventVolunteers:", error);
+  }
+};
+
+  const calculateEventDuration = (timeStart, timeEnd, callTime) => {
+    const parseTime = (timeStr) => {
+      const [time, period] = timeStr.split(/\s+/);
+      let [hours, minutes] = time.split(":").map(Number);
+      if (period?.toUpperCase() === "PM" && hours !== 12) hours += 12;
+      if (period?.toUpperCase() === "AM" && hours === 12) hours = 0;
+      return new Date(1970, 0, 1, hours, minutes || 0);
+    };
+
+    const start = parseTime(timeStart);
+    const end = parseTime(timeEnd);
+    let duration = (end - start) / (1000 * 60 * 60);
+
+    // Add call time if provided
+    if (callTime) {
+      const callTimeMatch = callTime.match(/(\d+)/);
+      if (callTimeMatch) {
+        duration += parseInt(callTimeMatch[1]);
+      }
+    }
+
+    return `${Math.round(duration)} hours`;
   };
 
   const generateAiSuggestions = async (volunteerData, eventData) => {
@@ -148,7 +171,8 @@ function ReviewAiScheduling() {
             days_available: volunteerData.days_available,
             time_availability: volunteerData.time_availability,
             busy_hours: volunteerData.busy_hours,
-            preferred_volunteering: volunteerData.preferred_volunteering
+            preferred_volunteering: volunteerData.preferred_volunteering,
+            location: volunteerData.location
           },
           eventData: {
             event_id: eventData.event_id,
@@ -156,6 +180,7 @@ function ReviewAiScheduling() {
             date: eventData.date,
             time_start: formatTime(eventData.time_start),
             time_end: formatTime(eventData.time_end),
+            call_time: eventData.call_time,
             volunteers_limit: eventData.volunteers_limit,
             event_objectives: eventData.event_objectives,
             description: eventData.description,
@@ -227,6 +252,9 @@ function ReviewAiScheduling() {
         duration: "0 hours",
         matchingVolunteerTypes: ["General Volunteering"],
         compatibilityScore: "0",
+        proximityScore: "0",
+        timeOverlapScore: "0",
+        skillMatchScore: "0",
         reasoning: "Volunteer has not specified their time availability.",
       };
     }
@@ -240,6 +268,9 @@ function ReviewAiScheduling() {
         duration: "0 hours",
         matchingVolunteerTypes: ["General Volunteering"],
         compatibilityScore: "0",
+        proximityScore: "0",
+        timeOverlapScore: "0",
+        skillMatchScore: "0",
         reasoning: "Could not parse volunteer's time availability format.",
       };
     }
@@ -261,8 +292,11 @@ function ReviewAiScheduling() {
           eventData.volunteer_opportunities
         ),
         compatibilityScore: "0",
+        proximityScore: "0",
+        timeOverlapScore: "0",
+        skillMatchScore: "0",
         reasoning:
-          "Volunteer's availability does not overlap with event time. Event requires different schedule.",
+          "Volunteer's availability does not overlap with event time.",
       };
     }
 
@@ -271,15 +305,16 @@ function ReviewAiScheduling() {
     const totalEventDuration =
       (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
 
-    const timeCompatibility = (overlapDuration / totalEventDuration) * 60;
+    const timeCompatibility = (overlapDuration / totalEventDuration) * 50;
+    const proximityScore = 20; // Default proximity score
     const skillMatch =
       getMatchingTypes(
         volunteerData.preferred_volunteering,
         eventData.volunteer_opportunities
       ).length > 1
-        ? 30
-        : 15;
-    const finalScore = Math.round(timeCompatibility + skillMatch);
+        ? 20
+        : 10;
+    const finalScore = Math.round(timeCompatibility + proximityScore + skillMatch);
 
     return {
       recommendedTimeSlot: `${formatTimeFromDate(
@@ -291,13 +326,10 @@ function ReviewAiScheduling() {
         eventData.volunteer_opportunities
       ),
       compatibilityScore: finalScore.toString(),
-      reasoning: `Volunteer available for ${Math.round(
-        overlapDuration
-      )} of ${Math.round(totalEventDuration)} event hours (${Math.round(
-        (overlapDuration / totalEventDuration) * 100
-      )}% time overlap). ${
-        skillMatch > 15 ? "Good skill match." : "Limited skill match."
-      }`,
+      timeOverlapScore: Math.round(timeCompatibility).toString(),
+      proximityScore: proximityScore.toString(),
+      skillMatchScore: skillMatch.toString(),
+      reasoning: `Time overlap: ${Math.round(timeCompatibility)}%, Proximity: ${proximityScore}%, Skills: ${skillMatch}%`,
     };
   };
 
@@ -339,25 +371,25 @@ function ReviewAiScheduling() {
       }
       if (
         pref.includes("disaster") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("disaster")
       ) {
         commonTypes.push("Disaster Relief & Emergency Response");
       }
       if (
         pref.includes("administrative") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("administrative")
       ) {
         commonTypes.push("Administrative & Technical Support");
       }
       if (
         pref.includes("advocacy") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("advocacy")
       ) {
         commonTypes.push("Human Rights & Advocacy");
       }
       if (
         pref.includes("animal") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("animal")
       ) {
         commonTypes.push("Animal Welfare");
       }
@@ -374,6 +406,17 @@ function ReviewAiScheduling() {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
+    });
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
     });
   };
 
@@ -408,26 +451,36 @@ function ReviewAiScheduling() {
     }
   };
 
-  const handlePreviousApplicant = () => {
-    if (currentVolunteerIndex > 0 && allVolunteers.length > 0) {
-      const prevVolunteer = allVolunteers[currentVolunteerIndex - 1];
-      setVolunteer(prevVolunteer);
-      setCurrentVolunteerIndex(currentVolunteerIndex - 1);
-      generateAiSuggestions(prevVolunteer, eventDetails);
-    }
-  };
+const handlePreviousApplicant = () => {
+  console.log('Current Index:', currentVolunteerIndex);
+  console.log('All Volunteers:', allVolunteers);
+  console.log('Can go previous?', currentVolunteerIndex > 0);
 
-  const handleNextApplicant = () => {
-    if (
-      currentVolunteerIndex < allVolunteers.length - 1 &&
-      allVolunteers.length > 0
-    ) {
-      const nextVolunteer = allVolunteers[currentVolunteerIndex + 1];
-      setVolunteer(nextVolunteer);
-      setCurrentVolunteerIndex(currentVolunteerIndex + 1);
-      generateAiSuggestions(nextVolunteer, eventDetails);
-    }
-  };
+  if (currentVolunteerIndex > 0 && allVolunteers.length > 0) {
+    const prevVolunteer = allVolunteers[currentVolunteerIndex - 1];
+    console.log('Previous volunteer:', prevVolunteer);
+    setVolunteer(prevVolunteer);
+    setCurrentVolunteerIndex(currentVolunteerIndex - 1);
+    generateAiSuggestions(prevVolunteer, eventDetails);
+  }
+};
+
+const handleNextApplicant = () => {
+  console.log('Current Index:', currentVolunteerIndex);
+  console.log('All Volunteers Length:', allVolunteers.length);
+  console.log('Can go next?', currentVolunteerIndex < allVolunteers.length - 1);
+
+  if (
+    currentVolunteerIndex < allVolunteers.length - 1 &&
+    allVolunteers.length > 0
+  ) {
+    const nextVolunteer = allVolunteers[currentVolunteerIndex + 1];
+    console.log('Next volunteer:', nextVolunteer);
+    setVolunteer(nextVolunteer);
+    setCurrentVolunteerIndex(currentVolunteerIndex + 1);
+    generateAiSuggestions(nextVolunteer, eventDetails);
+  }
+};
 
   const handleShowApproveModal = () => {
     setShowApproveModal(true);
@@ -688,8 +741,8 @@ function ReviewAiScheduling() {
             <span className="invisible"></span>
           </div>
 
-          <div className="flex flex-1">
-            <div className="w-1/2 border-r-4 px-8 py-6 overflow-y-auto flex flex-col justify-center">
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-2/5 px-6 py-6 overflow-y-auto flex flex-col justify-center">
               <div className="flex items-center gap-4 mb-6">
                 <img
                   src={
@@ -737,6 +790,15 @@ function ReviewAiScheduling() {
                 </p>
               </div>
 
+              <div className="mb-4">
+                <p className="font-semibold text-lg text-emerald-900">
+                  Location
+                </p>
+                <p className="text-gray-800 text-md">
+                  {volunteer.location || "Not specified"}
+                </p>
+              </div>
+
               <div>
                 <p className="font-semibold text-lg text-emerald-900">
                   Preferred Type of Volunteering
@@ -753,20 +815,76 @@ function ReviewAiScheduling() {
               </div>
             </div>
 
-            <div className="w-1/2 flex justify-center items-center px-6 py-8">
+            <div className="w-2/5 flex justify-center items-center px-4 py-4 overflow-y-auto">
               <div
-                className="rounded-xl p-10 w-full max-w-2xl flex flex-col"
+                className="rounded-xl p-6 w-full flex flex-col"
                 style={{ backgroundColor: "#b8d9c8" }}
               >
-                <h3 className="text-5xl font-bold text-emerald-900 mb-2 text-center font-serif">
+                <h3 className="text-4xl font-bold text-emerald-900 mb-1 text-center font-serif">
                   CENTRO<span className="text-yellow-500">suggests</span>
                 </h3>
-                <p className="text-center text-emerald-800 font-semibold mb-6 text-lg">
+                <p className="text-center text-emerald-800 font-semibold mb-4 text-base">
                   Event ID: {eventDetails.event_id}
                 </p>
 
+                {/* Event Details Section */}
+                <div className="bg-white rounded-lg p-4 mb-4 border border-emerald-300">
+                  <h4 className="font-bold text-emerald-900 text-lg mb-3 border-b border-emerald-300 pb-2">
+                    Event Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="font-semibold text-emerald-800">Description:</p>
+                      <p className="text-gray-700">{eventDetails.description || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Date:</p>
+                      <p className="text-gray-700">{formatDate(eventDetails.date)}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Time:</p>
+                      <p className="text-gray-700">
+                        {formatTime(eventDetails.time_start)} - {formatTime(eventDetails.time_end)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Call Time:</p>
+                      <p className="text-gray-700">{eventDetails.call_time || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Duration:</p>
+                      <p className="text-gray-700">
+                        {calculateEventDuration(
+                          formatTime(eventDetails.time_start),
+                          formatTime(eventDetails.time_end),
+                          eventDetails.call_time
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Location:</p>
+                      <p className="text-gray-700">{eventDetails.location || "N/A"}</p>
+                    </div>
+<div className="col-span-2">
+  <p className="font-semibold text-emerald-800">Volunteering Opportunities:</p>
+
+  {eventDetails.volunteer_opportunities ? (
+    <ul className="list-disc list-inside text-gray-700">
+      {eventDetails.volunteer_opportunities
+        .split("-")
+        .map((item, index) => (
+          <li key={index}>{item.trim()}</li>
+        ))}
+    </ul>
+  ) : (
+    <p className="text-gray-700">N/A</p>
+  )}
+</div>
+                  </div>
+                </div>
+
                 {isLoading ? (
-                  <div className="flex justify-center items-center h-64">
+                  <div className="flex justify-center items-center h-48">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-900"></div>
                     <p className="ml-4 text-emerald-900 font-semibold">
                       Generating AI suggestions...
@@ -774,26 +892,25 @@ function ReviewAiScheduling() {
                   </div>
                 ) : aiSuggestions ? (
                   <>
-                    <div className="flex justify-between items-start mb-8">
-                      {/* Left side - Main content */}
-                      <div className="flex-1 pr-6">
-                        <div className="mb-6">
-                          <p className="font-bold text-lg text-emerald-900">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex-1 pr-4">
+                        <div className="mb-4">
+                          <p className="font-bold text-1xl text-emerald-900">
                             Recommended Time &amp; Duration
                           </p>
-                          <p className="text-gray-800 text-md">
+                          <p className="text-gray-800 text-l">
                             {aiSuggestions.recommendedTimeSlot}{" "}
-                            <span className="text-sm font-bold text-emerald-800">
+                            <span className="text-xs font-bold text-emerald-800">
                               [{aiSuggestions.duration}]
                             </span>
                           </p>
                         </div>
 
-                        <div className="mb-6">
-                          <p className="font-bold text-lg text-emerald-900">
+                        <div className="mb-4">
+                          <p className="font-bold text-1xl text-emerald-900">
                             Matching Volunteer Types
                           </p>
-                          <ul className="list-disc list-inside text-gray-800 text-md space-y-1 mt-2">
+                          <ul className="list-disc list-inside text-gray-800 text-l space-y-1 mt-1">
                             {aiSuggestions.matchingVolunteerTypes?.map(
                               (type, idx) => (
                                 <li key={idx}>{type}</li>
@@ -802,22 +919,37 @@ function ReviewAiScheduling() {
                           </ul>
                         </div>
 
-                        {aiSuggestions.reasoning && (
-                          <div className="mb-6">
-                            <p className="font-bold text-lg text-emerald-900">
-                              AI Analysis
-                            </p>
-                            <p className="text-gray-800 text-sm italic mt-1">
-                              {aiSuggestions.reasoning}
-                            </p>
-                          </div>
-                        )}
+{aiSuggestions.reasoning && (
+  <div className="mb-4">
+    <p className="font-bold text-xl text-emerald-900">
+      AI Analysis
+    </p>
+    <ul className="list-disc list-inside text-gray-800 mt-2 space-y-1">
+      {aiSuggestions.reasoning
+        .split(",")
+        .map((item, idx) => {
+          // i-highlight ang numbers at percentages
+          const formatted = item.replace(
+            /(\d+\.?\d*\s*%?)/g,
+            '<span class="font-bold text-emerald-800">$1</span>'
+          );
+
+          return (
+            <li
+              key={idx}
+              className="italic"
+              dangerouslySetInnerHTML={{ __html: formatted.trim() }}
+            />
+          );
+        })}
+    </ul>
+  </div>
+)}
                       </div>
 
-                      {/* Right side - Stats boxes stacked */}
                       <div className="flex flex-col gap-4 flex-shrink-0">
-                        <div className="border-yellow-400 border-2 bg-white rounded-xl shadow w-52 h-52 flex flex-col items-center justify-center text-center p-4">
-                          <p className="text-base font-semibold text-emerald-800 mb-3">
+                        <div className="border-yellow-400 border-2 bg-white rounded-2xl shadow-lg w-80 h-30 flex flex-col items-center justify-center text-center p-4">
+                          <p className="text-base font-semibold text-emerald-800 mb-2">
                             Compatibility<br/>Score
                           </p>
                           <p className="text-5xl font-extrabold text-yellow-500">
@@ -825,8 +957,8 @@ function ReviewAiScheduling() {
                           </p>
                         </div>
 
-                        <div className="border-blue-400 border-2 bg-white rounded-xl shadow w-52 h-52 flex flex-col items-center justify-center text-center p-4">
-                          <p className="text-base font-semibold text-emerald-800 mb-3">
+                        <div className="border-blue-400 border-2 bg-white rounded-2xl shadow-lg w-80 h-30 flex flex-col items-center justify-center text-center p-4">
+                          <p className="text-base font-semibold text-emerald-800 mb-2">
                             Accepted<br/>Volunteers
                           </p>
                           <p className="text-5xl font-extrabold text-blue-500">
@@ -836,29 +968,29 @@ function ReviewAiScheduling() {
                       </div>
                     </div>
 
-                    <div className="mt-auto flex gap-4 justify-evenly">
-                      <button
-                        onClick={handleShowApproveModal}
-                        className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 text-md font-semibold cursor-pointer"
-                      >
-                        Approve Deployment
-                      </button>
-                      <button
-                        onClick={handleAdjustSchedule}
-                        className="bg-orange-400 text-white px-6 py-3 rounded-lg hover:bg-orange-500 text-md font-semibold cursor-pointer"
-                      >
-                        Adjust Schedule
-                      </button>
-                      <button
-                        onClick={handleShowRejectModal}
-                        className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 text-md font-semibold cursor-pointer"
-                      >
-                        Reject
-                      </button>
-                    </div>
+<div className="mt-auto flex gap-4 justify-evenly">
+  <button
+    onClick={handleShowApproveModal}
+    className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 text-md font-semibold cursor-pointer"
+  >
+    Approve Deployment
+  </button>
+  <button
+    onClick={handleAdjustSchedule}
+    className="bg-orange-400 text-white px-6 py-3 rounded-lg hover:bg-orange-500 text-md font-semibold cursor-pointer"
+  >
+    Adjust Schedule
+  </button>
+  <button
+    onClick={handleShowRejectModal}
+    className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 text-md font-semibold cursor-pointer"
+  >
+    Reject
+  </button>
+</div>
                   </>
                 ) : (
-                  <div className="flex justify-center items-center h-64">
+                  <div className="flex justify-center items-center h-48">
                     <p className="text-emerald-900 font-semibold">
                       Failed to generate suggestions. Please try again.
                     </p>
@@ -868,35 +1000,35 @@ function ReviewAiScheduling() {
             </div>
           </div>
 
-          <div className="flex justify-evenly px-4 py-3 border-gray-300">
-            <button
-              onClick={handlePreviousApplicant}
-              disabled={currentVolunteerIndex <= 0}
-              className={`border font-semibold px-4 py-2 rounded-lg text-md ${
-                currentVolunteerIndex <= 0
-                  ? "border-gray-500 text-gray-300 cursor-not-allowed"
-                  : "border-emerald-600 text-emerald-600 hover:bg-emerald-100"
-              }`}
-            >
-              Previous Applicant ({currentVolunteerIndex + 1} of{" "}
-              {allVolunteers.length})
-            </button>
-            <button
-              onClick={handleNextApplicant}
-              disabled={currentVolunteerIndex >= allVolunteers.length - 1}
-              className={`font-semibold px-4 py-2 rounded-lg text-md ${
-                currentVolunteerIndex >= allVolunteers.length - 1
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-emerald-600 text-white hover:bg-emerald-700"
-              }`}
-            >
-              Next Applicant
-            </button>
-          </div>
+<div className="flex justify-evenly px-4 py-3 border-gray-300">
+  <button
+    onClick={handlePreviousApplicant}
+    disabled={currentVolunteerIndex <= 0}
+    className={`border font-semibold px-4 py-2 rounded-lg text-md ${
+      currentVolunteerIndex <= 0
+        ? "border-gray-500 text-gray-300 cursor-not-allowed"
+        : "border-emerald-600 text-emerald-600 hover:bg-emerald-100"
+    }`}
+  >
+    Previous Applicant ({currentVolunteerIndex + 1} of{" "}
+    {allVolunteers.length})
+  </button>
+  <button
+    onClick={handleNextApplicant}
+    disabled={currentVolunteerIndex >= allVolunteers.length - 1}
+    className={`font-semibold px-4 py-2 rounded-lg text-md ${
+      currentVolunteerIndex >= allVolunteers.length - 1
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        : "bg-emerald-600 text-white hover:bg-emerald-700"
+    }`}
+  >
+    Next Applicant
+  </button>
+</div>
         </div>
       </main>
 
-      {/* Adjust Confirm Modal */}
+      {/* All modals remain the same */}
       {showAdjustConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
@@ -971,7 +1103,6 @@ function ReviewAiScheduling() {
         </div>
       )}
 
-      {/* Adjust Modal */}
       {showAdjustModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
@@ -1110,7 +1241,6 @@ function ReviewAiScheduling() {
         </div>
       )}
 
-      {/* Success Approve Modal */}
       {showSuccessApprove && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-500 p-6 max-w-md w-full mx-4 animate-slideIn">
@@ -1137,7 +1267,6 @@ function ReviewAiScheduling() {
         </div>
       )}
 
-      {/* Success Reject Modal */}
       {showSuccessReject && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500 p-6 max-w-md w-full mx-4 animate-slideIn">
@@ -1164,7 +1293,6 @@ function ReviewAiScheduling() {
         </div>
       )}
 
-      {/* Success Adjust Modal */}
       {showSuccessAdjust && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4 animate-slideIn">
@@ -1200,7 +1328,6 @@ function ReviewAiScheduling() {
         </div>
       )}
 
-      {/* Approve Modal */}
       {showApproveModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-900 p-6 max-w-md w-full mx-4">
@@ -1267,7 +1394,6 @@ function ReviewAiScheduling() {
         </div>
       )}
 
-      {/* Reject Modal */}
       {showRejectModal && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
