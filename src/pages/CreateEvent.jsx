@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import { Link, useNavigate } from "react-router-dom";
@@ -86,6 +86,9 @@ function CreateEvent() {
   const [eventDescription, setEventDescription] = useState("");
   const [eventObjectives, setEventObjectives] = useState("");
   const [location, setLocation] = useState("");
+  const [locationDetails, setLocationDetails] = useState(null);
+  const locationInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
   const [volunteersLimit, setVolunteersLimit] = useState("");
   const [callTime, setCallTime] = useState("");
   const [eventTasks, setEventTasks] = useState("");
@@ -136,7 +139,53 @@ function CreateEvent() {
       setAdminData(admin);
       setNgoCode(admin.NGO_Information?.ngo_code || "");
     }
+
+    // Load Google Maps API
+    const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+    
+    // Load Google Maps API
+    if (!window.google) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeAutocomplete;
+      document.head.appendChild(script);
+    } else {
+      initializeAutocomplete();
+    }
   }, []);
+
+  // Initialize Google Places Autocomplete
+  const initializeAutocomplete = () => {
+    if (locationInputRef.current && window.google) {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        locationInputRef.current,
+        {
+          types: ['establishment', 'geocode'],
+          componentRestrictions: { country: 'ph' }, // Restrict to Philippines
+        }
+      );
+
+      autocompleteRef.current.addListener('place_changed', handlePlaceSelect);
+    }
+  };
+
+  // Handle place selection
+  const handlePlaceSelect = () => {
+    const place = autocompleteRef.current.getPlace();
+    
+    if (place.geometry) {
+      setLocation(place.formatted_address || place.name);
+      setLocationDetails({
+        name: place.name,
+        address: place.formatted_address,
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        place_id: place.place_id,
+      });
+    }
+  };
 
   // Convert 12-hour format to 24-hour format
   const convertTo24Hour = (time12h) => {
@@ -317,13 +366,6 @@ function CreateEvent() {
         task.id === id ? { ...task, description: value } : task
       )
     );
-  };
-
-  // Fixed 3 tasks - no add function needed
-
-  // Remove completion task - removed since we have fixed 3 tasks
-  const removeCompletionTask = (id) => {
-    // Fixed 3 tasks - no removal allowed
   };
 
   // Get next event ID
@@ -668,18 +710,27 @@ function CreateEvent() {
         </div>
       </div>
 
-      {/* Location */}
+      {/* Location with Google Maps Autocomplete */}
       <div className="mb-4">
         <label className="block font-semibold text-lg text-green-800 mb-1">
           Location
         </label>
         <input
+          ref={locationInputRef}
           type="text"
-          placeholder="Enter Location"
+          placeholder="Search for a location..."
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          className="w-full px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer"
+          className="w-full px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer focus:outline-none focus:border-green-500"
         />
+        {locationDetails && (
+          <div className="mt-2 p-2 bg-green-50 rounded border border-green-200 text-sm">
+            <p className="text-green-800">
+              <span className="font-semibold">Selected:</span> {locationDetails.name}
+            </p>
+            <p className="text-gray-600 text-xs">{locationDetails.address}</p>
+          </div>
+        )}
       </div>
 
       {/* Event Description */}
