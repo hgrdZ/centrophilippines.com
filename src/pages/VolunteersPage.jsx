@@ -106,7 +106,7 @@ const VolunteersPage = () => {
   const sendRemovalEmail = async (volunteerEmail, volunteerName, reason, ngoName) => {
     try {
       console.log('Sending email to:', volunteerEmail);
-      const response = await fetch('https://centrophilippines.online/api/send-removal-notification', {
+      const response = await fetch('/api/send-removal-notification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

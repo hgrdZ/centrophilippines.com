@@ -380,7 +380,7 @@ function ReviewAiScheduling() {
   const sendRejectionEmail = async (volunteerEmail, volunteerName, eventTitle, ngoName, reason) => {
     try {
       console.log('📧 Sending rejection email to:', volunteerEmail);
-      const response = await fetch(`https://centrophilippines.online/api/send-reject-event`, {
+      const response = await fetch(`/api/send-reject-event`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

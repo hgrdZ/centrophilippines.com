@@ -255,7 +255,7 @@ export default function ReviewApplicationPage() {
         console.log("🏢 NGO Name:", ngoName);
         console.log("📝 Reason:", rejectReason);
 
-        const response = await fetch('https://centrophilippines.online/api/send-reject-org', {
+        const response = await fetch('/api/send-reject-org', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

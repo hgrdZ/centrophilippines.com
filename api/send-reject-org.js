@@ -1,6 +1,4 @@
-// ============================================
-// FILE 3: api/send-reject-org.js
-// ============================================
+// api/send-reject-org.js (at lahat ng iba pang api files)
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
@@ -8,25 +6,41 @@ const createTransporter = () => {
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER || 'centrophilippines.cpo@gmail.com',
-      pass: process.env.EMAIL_PASSWORD || 'kzwv bwsq lgku hauw'
+      pass: process.env.EMAIL_PASSWORD
     }
   });
 };
 
 module.exports = async (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  // ✅ CORS HEADERS - VERY IMPORTANT!
+  const allowedOrigins = [
+    'https://centrophilippines.online',
+    'https://www.centrophilippines.online',
+    'http://localhost:3000',
+    'http://localhost:5000'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT,DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
+  // ✅ Handle OPTIONS request (preflight)
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
+  // ✅ Only allow POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false,
+      error: 'Method not allowed' 
+    });
   }
 
   const { recipientEmail, volunteerName, reason, ngoName } = req.body;
@@ -93,11 +107,6 @@ module.exports = async (req, res) => {
             font-size: 28px; 
             font-weight: 600; 
           }
-          .header p { 
-            margin: 0; 
-            font-size: 14px; 
-            opacity: 0.9; 
-          }
           .content { 
             padding: 40px 30px; 
             color: #1f2937; 
@@ -123,13 +132,6 @@ module.exports = async (req, res) => {
             font-weight: 600; 
             font-size: 15px; 
             margin-bottom: 12px; 
-            display: flex;
-            align-items: center;
-          }
-          .reason-title::before {
-            content: '⚠';
-            margin-right: 8px;
-            font-size: 18px;
           }
           .reason-text { 
             color: #374151; 
@@ -146,32 +148,11 @@ module.exports = async (req, res) => {
             padding-top: 25px; 
             border-top: 2px solid #e5e7eb; 
           }
-          .signature p { 
-            margin: 5px 0; 
-            font-size: 15px; 
-          }
-          .ngo-name { 
-            color: #b91c1c; 
-            font-weight: 600; 
-          }
           .footer { 
             background: #f9fafb; 
             padding: 25px 30px; 
             text-align: center; 
             border-top: 1px solid #e5e7eb;
-          }
-          .footer p { 
-            font-size: 13px; 
-            color: #6b7280; 
-            margin: 8px 0; 
-          }
-          .footer-icon {
-            font-size: 20px;
-            margin-bottom: 10px;
-          }
-          @media only screen and (max-width: 600px) {
-            .container { margin: 0; border-radius: 0; }
-            .content, .header, .footer { padding: 25px 20px; }
           }
         </style>
       </head>
@@ -188,7 +169,7 @@ module.exports = async (req, res) => {
             </div>
             
             <p class="message">
-              We hope this message finds you well. We are writing to inform you that your volunteer application with <strong>${ngoName}</strong> has been rejected.
+              We are writing to inform you that your volunteer application with <strong>${ngoName}</strong> has been rejected.
             </p>
             
             <div class="reason-box">
@@ -197,22 +178,18 @@ module.exports = async (req, res) => {
             </div>
             
             <p class="message">
-              We sincerely appreciate your interest in joining our organization. After careful consideration, we regret to inform you that we will not be moving forward with your application at this time. 
-              We encourage you to apply again in the future and wish you the best in your endeavors.
+              We encourage you to apply again in the future.
             </p>
             
             <div class="signature">
               <p>Best regards,</p>
-              <p class="ngo-name">${ngoName}</p>
-              <p style="color: #6b7280; font-size: 14px;">Administration Team</p>
+              <p><strong>${ngoName}</strong></p>
             </div>
           </div>
           
           <div class="footer">
-            <div class="footer-icon">📧</div>
             <p><strong>This is an automated message from Centro App</strong></p>
-            <p>Please do not reply to this email.</p>
-            <p style="margin-top: 15px;">&copy; ${new Date().getFullYear()} Centro App. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} Centro App. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -221,23 +198,20 @@ module.exports = async (req, res) => {
   };
 
   try {
-    console.log(`📧 Attempting to send organization rejection email to: ${recipientEmail}`);
+    console.log(`📧 Sending email to: ${recipientEmail}`);
     
     const info = await transporter.sendMail(mailOptions);
     
-    console.log(`✓ Rejection email sent successfully!`);
-    console.log(`  → Recipient: ${recipientEmail}`);
-    console.log(`  → Message ID: ${info.messageId}`);
-    console.log(`  → NGO: ${ngoName}`);
+    console.log(`✓ Email sent! Message ID: ${info.messageId}`);
     
-    res.json({ 
+    res.status(200).json({ 
       success: true, 
       message: 'Email sent successfully',
       messageId: info.messageId,
       recipient: recipientEmail
     });
   } catch (error) {
-    console.error(`✗ Error sending email to ${recipientEmail}:`, error.message);
+    console.error(`✗ Email error:`, error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to send email',
