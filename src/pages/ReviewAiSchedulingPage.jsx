@@ -630,6 +630,9 @@ function ReviewAiScheduling() {
         <div className="bg-white rounded-lg shadow border-2 border-emerald-800 overflow-hidden h-full flex flex-col">
           <div className="bg-orange-400 h-14 flex items-center justify-between px-4">
             <span />
+            <h2 className="font-extrabold text-white font-montserrat text-3xl tracking-wide uppercase">
+              {eventDetails.event_title}
+            </h2>
             <Link to="/review-application-event">
               <button className="text-white text-2xl font-bold hover:text-gray-200 cursor-pointer">
                 ×
@@ -638,9 +641,7 @@ function ReviewAiScheduling() {
           </div>
 
           <div className="bg-white px-6 py-2 border-gray-300">
-            <h2 className="text-center font-bold text-teal-900 text-3xl tracking-wide leading-snug">
-              {eventDetails.event_title.toUpperCase()}
-            </h2>
+            <span className="invisible"></span>
           </div>
 
           <div className="flex flex-1">
@@ -771,22 +772,21 @@ function ReviewAiScheduling() {
 
                       {/* Right side - Stats boxes stacked */}
                       <div className="flex flex-col gap-4 flex-shrink-0">
-                        <div className="border-yellow-400 border-2 bg-gray-100 rounded-xl shadow px-6 py-6 w-56 text-center">
-                          <p className="text-sm font-semibold text-emerald-800">
-                            Compatibility Score
+                        <div className="border-yellow-400 border-2 bg-white rounded-xl shadow w-36 h-32 flex flex-col items-center justify-center text-center p-4">
+                          <p className="text-base font-semibold text-emerald-800 mb-3">
+                            Compatibility<br/>Score
                           </p>
                           <p className="text-4xl font-extrabold text-yellow-500">
                             {aiSuggestions.compatibilityScore}%
                           </p>
                         </div>
 
-                        <div className="border-blue-400 border-2 bg-gray-100 rounded-xl shadow px-6 py-6 w-56 text-center">
-                          <p className="text-sm font-semibold text-emerald-800">
-                            Accepted Volunteers
+                        <div className="border-blue-400 border-2 bg-white rounded-xl shadow w-36 h-32 flex flex-col items-center justify-center text-center p-4">
+                          <p className="text-base font-semibold text-emerald-800 mb-3">
+                            Accepted<br/>Volunteers
                           </p>
                           <p className="text-4xl font-extrabold text-blue-500">
-                            {acceptedVolunteersCount}/
-                            {eventDetails.volunteers_limit}
+                            {acceptedVolunteersCount}/{eventDetails.volunteers_limit}
                           </p>
                         </div>
                       </div>
