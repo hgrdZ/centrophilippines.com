@@ -542,28 +542,29 @@ function EventPage() {
             </div>
           </div>
 
-<div className="p-6 flex flex-col md:flex-row md:gap-8 flex-1 overflow-auto">
-  <div className="flex-1 pr-4 space-y-6">
-              <h2 className="text-4xl font-bold font-montserrat  text-emerald-800 leading-snug hover:text-emerald-700 transition-colors" title="Click to edit Event Name">
+          <div className="p-6 flex gap-8 flex-1 overflow-auto">
+            {/* LEFT COLUMN - Main Content */}
+            <div className="flex-1 space-y-6 overflow-y-auto pr-4">
+              <h2 className="text-4xl font-bold font-montserrat text-emerald-800 leading-snug hover:text-emerald-700 transition-colors" title="Click to edit Event Name">
                 {eventData.event_title}
               </h2>
 
-              <div className="flex gap-6">
-                <div  className="flex-1 rounded-lg overflow-hidden shadow-lg cursor-pointer hover:opacity-90 transition-all"
+              <div className="flex gap-6 min-h-[250px]">
+                <div className="flex-1 rounded-lg overflow-hidden shadow-lg cursor-pointer hover:opacity-90 transition-all max-h-[250px]"
                   title="Click to edit Event Image">
                   {eventImage ?  (
-                    <img src={eventImage} alt="Event" className="w-full h-full object-cover rounded-lg" onError={() => setEventImage(null)} />
+                    <img src={eventImage} alt="Event" className="w-full h-[250px] object-cover rounded-lg" onError={() => setEventImage(null)} />
                   ) : (
-                    <div className="text-center text-emerald-900">
+                    <div className="text-center text-emerald-900 flex flex-col items-center justify-center h-[250px]">
                       <div className="text-4xl mb-2">📸</div>
-                      <p className="font-semibold font-montserrat ">Add Event Image</p>
+                      <p className="font-semibold font-montserrat">Add Event Image</p>
                     </div>
                   )}
                 </div>
 
                 <div className="flex-1 space-y-3 text-gray-700 font-montserrat text-lg">
                   <div className="flex items-center hover:text-emerald-800 transition-colors">
-                  <strong>Date:</strong> <span className="ml-2">{formatDate(eventData.date)}</span>
+                    <strong>Date:</strong> <span className="ml-2">{formatDate(eventData.date)}</span>
                   </div>
                   <div className="flex items-center hover:text-emerald-800 transition-colors">
                     <strong>Time:</strong>
@@ -577,11 +578,11 @@ function EventPage() {
                     </span>
                   </div>
                   <div className="flex items-center hover:text-emerald-800 transition-colors">
-                  <strong>Location:</strong> <span className="ml-2">{eventData.location || "TBA"}</span>
+                    <strong>Location:</strong> <span className="ml-2">{eventData.location || "TBA"}</span>
                   </div>
                   {eventData.call_time && (
                     <div className="flex items-center">
-                  <strong>Call Time:</strong> <span className="ml-2">{formatTime(eventData.call_time)}</span>
+                      <strong>Call Time:</strong> <span className="ml-2">{formatTime(eventData.call_time)}</span>
                     </div>
                   )}
                 </div>
@@ -649,7 +650,6 @@ function EventPage() {
               )}
 
               <div className="flex justify-center pt-1">
-                {/* Review Certifications Button */}
                 <Link to={`/event/${eventData.event_id}/first`}>
                   <button className="bg-emerald-900 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-emerald-700 shadow-lg transition-colors cursor-pointer">
                     Review Certifications
@@ -658,34 +658,39 @@ function EventPage() {
               </div>
             </div>
 
-            <div className="w-full md:w-1/3 space-y-6 mt-8 md:mt-0 flex-shrink-0">
+            {/* RIGHT COLUMN - Fixed Width Sidebar */}
+            <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
+              {/* Status Badge */}
               <div className="text-center">
-                <div className={`px-6 py-2 rounded-full text-center font-bold  ${
+                <div className={`px-6 py-2 rounded-full text-center font-bold ${
                   eventData.status === 'ONGOING' ? 'bg-emerald-500 text-white' : 
                   eventData.status === 'UPCOMING' ? 'bg-yellow-500 text-white' : 
                   'bg-gray-500 text-white'
                 }`}>{eventData.status}</div>
               </div>
 
-              <div className="bg-emerald-900 rounded-lg p-6 text-center shadow-lg transition-colors font-montserrat " title="Click to view submission details">
+              {/* Complete Submissions Card */}
+              <div className="bg-emerald-900 rounded-lg p-6 text-center shadow-lg transition-colors font-montserrat" title="Click to view submission details">
                 <p className="text-xl font-semibold text-white mb-2">Complete Submissions</p>
                 <p className="text-5xl font-bold text-yellow-400 mb-2">{volunteerStats.submissions}</p>
                 <p className="text-l text-yellow-500 font-bold">out of {eventData.volunteers_limit || "unlimited"} volunteers</p>
                 <Link to={`/folder/${eventId}`}>
-                  <button className="bg-emerald-600 text-white font-semibold font-montserrat  px-8 py-2 rounded-full mt-4 hover:bg-emerald-700 transition-colors cursor-pointer">Open Folder</button>
+                  <button className="bg-emerald-600 text-white font-semibold font-montserrat px-8 py-2 rounded-full mt-4 hover:bg-emerald-700 transition-colors cursor-pointer">Open Folder</button>
                 </Link>
               </div>
 
-              <div className="bg-emerald-900 rounded-lg p-6 text-center shadow-lg transition-colors font-montserrat " title="Click to view volunteer details">
+              {/* Total Volunteers Card */}
+              <div className="bg-emerald-900 rounded-lg p-6 text-center shadow-lg transition-colors font-montserrat" title="Click to view volunteer details">
                 <p className="text-lg font-semibold text-white mb-2">Total Volunteers Joined</p>
                 <p className="text-6xl font-bold text-yellow-400 mb-2">{volunteerStats.totalJoined}</p>
-                <div className="text-l text-white space-y-1 font-montserrat ">
+                <div className="text-l text-white space-y-1 font-montserrat">
                   <p><span className="font-semibold text-yellow-500">{volunteerStats.ongoingCount}</span> Going</p>
                   <p><span className="font-semibold text-yellow-500">{volunteerStats.pendingCount}</span> Pending</p>
                   {eventData.volunteers_limit && <p className="mt-2 text-white font-semibold">Limit: {eventData.volunteers_limit}</p>}
                 </div>
               </div>
 
+              {/* Event Created Card */}
               {eventData.created_at && (
                 <div className="bg-emerald-900 rounded-lg p-4 text-center font-montserrat">
                   <p className="text-l text-yellow-400 font-bold">Event Created</p>
@@ -693,9 +698,10 @@ function EventPage() {
                 </div>
               )}
 
+              {/* Back Button */}
               <div className="text-center pt-4">
                 <Link to="/manage-reports">
-                  <button className="bg-orange-500 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-yellow-500 shadow-lg transition-colors cursor-pointer">Back to Events</button>
+                  <button className="bg-orange-500 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-yellow-500 shadow-lg transition-colors cursor-pointer w-full">Back to Events</button>
                 </Link>
               </div>
             </div>
@@ -707,3 +713,4 @@ function EventPage() {
 }
 
 export default EventPage;
+
