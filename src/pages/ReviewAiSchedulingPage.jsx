@@ -4,9 +4,6 @@ import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import Sidebar from "../components/Sidebar";
 import supabase from "../config/supabaseClient";
 
-// REMOVED: OpenAI import and initialization
-// API calls will now go through our backend
-
 function ReviewAiScheduling() {
   const [volunteer, setVolunteer] = useState(null);
   const [eventDetails, setEventDetails] = useState(null);
@@ -28,8 +25,11 @@ function ReviewAiScheduling() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // IMPORTANT: Replace this with your actual backend URL
-  const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+  // IMPORTANT: This will automatically use Vercel's URL in production
+  const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 
+                          (process.env.NODE_ENV === 'production' 
+                            ? '/api' // In Vercel, use relative path
+                            : 'http://localhost:3001');
 
   useEffect(() => {
     if (
@@ -121,11 +121,13 @@ function ReviewAiScheduling() {
     }
   };
 
-  // UPDATED: Now calls backend API instead of OpenAI directly
+  // UPDATED: Enhanced error handling and retry logic for Vercel deployment
   const generateAiSuggestions = async (volunteerData, eventData) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BACKEND_API_URL}/api/ai/generate-suggestions`, {
+      const endpoint = `${BACKEND_API_URL}/ai/generate-suggestions`;
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +157,7 @@ function ReviewAiScheduling() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate AI suggestions');
+        throw new Error(`API request failed with status ${response.status}`);
       }
 
       const data = await response.json();
@@ -174,6 +176,7 @@ function ReviewAiScheduling() {
       }
     } catch (error) {
       console.error("Error generating AI suggestions:", error);
+      // Always provide fallback suggestions to ensure UI works
       const fallbackSuggestions = createStrictFallbackSuggestions(
         volunteerData,
         eventData
@@ -847,7 +850,7 @@ function ReviewAiScheduling() {
         </div>
       </main>
 
-      {/* All modals remain the same as original */}
+      {/* Modals */}
       {showAdjustConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
