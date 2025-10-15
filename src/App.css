@@ -400,6 +400,9 @@
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
   }
+  .mr-3 {
+    margin-right: calc(var(--spacing) * 3);
+  }
   .mr-6 {
     margin-right: calc(var(--spacing) * 6);
   }
