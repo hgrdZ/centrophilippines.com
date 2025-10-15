@@ -28,24 +28,46 @@ function ReviewAiScheduling() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+const isLocal = window.location.hostname === "localhost";
+const BACKEND_API_URL = isLocal ? "http://localhost:5000" : "";
 
 useEffect(() => {
-  if (
-    location.state &&
-    location.state.volunteer &&
-    location.state.eventDetails
-  ) {
-    const { volunteer: selectedVolunteer, eventDetails: selectedEvent } =
-      location.state;
+const initializePage = async () => {
+  if (location.state?.volunteer && location.state?.eventDetails) {
+    const { volunteer: selectedVolunteer, eventDetails: selectedEvent } = location.state;
+
+    if (!selectedEvent?.event_id) {
+      console.warn("⚠️ Missing event_id in selectedEvent:", selectedEvent);
+      navigate("/review-application-event");
+      return;
+    }
+
     setVolunteer(selectedVolunteer);
     setEventDetails(selectedEvent);
     fetchEventVolunteers(selectedEvent.event_id, selectedVolunteer);
     fetchAcceptedVolunteersCount(selectedEvent.event_id);
-    generateAiSuggestions(selectedVolunteer, selectedEvent);
+
+    const { data: fullEventData, error: eventError } = await supabase
+      .from("Event_Information")
+      .select("*")
+      .eq("event_id", selectedEvent.event_id)
+      .maybeSingle();
+
+    if (eventError) {
+      console.error("Error fetching full event data:", eventError);
+      generateAiSuggestions(selectedVolunteer, selectedEvent);
+    } else if (fullEventData) {
+      setEventDetails(fullEventData);
+      generateAiSuggestions(selectedVolunteer, fullEventData);
+    } else {
+      console.warn("⚠️ Event not found in Event_Information:", selectedEvent.event_id);
+    }
   } else {
     navigate("/review-application-event");
   }
+};
+
+  initializePage();
 }, [location.state, navigate]);
 
   useEffect(() => {
@@ -849,7 +871,7 @@ const handleNextApplicant = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-emerald-800">Call Time:</p>
-                      <p className="text-gray-700">{eventDetails.call_time || "N/A"}</p>
+                      <p className="text-gray-700">{eventDetails.call_time}</p>
                     </div>
                     <div>
                       <p className="font-semibold text-emerald-800">Duration:</p>
