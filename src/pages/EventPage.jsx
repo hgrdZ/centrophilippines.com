@@ -25,10 +25,81 @@ function EventPage() {
   const [ngoLogo, setNgoLogo] = useState("");
   const [ngoName, setNgoName] = useState("");
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("");
 
   const eventColors = ["bg-emerald-800/90"];
 
-  const handleButtonClick = (button) => setActiveButton(button);  
+  const handleButtonClick = (button) => setActiveButton(button);
+
+  // Function to calculate real-time status based on date and time
+  const calculateEventStatus = (eventDate, startTime, endTime) => {
+    if (!eventDate || !startTime || !endTime) return "UPCOMING";
+
+    const now = new Date();
+    const eventDateObj = new Date(eventDate);
+    
+    // Create full datetime objects
+    const [startHours, startMinutes] = startTime.split(':');
+    const eventStart = new Date(eventDateObj);
+    eventStart.setHours(parseInt(startHours), parseInt(startMinutes), 0);
+
+    const [endHours, endMinutes] = endTime.split(':');
+    const eventEnd = new Date(eventDateObj);
+    eventEnd.setHours(parseInt(endHours), parseInt(endMinutes), 0);
+
+    // Check status based on current time
+    if (now < eventStart) {
+      return "UPCOMING";
+    } else if (now >= eventStart && now <= eventEnd) {
+      return "ONGOING";
+    } else {
+      return "COMPLETED";
+    }
+  };
+
+  // Update status in real-time
+  useEffect(() => {
+    if (!eventData) return;
+
+    const updateStatus = () => {
+      const newStatus = calculateEventStatus(
+        eventData.date,
+        eventData.time_start,
+        eventData.time_end
+      );
+      setCurrentStatus(newStatus);
+
+      // Optionally update in database
+      if (newStatus !== eventData.status) {
+        updateEventStatusInDB(newStatus);
+      }
+    };
+
+    // Initial status calculation
+    updateStatus();
+
+    // Update every minute
+    const interval = setInterval(updateStatus, 60000);
+
+    return () => clearInterval(interval);
+  }, [eventData]);
+
+  // Function to update status in Supabase
+  const updateEventStatusInDB = async (newStatus) => {
+    try {
+      const { error } = await supabase
+        .from("Event_Information")
+        .update({ status: newStatus })
+        .eq("event_id", eventId);
+
+      if (error) throw error;
+
+      // Update local state
+      setEventData(prev => ({ ...prev, status: newStatus }));
+    } catch (err) {
+      console.error("Error updating event status:", err);
+    }
+  };  
 
   useEffect(() => {
     if (eventId) {
@@ -660,13 +731,16 @@ function EventPage() {
 
             {/* RIGHT COLUMN - Fixed Width Sidebar */}
             <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
-              {/* Status Badge */}
+              {/* Status Badge - Real-time */}
               <div className="text-center">
-                <div className={`px-6 py-2 rounded-full text-center font-bold ${
-                  eventData.status === 'ONGOING' ? 'bg-emerald-500 text-white' : 
-                  eventData.status === 'UPCOMING' ? 'bg-yellow-500 text-white' : 
-                  'bg-gray-500 text-white'
-                }`}>{eventData.status}</div>
+                <div className={`px-6 py-2 rounded-full text-center font-bold transition-all duration-500 ${
+                  currentStatus === 'ONGOING' ? 'bg-emerald-500 text-white animate-pulse' : 
+                  currentStatus === 'UPCOMING' ? 'bg-yellow-500 text-white' : 
+                  currentStatus === 'COMPLETED' ? 'bg-gray-500 text-white' :
+                  'bg-blue-500 text-white'
+                }`}>
+                  {currentStatus || eventData.status}
+                </div>
               </div>
 
               {/* Complete Submissions Card */}
@@ -713,4 +787,3 @@ function EventPage() {
 }
 
 export default EventPage;
-
