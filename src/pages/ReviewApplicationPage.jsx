@@ -41,7 +41,7 @@ export default function ReviewApplicationPage() {
             data.map(async (application) => {
               const { data: volunteerData, error: userError } = await supabase
                 .from("LoginInformation")
-                .select("user_id, firstname, lastname, email, profile_picture, preferred_volunteering")
+                .select("user_id, firstname, lastname, email, profile_picture, contact_number, preferred_volunteering")
                 .eq("user_id", application.user_id)
                 .single();
 
@@ -449,6 +449,11 @@ export default function ReviewApplicationPage() {
                         <span className="font-bold text-xl">Email Address</span>
                         <br />
                         {selectedVolunteer.email}
+                      </p>
+                                            <p className="text-m text-emerald-900 mb-4">
+                        <span className="font-bold text-xl">Contact Number</span>
+                        <br />
+                        {selectedVolunteer.contact_number}
                       </p>
                       <p className="text-m text-emerald-900 mb-4">
                         <span className="font-bold text-xl">Application ID</span>
