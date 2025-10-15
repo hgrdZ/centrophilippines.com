@@ -542,8 +542,8 @@ function EventPage() {
             </div>
           </div>
 
-          <div className="p-6 md:flex md:gap-8 flex-1 overflow-auto">
-            <div className="flex-1 pr-4 space-y-6">
+<div className="p-6 flex flex-col md:flex-row md:gap-8 flex-1 overflow-auto">
+  <div className="flex-1 pr-4 space-y-6">
               <h2 className="text-4xl font-bold font-montserrat  text-emerald-800 leading-snug hover:text-emerald-700 transition-colors" title="Click to edit Event Name">
                 {eventData.event_title}
               </h2>
