@@ -622,23 +622,23 @@ function CreateEvent() {
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Date
           </label>
-    <div className="flex items-center bg-white border border-gray-300 rounded px-3">
+    <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-1">
             <img src={DateIcon} alt="Date" className="w-5 h-5 mr-2" />
             <input
               type="date"
               value={eventDate}
               onChange={(e) => setEventDate(e.target.value)}
               min={new Date().toISOString().split('T')[0]}
-        className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+        className="w-full border-none focus:outline-none cursor-pointer  px-3 py-1 text-gray-700 bg-transparent"
             />
           </div>
         </div>
 
   <div className="flex-1 min-w-[200px]">
-    <label className="block mb-2 font-semibold text-lg text-green-900">
+    <label className="block font-semibold text-lg text-green-900">
             Time
           </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-1">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={startTime}
@@ -678,7 +678,7 @@ function CreateEvent() {
           placeholder="Enter Location"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+        className="w-full border border-gray-300 focus:outline-none rounded-lg mb-2 cursor-pointer p-2 bg-white text-gray-700"
         />
       </div>
 
@@ -691,7 +691,7 @@ function CreateEvent() {
           placeholder="Enter Event Description"
           value={eventDescription}
           onChange={(e) => setEventDescription(e.target.value)}
-                className="w-full p-3 rounded bg-white border border-green-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+                className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
           rows={3}
         />
       </div>
@@ -705,7 +705,7 @@ function CreateEvent() {
           placeholder="Enter Objectives (separate each objective with a dash '-')"
           value={eventObjectives}
           onChange={(e) => setEventObjectives(e.target.value)}
-                className="w-full p-3 rounded bg-white border border-green-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+                className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
           rows={2}
         />
         <p className="text-sm text-green-700 mt-1">
@@ -725,7 +725,7 @@ function CreateEvent() {
             value={volunteersLimit}
             onChange={(e) => setVolunteersLimit(e.target.value)}
             min="1"
-        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+        className="w-full border border-gray-300 focus:outline-none rounded-lg mb-2 cursor-pointer p-2 bg-white text-gray-700"
           />
         </div>
 
@@ -733,7 +733,7 @@ function CreateEvent() {
     <label className="block mb-2 font-semibold text-lg text-green-900">
             Call Time
           </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-gray-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={callTime}
@@ -786,8 +786,8 @@ function CreateEvent() {
       </div>
 
       {/* Upload Poster & Volunteer Opportunities */}
-<div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div className="flex flex-col">
+<div className="w-full flex flex-wrap gap-6 mb-3">
+  <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Upload Event Poster/Image
           </label>
@@ -835,7 +835,7 @@ function CreateEvent() {
           )}
         </div>
 
-  <div className="flex flex-col">
+  <div className="flex-1 min-w-[300px]">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Volunteer Opportunities
           </label>
