@@ -481,40 +481,32 @@ export default function CalendarPage() {
               </div>
 
               {/* Main Content with Volunteer Counter */}
-              <div className="relative">
-                {/* Interested Volunteers Box - Positioned in upper right */}
+              <div>
                 {selectedEvent.name !== "No Events Scheduled" && (
-                  <div className="absolute top-0 right-0 w-64 bg-emerald-700 text-white rounded-xl p-8 text-center shadow-lg z-10">
-                    <p className="text-xl font-semibold">Interested Volunteers</p>
-                    <p className="mt-2 text-6xl font-extrabold text-emerald-200">{selectedEvent.volunteers}</p>
-                  </div>
-                )}
-
-                {/* Event Content - With right padding to prevent overlap */}
-                <div className={selectedEvent.name !== "No Events Scheduled" ? "pr-72" : ""}>
-                  {selectedEvent.name !== "No Events Scheduled" && (
-                    <div className="text-left">
-                      <div className="flex gap-6">
-                        {/* Event Image */}
-                        {selectedEvent.image && (
-                          <div className="w-80 h-60 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            <img 
-                              src={selectedEvent.image} 
-                              alt={selectedEvent.name}
-                              className="w-full h-full object-cover rounded-lg shadow-lg"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
-                              }}
-                            />
-                            <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center shadow-lg" style={{display: 'none'}}>
-                              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
+                  <div className="text-left">
+                    <div className="flex gap-6">
+                      {/* Event Image */}
+                      {selectedEvent.image && (
+                        <div className="w-[400px] h-80 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          <img 
+                            src={selectedEvent.image} 
+                            alt={selectedEvent.name}
+                            className="w-full h-full object-cover rounded-lg shadow-lg"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center shadow-lg" style={{display: 'none'}}>
+                            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
                           </div>
-                        )}
+                        </div>
+                      )}
 
+                      {/* Event Details and Volunteer Counter */}
+                      <div className="flex-1 flex gap-6">
                         {/* Event Details */}
                         {(selectedEvent.time || selectedEvent.location) && (
                           <div className="flex-1">
@@ -528,62 +520,68 @@ export default function CalendarPage() {
                             </div>
                           </div>
                         )}
+
+                        {/* Interested Volunteers Box */}
+                        <div className="w-64 h-50 bg-emerald-700 text-white rounded-xl p-8 text-center shadow-lg flex-shrink-0">
+                          <p className="text-xl font-semibold">Interested Volunteers</p>
+                          <p className="mt-2 text-6xl font-extrabold text-emerald-200">{selectedEvent.volunteers}</p>
+                        </div>
                       </div>
-
-                      {selectedEvent.objectives.length > 0 && (
-                        <div className="mt-6">
-                          <p className="font-semibold text-xl text-gray-800 mb-2">Objectives:</p>
-                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                            {selectedEvent.objectives.map((obj, idx) => (
-                              <li key={idx}>{obj.trim()}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {selectedEvent.opportunities.length > 0 && (
-                        <div className="mt-6">
-                          <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Opportunities:</p>
-                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                            {selectedEvent.opportunities.map((opp, idx) => (
-                              <li key={idx}>{opp.trim()}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {(selectedEvent.whatExpected || selectedEvent.whatExpectedItems?.length > 0) && (
-                        <div className="mt-6">
-                          <p className="font-semibold text-xl text-gray-800 mb-2">What to Expect:</p>
-                          {selectedEvent.whatExpectedItems?.length > 0 ? (
-                            <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                              {selectedEvent.whatExpectedItems.map((item, idx) => (
-                                <li key={idx}>{item.trim()}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-gray-700 leading-relaxed">{selectedEvent.whatExpected}</p>
-                          )}
-                        </div>
-                      )}
-
-                      {(selectedEvent.guidelines || selectedEvent.guidelinesItems?.length > 0) && (
-                        <div className="mt-6">
-                          <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Guidelines:</p>
-                          {selectedEvent.guidelinesItems?.length > 0 ? (
-                            <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
-                              {selectedEvent.guidelinesItems.map((item, idx) => (
-                                <li key={idx}>{item.trim()}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-gray-700 leading-relaxed">{selectedEvent.guidelines}</p>
-                          )}
-                        </div>
-                      )}
                     </div>
-                  )}
-                </div>
+
+                    {selectedEvent.objectives.length > 0 && (
+                      <div className="mt-6">
+                        <p className="font-semibold text-xl text-gray-800 mb-2">Objectives:</p>
+                        <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                          {selectedEvent.objectives.map((obj, idx) => (
+                            <li key={idx}>{obj.trim()}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {selectedEvent.opportunities.length > 0 && (
+                      <div className="mt-6">
+                        <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Opportunities:</p>
+                        <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                          {selectedEvent.opportunities.map((opp, idx) => (
+                            <li key={idx}>{opp.trim()}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {(selectedEvent.whatExpected || selectedEvent.whatExpectedItems?.length > 0) && (
+                      <div className="mt-6">
+                        <p className="font-semibold text-xl text-gray-800 mb-2">What to Expect:</p>
+                        {selectedEvent.whatExpectedItems?.length > 0 ? (
+                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                            {selectedEvent.whatExpectedItems.map((item, idx) => (
+                              <li key={idx}>{item.trim()}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-700 leading-relaxed">{selectedEvent.whatExpected}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {(selectedEvent.guidelines || selectedEvent.guidelinesItems?.length > 0) && (
+                      <div className="mt-6">
+                        <p className="font-semibold text-xl text-gray-800 mb-2">Volunteer Guidelines:</p>
+                        {selectedEvent.guidelinesItems?.length > 0 ? (
+                          <ul className="list-disc pl-6 text-gray-700 leading-relaxed">
+                            {selectedEvent.guidelinesItems.map((item, idx) => (
+                              <li key={idx}>{item.trim()}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-700 leading-relaxed">{selectedEvent.guidelines}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
