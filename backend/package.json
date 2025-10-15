@@ -1,5 +1,5 @@
 {
-  "name": "centro-backend",
+  "name": "centro-philippines",
   "version": "1.0.0",
   "description": "Centro App Backend API",
   "main": "server.js",
@@ -22,5 +22,6 @@
     "nodemon": "^3.0.1",
     "@vercel/node": "^3.0.7"
   }
+  
 }
 
