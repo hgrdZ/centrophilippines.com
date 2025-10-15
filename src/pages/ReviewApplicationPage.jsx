@@ -600,7 +600,7 @@ export default function ReviewApplicationPage() {
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
                 <h3 className="text-2xl font-bold text-red-700">Reject Application</h3>
               </div>
               <p className="text-lg text-gray-700">

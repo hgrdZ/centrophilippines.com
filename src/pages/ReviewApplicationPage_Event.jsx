@@ -346,7 +346,7 @@ export default function ReviewApplicationEventPage() {
             {pendingApplications.length > 0 ? (
 <div className="w-full flex flex-wrap gap-6 mb-6">
                 {/* Applicant List - 2 columns out of 3 */}
-  <div className="flex-1 min-w-[300px] max-w-[400px] bg-white rounded-lg shadow p-6 flex flex-col" style={{ minWidth: "300px" }}>
+  <div className="flex-1 min-w-full bg-white rounded-lg shadow overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50 w-full">
                     <h3 className="text-lg font-semibold text-emerald-900">
                       Applicant List
