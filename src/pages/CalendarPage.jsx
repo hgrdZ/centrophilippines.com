@@ -590,16 +590,13 @@ export default function CalendarPage() {
                 )}
               </div>
 
-                {/* Volunteers Count */}
-                {selectedEvent.name !== "No Events Scheduled" && (
-                  <div className="md:w-24 bg-emerald-700 text-white rounded-2xl p-10 text-center">
-                    <p className="text-lg font-semibold">Interested Volunteers</p>
-                    <p className="mt-3 text-6xl font-extrabold text-emerald-200">
-                      {selectedEvent.volunteers}
-                    </p>
-                  </div>
-                )}
-              </div>
+              {selectedEvent.name !== "No Events Scheduled" && (
+                <div className="w-64 bg-emerald-700 text-white rounded-xl p-14 text-center">
+                  <p className="text-xl font-semibold">Interested Volunteers</p>
+                  <p className="mt-2 text-6xl font-extrabold text-emerald-200">{selectedEvent.volunteers}</p>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="h-48 flex items-center justify-center text-gray-400 text-xl">
               Click on a date to view details
