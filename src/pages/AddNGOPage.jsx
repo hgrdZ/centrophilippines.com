@@ -61,6 +61,7 @@ function AddNGOPage() {
   const [modalConfig, setModalConfig] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
 
+  // Changed to blank initial values
   const [formData, setFormData] = useState({
     loginId: "",
     password: "",
@@ -77,6 +78,7 @@ function AddNGOPage() {
     preferredVolunteering: [],
   });
 
+  // Supported image formats
   const supportedImageTypes = [
     'image/jpeg',
     'image/jpg', 
@@ -89,6 +91,7 @@ function AddNGOPage() {
 
   const supportedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
 
+  // Preferred volunteering options
   const volunteeringOptions = [
     "Education & Youth Development",
     "Healthcare & Medical Aid",
@@ -100,9 +103,11 @@ function AddNGOPage() {
     "Animal Welfare"
   ];
 
+  // Handle close/back navigation with confirmation
   const handleClose = () => {
+    // Check if form has any data
     const hasFormData = Object.entries(formData).some(([key, value]) => {
-      if (key === 'adminType') return value !== 'admin';
+      if (key === 'adminType') return value !== 'admin'; // Default value
       if (key === 'logo') return value !== null;
       if (key === 'preferredVolunteering') return value.length > 0;
       return value.trim() !== '';
@@ -124,7 +129,9 @@ function AddNGOPage() {
     }
   };
 
+  // Validate file type and size
   const validateFile = (file) => {
+    // Check file type
     if (!supportedImageTypes.includes(file.type)) {
       const extension = file.name.split('.').pop().toLowerCase();
       if (!supportedExtensions.includes(extension)) {
@@ -138,7 +145,8 @@ function AddNGOPage() {
       }
     }
 
-    const maxSize = 10 * 1024 * 1024;
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > maxSize) {
       setModalConfig({
         title: "File Too Large",
@@ -162,12 +170,13 @@ function AddNGOPage() {
       }
 
       if (!validateFile(file)) {
-        e.target.value = '';
+        e.target.value = ''; // Reset file input
         return;
       }
 
       setFormData({ ...formData, logo: file });
 
+      // Create preview for non-SVG files
       if (file.type !== 'image/svg+xml') {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -175,6 +184,7 @@ function AddNGOPage() {
         };
         reader.readAsDataURL(file);
       } else {
+        // For SVG files, just show the file name
         setLogoPreview(null);
       }
     } else {
@@ -182,6 +192,7 @@ function AddNGOPage() {
     }
   };
 
+  // Handle preferred volunteering selection
   const handleVolunteeringChange = (option) => {
     setFormData(prev => {
       if (prev.preferredVolunteering.includes(option)) {
@@ -198,29 +209,47 @@ function AddNGOPage() {
     });
   };
 
+  // Upload logo to Supabase Storage
   const uploadNgoLogo = async (file) => {
     if (!file) return null;
 
     setLogoUploading(true);
     try {
+      // Get file extension
       const fileExt = file.name.split('.').pop().toLowerCase();
+      
+      // Generate unique filename with NGO code for better organization
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 15);
       const fileName = `${formData.ngoCode}_logo_${timestamp}_${randomStr}.${fileExt}`;
       const filePath = `ngo_logo/${fileName}`;
 
+      console.log('Uploading NGO logo:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        filePath,
+        ngoCode: formData.ngoCode
+      });
+
+      // Upload options
       const uploadOptions = {
         cacheControl: '3600',
         upsert: false,
         contentType: file.type
       };
 
+      // Upload file to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("centro_bucket")
         .upload(filePath, file, uploadOptions);
 
       if (uploadError) {
+        console.error('Upload error:', uploadError);
+        
+        // If RLS error, try with upsert = true
         if (uploadError.message.includes('row_level_security')) {
+          console.log('Retrying with upsert=true...');
           const { data: retryData, error: retryError } = await supabase.storage
             .from("centro_bucket")
             .upload(filePath, file, {
@@ -231,11 +260,15 @@ function AddNGOPage() {
           if (retryError) {
             throw retryError;
           }
+          console.log('Retry successful:', retryData);
         } else {
           throw uploadError;
         }
+      } else {
+        console.log('Upload successful:', uploadData);
       }
 
+      // Get the public URL
       const { data: urlData } = supabase.storage
         .from("centro_bucket")
         .getPublicUrl(filePath);
@@ -244,19 +277,21 @@ function AddNGOPage() {
         throw new Error('Failed to get public URL');
       }
 
+      console.log('Public URL:', urlData.publicUrl);
       return urlData.publicUrl;
 
     } catch (error) {
       console.error("Error uploading logo:", error);
       
+      // More specific error messages
       if (error.message.includes('row_level_security')) {
         setModalConfig({
           title: "Storage Permission Error",
-          message: "Storage permission error. Please make sure you're logged in as an admin.",
+          message: "Storage permission error. Please make sure you're logged in as an admin. If the issue persists, contact the system administrator to configure storage policies.",
           onCancel: () => setModalConfig(null),
           type: "alert",
         });
-      } else if (error.message.includes('413') || error.message.includes('size')) {
+      } else if (error.message.includes('413') || error.message.includes('size') || error.message.includes('too large')) {
         setModalConfig({
           title: "File Too Large",
           message: "File too large. Please upload an image smaller than 10MB.",
@@ -266,7 +301,7 @@ function AddNGOPage() {
       } else {
         setModalConfig({
           title: "Upload Error",
-          message: `Error uploading logo: ${error.message}. Please try again.`,
+          message: `Error uploading logo: ${error.message}. Please try again or contact support.`,
           onCancel: () => setModalConfig(null),
           type: "alert",
         });
@@ -278,6 +313,7 @@ function AddNGOPage() {
     }
   };
 
+  // Get next admin ID
   const getNextAdminId = async () => {
     try {
       const { data, error } = await supabase
@@ -301,6 +337,7 @@ function AddNGOPage() {
     }
   };
 
+  // Get next login ID
   const getNextLoginId = async () => {
     try {
       const { data, error } = await supabase
@@ -324,6 +361,7 @@ function AddNGOPage() {
     }
   };
 
+  // Validate form
   const validateForm = () => {
     const missingFields = [];
     if (!formData.loginId.trim()) missingFields.push("Login ID");
@@ -347,6 +385,7 @@ function AddNGOPage() {
       return false;
     }
 
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setModalConfig({
@@ -358,6 +397,7 @@ function AddNGOPage() {
       return false;
     }
 
+    // Validate phone format (basic check)
     const phoneRegex = /^[0-9+\s()-]+$/;
     if (!phoneRegex.test(formData.phone)) {
       setModalConfig({
@@ -372,11 +412,13 @@ function AddNGOPage() {
     return true;
   };
 
+  // Show confirmation before submitting
   const handleSubmitClick = (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
+    // Show confirmation modal before proceeding
     setModalConfig({
       title: "Confirm Registration",
       message: "Are you sure you want to register this NGO? Please review all the information before proceeding.",
@@ -392,6 +434,7 @@ function AddNGOPage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      // Check if NGO code already exists
       const { data: existingNgo, error: checkError } = await supabase
         .from("NGO_Information")
         .select("ngo_code")
@@ -409,18 +452,24 @@ function AddNGOPage() {
         return;
       }
 
+      // Upload logo if provided
       let logoUrl = null;
       if (formData.logo) {
+        console.log('Starting logo upload...');
         logoUrl = await uploadNgoLogo(formData.logo);
         if (!logoUrl) {
+          console.error('Logo upload failed, aborting NGO creation');
           setLoading(false);
           return;
         }
+        console.log('Logo uploaded successfully:', logoUrl);
       }
 
+      // Generate IDs
       const adminId = await getNextAdminId();
       const loginId = await getNextLoginId();
 
+      // Insert into NGO_Information table FIRST
       const ngoData = {
         admin_id: adminId,
         name: formData.name.trim(),
@@ -441,6 +490,7 @@ function AddNGOPage() {
 
       if (ngoError) throw ngoError;
 
+      // Then insert into NGO_Admin table
       const adminData = {
         login_id: loginId,
         password: formData.password,
@@ -453,9 +503,12 @@ function AddNGOPage() {
         .insert([adminData]);
 
       if (adminError) {
+        // If admin insertion fails, clean up NGO record
         await supabase.from("NGO_Information").delete().eq("admin_id", adminId);
         throw adminError;
       }
+
+      console.log('NGO created successfully');
       
       setModalConfig({
         title: "Success",
@@ -487,13 +540,13 @@ function AddNGOPage() {
         <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
           {/* Close Button */}
           <button
-            onClick={handleClose}
-            className="absolute top-6 right-6 z-10 text-white text-4xl font-bold leading-none transition-all duration-300 hover:scale-110 hover:rotate-90"
-            disabled={loading || logoUploading}
-            title="Close and return to NGO Hub"
-          >
-            ✕
-          </button>
+          onClick={handleClose}
+          className="absolute top-6 right-6 z-10 text-white text-4xl font-bold leading-none transition-all duration-300 hover:scale-110 hover:rotate-90 cursor-pointer bg-emerald-700 rounded-full w-10 h-10 flex items-center justify-center focus:outline-none"
+          disabled={loading || logoUploading}
+          title="Close and return to NGO Hub"
+        >
+          ✕
+        </button>
 
           {/* Header */}
           <div className="bg-emerald-700 py-6 px-8 text-white">
@@ -503,29 +556,29 @@ function AddNGOPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmitClick} className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            {/* Login ID */}
+          {/* Login ID */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Login ID *</label>
               <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
-                <input
+                  <input
                   type="text"
                   name="loginId"
                   value={formData.loginId}
                   onChange={handleChange}
-                  placeholder="Enter login ID"
-                  className="w-full outline-none"
+                  placeholder="e.g., jdoe123"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={AdminIcon}
                   alt="Login Icon"
-                  className="w-5 h-5 ml-2"
+                  className="w-5 h-5 ml-2 flex-shrink-0"
                 />
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password with Icon */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Password *</label>
               <div className="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-400 mt-1">
@@ -534,15 +587,15 @@ function AddNGOPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter password"
-                  className="w-full outline-none"
+                  placeholder="Strong password"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={showPassword ? ShowPasswordIcon : PasswordIcon}
                   alt={showPassword ? "Hide password" : "Password icon"}
-                  className="w-5 h-5 ml-2 cursor-pointer hover:opacity-70 transition-opacity duration-200"
+                  className="w-5 h-5 ml-2 cursor-pointer hover:opacity-70 transition-opacity duration-200 flex-shrink-0"
                   onClick={() => setShowPassword(!showPassword)}
                   title={showPassword ? "Hide Password" : "Show Password"}
                 />
@@ -558,15 +611,15 @@ function AddNGOPage() {
                   name="adminId"
                   value={formData.adminId}
                   onChange={handleChange}
-                  placeholder="Enter admin ID"
-                  className="w-full outline-none"
+                  placeholder="e.g., ADMIN001"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={AdminIcon}
                   alt="Admin Icon"
-                  className="w-5 h-5 ml-2"
+                  className="w-5 h-5 ml-2 flex-shrink-0"
                 />
               </div>
             </div>
@@ -579,7 +632,7 @@ function AddNGOPage() {
                   name="adminType"
                   value={formData.adminType}
                   onChange={handleChange}
-                  className="w-full outline-none bg-transparent"
+                  className="w-full outline-none bg-transparent text-sm"
                   disabled={loading || logoUploading}
                 >
                   <option value="admin">Admin</option>
@@ -597,15 +650,15 @@ function AddNGOPage() {
                   name="ngoCode"
                   value={formData.ngoCode}
                   onChange={handleChange}
-                  placeholder="Enter unique NGO code"
-                  className="w-full outline-none"
+                  placeholder="e.g., NGO2024001"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={NGOLogoIcon}
                   alt="NGO Code Icon"
-                  className="w-5 h-5 ml-2"
+                  className="w-5 h-5 ml-2 flex-shrink-0"
                 />
               </div>
             </div>
@@ -619,19 +672,20 @@ function AddNGOPage() {
                   name="logo"
                   accept={supportedImageTypes.join(',')}
                   onChange={handleChange}
-                  className="w-full outline-none cursor-pointer"
+                  className="w-full outline-none cursor-pointer text-sm"
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={FileIcon}
                   alt="NGO Logo Icon"
-                  className="w-5 h-5 ml-2"
+                  className="w-5 h-5 ml-2 flex-shrink-0"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Supported: {supportedExtensions.join(', ')}. Max: 10MB
+                {supportedExtensions.join(', ')} • Max: 10MB
               </p>
               
+              {/* Logo Preview */}
               {logoPreview && (
                 <div className="mt-2">
                   <img 
@@ -664,12 +718,12 @@ function AddNGOPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Enter NGO name"
-                  className="w-full outline-none"
+                  placeholder="e.g., Hope Foundation Philippines"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
-                <img src={NGOLogoIcon} alt="NGO Name Icon" className="w-5 h-5 ml-2" />
+                <img src={NGOLogoIcon} alt="NGO Name Icon" className="w-5 h-5 ml-2 flex-shrink-0" />
               </div>
             </div>
 
@@ -680,9 +734,9 @@ function AddNGOPage() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Short description"
+                placeholder="Brief description of NGO's mission and activities"
                 rows="3"
-                className="mt-1 w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                className="mt-1 w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-400 focus:outline-none text-sm"
                 disabled={loading || logoUploading}
               />
             </div>
@@ -696,15 +750,15 @@ function AddNGOPage() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  placeholder="Enter NGO address"
-                  className="w-full outline-none"
+                  placeholder="Complete address (Street, Barangay, City)"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={LocationIcon}
                   alt="Address Icon"
-                  className="w-5 h-5 ml-2"
+                  className="w-5 h-5 ml-2 flex-shrink-0"
                 />
               </div>
             </div>
@@ -718,15 +772,15 @@ function AddNGOPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="Enter phone number"
-                  className="w-full outline-none"
+                  placeholder="+63 912 345 6789"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={PhoneIcon}
                   alt="Phone Icon"
-                  className="w-5 h-5 ml-2"
+                  className="w-5 h-5 ml-2 flex-shrink-0"
                 />
               </div>
             </div>
@@ -740,15 +794,15 @@ function AddNGOPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="Enter email"
-                  className="w-full outline-none"
+                  placeholder="info@ngo.org"
+                  className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
                 />
                 <img
                   src={EmailIcon}
                   alt="Email Icon"
-                  className="w-5 h-5 ml-2"
+                  className="w-5 h-5 ml-2 flex-shrink-0"
                 />
               </div>
             </div>
@@ -756,13 +810,13 @@ function AddNGOPage() {
             {/* NGO Location */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700">NGO Location *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
+<div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
                 <input
                   type="text"
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
-                  placeholder="Enter NGO location"
+                  placeholder="e.g., Manila, Metro Manila, Philippines"
                   className="w-full outline-none text-sm"
                   required
                   disabled={loading || logoUploading}
@@ -792,7 +846,7 @@ function AddNGOPage() {
                         checked={formData.preferredVolunteering.includes(option)}
                         onChange={() => handleVolunteeringChange(option)}
                         disabled={loading || logoUploading}
-                        className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                        className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
                       />
                       <span className="ml-3 text-sm text-gray-700">{option}</span>
                     </label>
