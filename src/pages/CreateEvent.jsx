@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import { Link, useNavigate } from "react-router-dom";
@@ -86,6 +86,9 @@ function CreateEvent() {
   const [eventDescription, setEventDescription] = useState("");
   const [eventObjectives, setEventObjectives] = useState("");
   const [location, setLocation] = useState("");
+  const [locationDetails, setLocationDetails] = useState(null);
+  const locationInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
   const [volunteersLimit, setVolunteersLimit] = useState("");
   const [callTime, setCallTime] = useState("");
   const [eventTasks, setEventTasks] = useState("");
@@ -136,7 +139,53 @@ function CreateEvent() {
       setAdminData(admin);
       setNgoCode(admin.NGO_Information?.ngo_code || "");
     }
+
+    // Load Google Maps API
+    const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+    
+    // Load Google Maps API
+    if (!window.google) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeAutocomplete;
+      document.head.appendChild(script);
+    } else {
+      initializeAutocomplete();
+    }
   }, []);
+
+  // Initialize Google Places Autocomplete
+  const initializeAutocomplete = () => {
+    if (locationInputRef.current && window.google) {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        locationInputRef.current,
+        {
+          types: ['establishment', 'geocode'],
+          componentRestrictions: { country: 'ph' }, // Restrict to Philippines
+        }
+      );
+
+      autocompleteRef.current.addListener('place_changed', handlePlaceSelect);
+    }
+  };
+
+  // Handle place selection
+  const handlePlaceSelect = () => {
+    const place = autocompleteRef.current.getPlace();
+    
+    if (place.geometry) {
+      setLocation(place.formatted_address || place.name);
+      setLocationDetails({
+        name: place.name,
+        address: place.formatted_address,
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        place_id: place.place_id,
+      });
+    }
+  };
 
   // Convert 12-hour format to 24-hour format
   const convertTo24Hour = (time12h) => {
@@ -245,7 +294,7 @@ function CreateEvent() {
 
     if (missingFields.length > 0) {
       setModalConfig({
-        title: "Incomplete Form",
+        title: "Incomplete",
         message: "Please complete all required fields first.",
         onCancel: () => setModalConfig(null),
         type: "alert",
@@ -317,13 +366,6 @@ function CreateEvent() {
         task.id === id ? { ...task, description: value } : task
       )
     );
-  };
-
-  // Fixed 3 tasks - no add function needed
-
-  // Remove completion task - removed since we have fixed 3 tasks
-  const removeCompletionTask = (id) => {
-    // Fixed 3 tasks - no removal allowed
   };
 
   // Get next event ID
@@ -617,28 +659,28 @@ function CreateEvent() {
       </div>
 
       {/* Date & Time Container */}
-<div className="w-full flex flex-wrap gap-6 mb-6">
-  <div className="flex-1 min-w-[250px]">
+      <div className="w-full flex flex-wrap gap-6 mb-6">
+        <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Date
           </label>
-    <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-1">
+          <div className="flex items-center border bg-white border-gray-300 rounded px-4 py-2">
             <img src={DateIcon} alt="Date" className="w-5 h-5 mr-2" />
             <input
               type="date"
               value={eventDate}
               onChange={(e) => setEventDate(e.target.value)}
               min={new Date().toISOString().split('T')[0]}
-        className="w-full border-none focus:outline-none cursor-pointer  px-3 py-1 text-gray-700 bg-transparent"
+              className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
             />
           </div>
         </div>
 
-  <div className="flex-1 min-w-[200px]">
-    <label className="block font-semibold text-lg text-green-900">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block font-semibold text-lg text-green-800 mb-1">
             Time
           </label>
-    <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-1">
+    <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={startTime}
@@ -668,30 +710,39 @@ function CreateEvent() {
         </div>
       </div>
 
-      {/* Location */}
+      {/* Location with Google Maps Autocomplete */}
   <div className="flex-1 min-w-[250px]">
-              <label className="block mb-2 font-semibold text-lg text-green-900">
+        <label className="block mb-2 font-semibold text-lg text-green-900">
           Location
         </label>
         <input
+          ref={locationInputRef}
           type="text"
-          placeholder="Enter Location"
+          placeholder="Search for a location..."
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         className="w-full border border-gray-300 focus:outline-none rounded-lg mb-2 cursor-pointer p-2 bg-white text-gray-700"
         />
+        {locationDetails && (
+          <div className="mt-2 p-2 bg-green-50 rounded border border-green-200 text-sm">
+            <p className="text-green-800">
+              <span className="font-semibold">Selected:</span> {locationDetails.name}
+            </p>
+            <p className="text-gray-600 text-xs">{locationDetails.address}</p>
+          </div>
+        )}
       </div>
 
       {/* Event Description */}
       <div className="mb-4">
-              <label className="block mb-2 font-semibold text-lg text-green-900">
+        <label className="block mb-2 font-semibold text-lg text-green-900">
           Event Description
         </label>
         <textarea
           placeholder="Enter Event Description"
           value={eventDescription}
           onChange={(e) => setEventDescription(e.target.value)}
-                className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+          className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
           rows={3}
         />
       </div>
@@ -705,7 +756,7 @@ function CreateEvent() {
           placeholder="Enter Objectives (separate each objective with a dash '-')"
           value={eventObjectives}
           onChange={(e) => setEventObjectives(e.target.value)}
-                className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+          className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
           rows={2}
         />
         <p className="text-sm text-green-700 mt-1">
@@ -714,8 +765,8 @@ function CreateEvent() {
       </div>
 
       {/* Volunteers Limit and Call Time */}
-<div className="w-full flex flex-wrap gap-6 mb-3">
-  <div className="flex-1 min-w-[280px]">
+      <div className="w-full flex flex-wrap gap-6 mb-3">
+        <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Volunteers Limit
           </label>
@@ -725,20 +776,20 @@ function CreateEvent() {
             value={volunteersLimit}
             onChange={(e) => setVolunteersLimit(e.target.value)}
             min="1"
-        className="w-full border border-gray-300 focus:outline-none rounded-lg mb-2 cursor-pointer p-2 bg-white text-gray-700"
+        className="w-full border border-gray-300 focus:outline-none rounded-lg mb-2 cursor-pointer px-4 py-2 bg-white text-gray-700"
           />
         </div>
 
   <div className="flex-1 min-w-[250px]">
-    <label className="block mb-2 font-semibold text-lg text-green-900">
+          <label className="block font-semibold text-lg text-green-800 mb-2">
             Call Time
           </label>
-    <div className="flex items-center border border-gray-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center border bg-white border-gray-300 rounded px-4 py-2">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
             <select
               value={callTime}
               onChange={(e) => setCallTime(e.target.value)}
-        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+              className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
             >
               <option value="">Select Call Time</option>
               {timeOptions.map((time) => (
@@ -786,8 +837,8 @@ function CreateEvent() {
       </div>
 
       {/* Upload Poster & Volunteer Opportunities */}
-<div className="w-full flex flex-wrap gap-6 mb-3">
-  <div className="flex-1 min-w-[250px]">
+      <div className="w-full flex flex-wrap gap-6 mb-3">
+        <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-green-800 mb-1">
             Upload Event Poster/Image
           </label>
@@ -797,7 +848,7 @@ function CreateEvent() {
               type="file"
               accept={supportedImageTypes.join(',')}
               onChange={handleFileSelect}
-        className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <p className="text-xs text-green-700 mt-1">
@@ -850,8 +901,7 @@ function CreateEvent() {
             </div>
       <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
               {opportunityOptions.map((option) => (
-                <label key={option} 
-            className="flex items-center text-sm cursor-pointer group hover:bg-green-50 p-2 rounded transition-colors">
+                <label key={option} className="flex items-center text-sm cursor-pointer group hover:bg-green-50 p-2 rounded transition-colors">
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
@@ -905,7 +955,7 @@ function CreateEvent() {
           onClick={goToStep2}
           className="bg-green-700 text-white px-6 py-2 rounded-full hover:bg-green-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
-          Confirm
+          Next
         </button>
       </div>
     </div>
@@ -1077,7 +1127,7 @@ function CreateEvent() {
         <div className="flex gap-3">
           <button
             onClick={goToStep1}
-            className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="bg-cyan-500 text-white px-6 py-2 rounded-full hover:bg-cyan-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             Edit
           </button>
@@ -1091,7 +1141,7 @@ function CreateEvent() {
               },
               onCancel: () => setModalConfig(null),
             })}
-            className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             Discard
           </button>

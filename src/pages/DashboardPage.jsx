@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -84,6 +85,7 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [viewingContext, setViewingContext] = useState(null);
   const [modalState, setModalState] = useState({ isOpen: false, type: null });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     initializeDashboard();
@@ -400,8 +402,8 @@ function DashboardPage() {
       </div>
     );
   }
-
-  return (
+  
+   return (
     <div
       className="flex min-h-screen bg-no-repeat bg-center"
       style={{
@@ -409,10 +411,12 @@ function DashboardPage() {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
       <main
-        className="flex-1 ml-64 p-6 overflow-y-auto transition-all duration-300"
+        className={`flex-1 p-6 overflow-y-auto transition-all duration-300 ${
+          sidebarCollapsed ? "ml-20" : "ml-64"
+        }`}
         style={{ filter: modalState.isOpen ? "blur(3px)" : "none" }}
       >
         <div className="relative z-10 space-y-6 w-full max-w-7xl mx-auto">
