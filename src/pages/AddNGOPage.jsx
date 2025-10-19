@@ -741,42 +741,45 @@ function AddNGOPage() {
     Preferred Volunteering Types *
   </label>
   <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
-    {/* First Row - 4 items */}
-    <div className="grid grid-cols-4 gap-4 mb-3">
-      {volunteeringOptions.slice(0, 4).map((option) => (
-        <label
-          key={option}
-          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
-        >
-          <input
-            type="checkbox"
-            checked={formData.preferredVolunteering.includes(option)}
-            onChange={() => handleVolunteeringChange(option)}
-            disabled={loading || logoUploading}
-            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
-          />
-          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
-        </label>
-      ))}
-    </div>
+    {/* Container for both rows */}
+    <div className="space-y-3">
+      {/* First Row - 4 items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {volunteeringOptions.slice(0, 4).map((option) => (
+          <label
+            key={option}
+            className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors min-w-0"
+          >
+            <input
+              type="checkbox"
+              checked={formData.preferredVolunteering.includes(option)}
+              onChange={() => handleVolunteeringChange(option)}
+              disabled={loading || logoUploading}
+              className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+            />
+            <span className="ml-3 text-sm text-gray-700 leading-tight break-words">{option}</span>
+          </label>
+        ))}
+      </div>
 
-    {/* Second Row - 4 items */}
-    <div className="grid grid-cols-4 gap-4">
-      {volunteeringOptions.slice(4, 8).map((option) => (
-        <label
-          key={option}
-          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
-        >
-          <input
-            type="checkbox"
-            checked={formData.preferredVolunteering.includes(option)}
-            onChange={() => handleVolunteeringChange(option)}
-            disabled={loading || logoUploading}
-            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
-          />
-          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
-        </label>
-      ))}
+      {/* Second Row - 4 items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {volunteeringOptions.slice(4, 8).map((option) => (
+          <label
+            key={option}
+            className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors min-w-0"
+          >
+            <input
+              type="checkbox"
+              checked={formData.preferredVolunteering.includes(option)}
+              onChange={() => handleVolunteeringChange(option)}
+              disabled={loading || logoUploading}
+              className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+            />
+            <span className="ml-3 text-sm text-gray-700 leading-tight break-words">{option}</span>
+          </label>
+        ))}
+      </div>
     </div>
 
     {/* Selected Count */}
