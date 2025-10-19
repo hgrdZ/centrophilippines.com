@@ -741,12 +741,13 @@ function AddNGOPage() {
     Preferred Volunteering Types *
   </label>
   <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
-    {/* First Row - 3 items evenly spaced */}
-    <div className="grid grid-cols-3 gap-4 mb-4">
-      {volunteeringOptions.slice(0, 3).map((option) => (
+    {/* First Row - 4 items */}
+    <div className="flex flex-wrap gap-4 mb-3">
+      {volunteeringOptions.slice(0, 4).map((option) => (
         <label
           key={option}
           className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+          style={{ width: 'calc(25% - 12px)' }}
         >
           <input
             type="checkbox"
@@ -760,12 +761,13 @@ function AddNGOPage() {
       ))}
     </div>
 
-    {/* Second Row - 5 items evenly distributed */}
-    <div className="grid grid-cols-5 gap-4">
-      {volunteeringOptions.slice(3, 8).map((option) => (
+    {/* Second Row - 4 items */}
+    <div className="flex flex-wrap gap-4">
+      {volunteeringOptions.slice(4, 8).map((option) => (
         <label
           key={option}
           className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+          style={{ width: 'calc(25% - 12px)' }}
         >
           <input
             type="checkbox"
