@@ -209,14 +209,6 @@ function AddNGOPage() {
       const fileName = `${formData.ngoCode}_logo_${timestamp}_${randomStr}.${fileExt}`;
       const filePath = `ngo_logo/${fileName}`;
 
-      console.log('Uploading NGO logo:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        filePath,
-        ngoCode: formData.ngoCode
-      });
-
       const uploadOptions = {
         cacheControl: '3600',
         upsert: false,
@@ -228,10 +220,7 @@ function AddNGOPage() {
         .upload(filePath, file, uploadOptions);
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
-        
         if (uploadError.message.includes('row_level_security')) {
-          console.log('Retrying with upsert=true...');
           const { data: retryData, error: retryError } = await supabase.storage
             .from("centro_bucket")
             .upload(filePath, file, {
@@ -239,15 +228,10 @@ function AddNGOPage() {
               upsert: true
             });
           
-          if (retryError) {
-            throw retryError;
-          }
-          console.log('Retry successful:', retryData);
+          if (retryError) throw retryError;
         } else {
           throw uploadError;
         }
-      } else {
-        console.log('Upload successful:', uploadData);
       }
 
       const { data: urlData } = supabase.storage
@@ -258,7 +242,6 @@ function AddNGOPage() {
         throw new Error('Failed to get public URL');
       }
 
-      console.log('Public URL:', urlData.publicUrl);
       return urlData.publicUrl;
 
     } catch (error) {
@@ -267,21 +250,14 @@ function AddNGOPage() {
       if (error.message.includes('row_level_security')) {
         setModalConfig({
           title: "Storage Permission Error",
-          message: "Storage permission error. Please make sure you're logged in as an admin. If the issue persists, contact the system administrator to configure storage policies.",
-          onCancel: () => setModalConfig(null),
-          type: "alert",
-        });
-      } else if (error.message.includes('413') || error.message.includes('size') || error.message.includes('too large')) {
-        setModalConfig({
-          title: "File Too Large",
-          message: "File too large. Please upload an image smaller than 10MB.",
+          message: "Storage permission error. Please make sure you're logged in as an admin.",
           onCancel: () => setModalConfig(null),
           type: "alert",
         });
       } else {
         setModalConfig({
           title: "Upload Error",
-          message: `Error uploading logo: ${error.message}. Please try again or contact support.`,
+          message: `Error uploading logo: ${error.message}. Please try again.`,
           onCancel: () => setModalConfig(null),
           type: "alert",
         });
@@ -426,14 +402,11 @@ function AddNGOPage() {
 
       let logoUrl = null;
       if (formData.logo) {
-        console.log('Starting logo upload...');
         logoUrl = await uploadNgoLogo(formData.logo);
         if (!logoUrl) {
-          console.error('Logo upload failed, aborting NGO creation');
           setLoading(false);
           return;
         }
-        console.log('Logo uploaded successfully:', logoUrl);
       }
 
       const adminId = await getNextAdminId();
@@ -474,8 +447,6 @@ function AddNGOPage() {
         await supabase.from("NGO_Information").delete().eq("admin_id", adminId);
         throw adminError;
       }
-
-      console.log('NGO created successfully');
       
       setModalConfig({
         title: "Success",
@@ -503,297 +474,316 @@ function AddNGOPage() {
   return (
     <div className="flex min-h-screen bg-no-repeat bg-center" style={{ backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%" }}>
       <Sidebar handleAlert={(msg) => alert(msg)} />
-      <main className="ml-64 flex-1 p-4 bg-gray-50 min-h-screen overflow-y-auto">
-        <div className="flex items-center justify-center min-h-full py-4">
-          <div className="bg-white shadow-2xl rounded-2xl w-full max-w-5xl border border-emerald-200 relative">
-            <button
-              onClick={handleClose}
-              className="absolute top-3 right-3 z-10 text-white text-2xl font-bold leading-none transition-all duration-300 hover:scale-110 hover:rotate-90 cursor-pointer bg-emerald-700 rounded-full w-8 h-8 flex items-center justify-center focus:outline-none shadow-lg"
-              disabled={loading || logoUploading}
-              title="Close and return to NGO Hub"
-            >
-              ✕
-            </button>
+      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
+          {/* Close Button */}
+          <button
+            onClick={handleClose}
+            className="absolute top-6 right-6 z-10 text-white text-4xl font-bold leading-none transition-all duration-300 hover:scale-110 hover:rotate-90 cursor-pointer bg-emerald-700 rounded-full w-10 h-10 flex items-center justify-center focus:outline-none"
+            disabled={loading || logoUploading}
+            title="Close and return to NGO Hub"
+          >
+            ✕
+          </button>
 
-            <div className="bg-emerald-700 py-3 px-6 text-white text-center rounded-t-2xl">
-              <h1 className="text-2xl font-extrabold">Register New NGO</h1>
-              <p className="text-xs opacity-90">Fill in the details below</p>
-            </div>
+          {/* Header */}
+          <div className="bg-emerald-700 py-6 px-8 text-white">
+            <h1 className="text-3xl font-extrabold">Register New NGO</h1>
+            <p className="text-sm opacity-80">Fill in the details below</p>
+          </div>
 
-            <form onSubmit={handleSubmitClick} className="p-6">
-              <div className="grid grid-cols-1 gap-3">
-                
-                {/* Row 1: Login ID + Password */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Login ID *</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <input
-                        type="text"
-                        name="loginId"
-                        value={formData.loginId}
-                        onChange={handleChange}
-                        placeholder="Enter login ID"
-                        className="w-full outline-none text-sm"
-                        required
-                        disabled={loading || logoUploading}
-                      />
-                      <img src={AdminIcon} alt="Login" className="w-4 h-4 ml-2 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Password *</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Enter password"
-                        className="w-full outline-none text-sm"
-                        required
-                        disabled={loading || logoUploading}
-                      />
-                      <img
-                        src={showPassword ? ShowPasswordIcon : PasswordIcon}
-                        alt="Toggle"
-                        className="w-4 h-4 ml-2 cursor-pointer flex-shrink-0"
-                        onClick={() => setShowPassword(!showPassword)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 2: Admin ID + Admin Type */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Admin ID *</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <input
-                        type="text"
-                        name="adminId"
-                        value={formData.adminId}
-                        onChange={handleChange}
-                        placeholder="Enter admin ID"
-                        className="w-full outline-none text-sm"
-                        required
-                        disabled={loading || logoUploading}
-                      />
-                      <img src={AdminIcon} alt="Admin" className="w-4 h-4 ml-2 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Admin Type</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <select
-                        name="adminType"
-                        value={formData.adminType}
-                        onChange={handleChange}
-                        className="w-full outline-none bg-transparent text-sm"
-                        disabled={loading || logoUploading}
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="super_admin">Super Admin</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 3: NGO Code + NGO Logo */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">NGO Code *</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <input
-                        type="text"
-                        name="ngoCode"
-                        value={formData.ngoCode}
-                        onChange={handleChange}
-                        placeholder="Enter unique NGO code"
-                        className="w-full outline-none text-sm"
-                        required
-                        disabled={loading || logoUploading}
-                      />
-                      <img src={NGOLogoIcon} alt="Code" className="w-4 h-4 ml-2 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">NGO Logo</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <input
-                        type="file"
-                        name="logo"
-                        accept={supportedImageTypes.join(',')}
-                        onChange={handleChange}
-                        className="w-full outline-none text-xs cursor-pointer file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700"
-                        disabled={loading || logoUploading}
-                      />
-                      <img src={FileIcon} alt="File" className="w-4 h-4 ml-1 flex-shrink-0" />
-                    </div>
-                    {logoPreview && (
-                      <img src={logoPreview} alt="Preview" className="mt-1 h-10 w-auto object-contain rounded border" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Row 4: NGO Name */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">NGO Name *</label>
-                  <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Enter NGO name"
-                      className="w-full outline-none text-sm"
-                      required
-                      disabled={loading || logoUploading}
-                    />
-                    <img src={NGOLogoIcon} alt="Name" className="w-4 h-4 ml-2 flex-shrink-0" />
-                  </div>
-                </div>
-
-                {/* Row 5: Description */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
+          {/* Form */}
+          <form onSubmit={handleSubmitClick} className="p-8 space-y-5 text-left">
+            {/* Row 1: Login ID + Password */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 font-semibold text-base text-emerald-900">Login ID</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="text"
+                    name="loginId"
+                    value={formData.loginId}
                     onChange={handleChange}
-                    placeholder="Short description"
-                    rows="2"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
+                    placeholder="Enter login ID"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
                     disabled={loading || logoUploading}
                   />
+                  <img src={AdminIcon} alt="Login Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
                 </div>
-
-                {/* Row 6: Address */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Address *</label>
-                  <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      placeholder="Enter NGO address"
-                      className="w-full outline-none text-sm"
-                      required
-                      disabled={loading || logoUploading}
-                    />
-                    <img src={LocationIcon} alt="Address" className="w-4 h-4 ml-2 flex-shrink-0" />
-                  </div>
-                </div>
-
-                {/* Row 7: Phone + Email */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Phone Number *</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <input
-                        type="text"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="Enter phone number"
-                        className="w-full outline-none text-sm"
-                        required
-                        disabled={loading || logoUploading}
-                      />
-                      <img src={PhoneIcon} alt="Phone" className="w-4 h-4 ml-2 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Official Email *</label>
-                    <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Enter email"
-                        className="w-full outline-none text-sm"
-                        required
-                        disabled={loading || logoUploading}
-                      />
-                      <img src={EmailIcon} alt="Email" className="w-4 h-4 ml-2 flex-shrink-0" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 8: NGO Location */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">NGO Location *</label>
-                  <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleChange}
-                      placeholder="Enter NGO location"
-                      className="w-full outline-none text-sm"
-                      required
-                      disabled={loading || logoUploading}
-                    />
-                    <img src={LocationIcon} alt="Location" className="w-4 h-4 ml-2 flex-shrink-0" />
-                  </div>
-                </div>
-
-                {/* Row 9: Preferred Volunteering Types - 4 columns x 2 rows */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
-                    Preferred Volunteering Types *
-                  </label>
-                  <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <div className="grid grid-cols-4 gap-x-3 gap-y-2">
-                      {volunteeringOptions.map((option) => (
-                        <label 
-                          key={option} 
-                          className="flex items-start p-2 rounded-md hover:bg-emerald-50 cursor-pointer transition-colors border border-transparent hover:border-emerald-200"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={formData.preferredVolunteering.includes(option)}
-                            onChange={() => handleVolunteeringChange(option)}
-                            disabled={loading || logoUploading}
-                            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
-                          />
-                          <span className="ml-2 text-xs text-gray-700 leading-snug">{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {formData.preferredVolunteering.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-emerald-200 bg-white rounded px-3 py-2">
-                        <p className="text-xs text-emerald-700 font-semibold">
-                          Selected ({formData.preferredVolunteering.length}): {formData.preferredVolunteering.join(", ")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <div className="pt-3">
-                  <button
-                    type="submit"
-                    disabled={loading || logoUploading}
-                    className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-lg hover:bg-emerald-700 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm"
-                  >
-                    {loading ? "Registering..." : logoUploading ? "Uploading Logo..." : "Register NGO"}
-                  </button>
-                </div>
-
               </div>
-            </form>
-          </div>
+
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 font-semibold text-base text-emerald-900">Password</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter password"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img
+                    src={showPassword ? ShowPasswordIcon : PasswordIcon}
+                    alt={showPassword ? "Hide password" : "Password icon"}
+                    className="w-5 h-5 ml-2 opacity-70 cursor-pointer hover:opacity-100 transition-opacity duration-200 flex-shrink-0"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? "Hide Password" : "Show Password"}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2: Admin ID + Admin Type */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin ID *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="text"
+                    name="adminId"
+                    value={formData.adminId}
+                    onChange={handleChange}
+                    placeholder="Enter admin ID"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={AdminIcon} alt="Admin Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-[200px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin Type</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <select
+                    name="adminType"
+                    value={formData.adminType}
+                    onChange={handleChange}
+                    className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+                    disabled={loading || logoUploading}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: NGO Code + NGO Logo */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Code *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="text"
+                    name="ngoCode"
+                    value={formData.ngoCode}
+                    onChange={handleChange}
+                    placeholder="Enter unique NGO code"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={NGOLogoIcon} alt="NGO Code Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-[280px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Logo</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="file"
+                    name="logo"
+                    accept={supportedImageTypes.join(',')}
+                    onChange={handleChange}
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent text-sm"
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={FileIcon} alt="NGO Logo Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Supported: jpg, jpeg, png, gif, webp, svg, bmp. Max: 10MB
+                </p>
+                
+                {logoPreview && (
+                  <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                    <img src={logoPreview} alt="Logo Preview" className="max-w-full h-20 object-contain mx-auto rounded border" />
+                    <p className="text-sm text-gray-600 mt-2 font-medium">{formData.logo.name}</p>
+                  </div>
+                )}
+                
+                {formData.logo && !logoPreview && (
+                  <div className="mt-2 p-2 bg-emerald-100 rounded text-sm text-emerald-800">
+                    File selected: {formData.logo.name}
+                  </div>
+                )}
+
+                {logoUploading && (
+                  <div className="mt-2 p-2 bg-blue-100 rounded text-sm text-blue-800">
+                    Uploading logo...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Row 4: NGO Name (full width) */}
+            <div>
+              <label className="block mb-2 font-semibold text-base text-emerald-900">NGO Name *</label>
+              <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter NGO name"
+                  className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                  required
+                  disabled={loading || logoUploading}
+                />
+                <img src={NGOLogoIcon} alt="NGO Name Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+              </div>
+            </div>
+
+            {/* Row 5: Description (full width) */}
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Short description"
+                rows="4"
+                className="w-full border border-emerald-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 cursor-pointer"
+                disabled={loading || logoUploading}
+              />
+            </div>
+
+            {/* Row 6: Address (full width) */}
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Address *</label>
+              <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter NGO address"
+                  className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                  required
+                  disabled={loading || logoUploading}
+                />
+                <img src={LocationIcon} alt="Address Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+              </div>
+            </div>
+
+            {/* Row 7: Phone + Email */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Phone Number *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="Enter phone number"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={PhoneIcon} alt="Phone Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Official Email *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter email"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={EmailIcon} alt="Email Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 8: NGO Location (full width) */}
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Location *</label>
+              <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="Enter NGO location"
+                  className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                  required
+                  disabled={loading || logoUploading}
+                />
+                <img src={LocationIcon} alt="Location Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+              </div>
+            </div>
+
+            {/* Row 9: Preferred Volunteering Types */}
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">
+                Preferred Volunteering Types *
+              </label>
+              <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {volunteeringOptions.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.preferredVolunteering.includes(option)}
+                        onChange={() => handleVolunteeringChange(option)}
+                        disabled={loading || logoUploading}
+                        className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
+                    </label>
+                  ))}
+                </div>
+                {formData.preferredVolunteering.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <p className="text-sm text-teal-700">
+                      <span className="font-medium">Selected ({formData.preferredVolunteering.length}):</span>{" "}
+                      {formData.preferredVolunteering.join(", ")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-2 mt-4">
+              <button
+                type="submit"
+                disabled={loading || logoUploading}
+                className="w-full bg-emerald-600 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Registering..." : logoUploading ? "Uploading Logo..." : "Register NGO"}
+              </button>
+            </div>
+          </form>
         </div>
       </main>
 
+      {/* Modal */}
       {modalConfig && (
         <ConfirmationModal
           title={modalConfig.title}
