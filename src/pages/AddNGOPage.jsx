@@ -742,7 +742,7 @@ function AddNGOPage() {
   </label>
   <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
     {/* First Row - 4 items */}
-    <div className="grid grid-cols-4 gap-4 mb-3">
+    <div className="grid grid-cols-2 gap-4 mb-3">
       {volunteeringOptions.slice(0, 4).map((option) => (
         <label
           key={option}
@@ -761,7 +761,7 @@ function AddNGOPage() {
     </div>
 
     {/* Second Row - 4 items */}
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 gap-4">
       {volunteeringOptions.slice(4, 8).map((option) => (
         <label
           key={option}
