@@ -735,39 +735,63 @@ function AddNGOPage() {
               </div>
             </div>
 
-            {/* Row 9: Preferred Volunteering Types */}
-            <div>
-              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">
-                Preferred Volunteering Types *
-              </label>
-              <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {volunteeringOptions.map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.preferredVolunteering.includes(option)}
-                        onChange={() => handleVolunteeringChange(option)}
-                        disabled={loading || logoUploading}
-                        className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
-                      />
-                      <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
-                    </label>
-                  ))}
-                </div>
-                {formData.preferredVolunteering.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-gray-200">
-                    <p className="text-sm text-teal-700">
-                      <span className="font-medium">Selected ({formData.preferredVolunteering.length}):</span>{" "}
-                      {formData.preferredVolunteering.join(", ")}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Row 9: Preferred Volunteering Types - Fixed 2 Rows x 4 Columns */}
+<div>
+  <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">
+    Preferred Volunteering Types *
+  </label>
+  <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
+    {/* First Row - 4 items */}
+    <div className="flex flex-wrap gap-4 mb-3">
+      {volunteeringOptions.slice(0, 4).map((option) => (
+        <label
+          key={option}
+          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+          style={{ width: 'calc(25% - 12px)' }}
+        >
+          <input
+            type="checkbox"
+            checked={formData.preferredVolunteering.includes(option)}
+            onChange={() => handleVolunteeringChange(option)}
+            disabled={loading || logoUploading}
+            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+          />
+          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
+        </label>
+      ))}
+    </div>
+
+    {/* Second Row - 4 items */}
+    <div className="flex flex-wrap gap-4">
+      {volunteeringOptions.slice(4, 8).map((option) => (
+        <label
+          key={option}
+          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+          style={{ width: 'calc(25% - 12px)' }}
+        >
+          <input
+            type="checkbox"
+            checked={formData.preferredVolunteering.includes(option)}
+            onChange={() => handleVolunteeringChange(option)}
+            disabled={loading || logoUploading}
+            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+          />
+          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
+        </label>
+      ))}
+    </div>
+
+    {/* Selected Count */}
+    {formData.preferredVolunteering.length > 0 && (
+      <div className="mt-4 pt-3 border-t border-gray-200">
+        <p className="text-sm text-teal-700">
+          <span className="font-medium">Selected ({formData.preferredVolunteering.length}):</span>{" "}
+          {formData.preferredVolunteering.join(", ")}
+        </p>
+      </div>
+    )}
+  </div>
+</div>
 
             {/* Submit Button */}
             <div className="pt-2 mt-4">
