@@ -25,6 +25,7 @@ const VolunteersPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [removalReason, setRemovalReason] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Result modal states
   const [showResultModal, setShowResultModal] = useState(false);
@@ -345,15 +346,21 @@ const VolunteersPage = () => {
 
   return (
     <div
-      className="flex min-h-screen bg-no-repeat bg-center"
+      className="flex min-h-screen bg-no-repeat bg-center bg-fixed"
       style={{
         backgroundImage: `url(${CentroAdminBg})`,
-        backgroundSize: "100% 100%",
+        backgroundSize: "cover",
       }}
     >
-      <Sidebar activeButton="Volunteers" />
+      <Sidebar activeButton="Volunteers" onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 ml-64 p-6 overflow-y-auto">
+      <main 
+        className="flex-1 p-6 overflow-y-auto transition-all duration-300"
+        style={{ 
+          filter: (showConfirmModal || showResultModal) ? "blur(3px)" : "none",
+          marginLeft: sidebarCollapsed ? "5rem" : "16rem"
+        }}
+      >
         <div className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-7xl mx-auto p-8">
           <div className="grid grid-cols-12 gap-8 items-start">
             <div className="col-span-12">

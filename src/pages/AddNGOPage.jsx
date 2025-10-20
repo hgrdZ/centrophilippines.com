@@ -60,6 +60,7 @@ function AddNGOPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [formData, setFormData] = useState({
     loginId: "",
@@ -473,9 +474,12 @@ function AddNGOPage() {
 
   return (
     <div className="flex min-h-screen bg-no-repeat bg-center" style={{ backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%" }}>
-      <Sidebar handleAlert={(msg) => alert(msg)} />
-      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
+        <Sidebar onCollapseChange={setSidebarCollapsed} />
+
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >               
+      <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
           {/* Close Button */}
           <button
             onClick={handleClose}

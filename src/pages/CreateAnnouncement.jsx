@@ -90,6 +90,7 @@ function CreateAnnouncement() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [expiryDate, setExpiryDate] = useState("");
+ const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Event options
   const [events, setEvents] = useState([]);
@@ -330,10 +331,13 @@ function CreateAnnouncement() {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />
+<Sidebar onCollapseChange={setSidebarCollapsed} />
 
-    <main className="flex-1 flex justify-center ml-64 p-4 sm:p-6">
-      <div className="w-full max-w-6xl rounded-2xl border-green-800 p-2 sm:p-8">
+      <main 
+        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >        
+            <div className="w-full max-w-6xl rounded-2xl border-green-800 p-2 sm:p-8">
         <div className="border-2 border-emerald-900 rounded-lg mb-2 p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>

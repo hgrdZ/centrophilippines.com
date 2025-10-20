@@ -67,11 +67,10 @@ function Sidebar({ handleAlert, onCollapseChange }) {
     }
   };
 
-  // Toggle collapse when clicking logo
+  // Toggle collapse when clicking arrow
   const toggleCollapse = () => {
     setCollapsed((prev) => {
       const newValue = !prev;
-      // Notify parent component about the change
       if (onCollapseChange) {
         onCollapseChange(newValue);
       }
@@ -113,165 +112,190 @@ function Sidebar({ handleAlert, onCollapseChange }) {
   return (
     <>
       <aside 
-        className={`fixed top-0 left-0 h-screen shadow-lg border-r border-gray-200 flex flex-col justify-between p-4 z-30 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-screen shadow-xl border-r-2 border-emerald-300 flex flex-col justify-between p-4 z-30 transition-all duration-300 ease-in-out ${
           collapsed ? "w-20" : "w-64"
         }`}
         style={{ backgroundColor: "#d8eeeb" }}
       >
         <div>
-          {/* ✅ Logo Section - Clickable to toggle */}
-          <div 
-            className={`w-full bg-gray-100 rounded-lg shadow-sm overflow-hidden mb-8 cursor-pointer transition-all duration-300 ${
-              collapsed ? "h-16" : "h-50"
-            }`}
-            onClick={toggleCollapse}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {ngoLogo ? (
-              <img
-                src={ngoLogo}
-                alt="Organization Logo"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="flex items-center justify-center w-full h-full text-gray-400">
-                {collapsed ? "L" : "Logo"}
+          {/* Toggle Arrow Button - Above Logo */}
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={toggleCollapse}
+              className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-emerald-700 transition-all duration-200 hover:scale-110"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <span className={`inline-block transition-transform duration-300 text-sm font-bold ${collapsed ? "rotate-0" : "rotate-180"}`}>
+                ◀
               </span>
-            )}
-            {/* Collapse indicator arrow */}
-            <div className="absolute top-4 right-4 text-emerald-600">
-              <span className={`inline-block transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}>
-                ▶
-              </span>
+            </button>
+          </div>
+
+          {/* Logo Section */}
+          <div className="relative mb-4">
+            <div 
+              className={`w-full bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 ${
+                collapsed ? "h-16" : "h-40"
+              }`}
+            >
+              {ngoLogo ? (
+                <img
+                  src={ngoLogo}
+                  alt="Organization Logo"
+                  className="w-full h-full object-contain p-1"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full text-gray-400 font-montserrat font-semibold">
+                  {collapsed ? "L" : "LOGO"}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* ✅ Sidebar Navigation */}
-          <nav className="space-y-3 text-base font-montserrat text-gray-700" id="sidebarButtons">
+          {/* Sidebar Navigation */}
+          <nav className="space-y-2 text-base font-montserrat text-gray-700" id="sidebarButtons">
             <Link to="/dashboard">
               <button
-                className={`w-full text-left font-montserrat px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 cursor-pointer ${
+                className={`w-full text-left font-montserrat px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
+                  collapsed ? "justify-center" : "gap-3"
+                } ${
                   isActive("/dashboard")
-                    ? "bg-emerald-600 text-white font-montserrat font-semibold shadow-md border-emerald-600"
-                    : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
                 }`}
                 title="Dashboard"
               >
-                <img src={DashboardIcon} alt="Dashboard" className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>Dashboard</span>}
+                <img src={DashboardIcon} alt="Dashboard" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Dashboard</span>}
               </button>
             </Link>
 
             <Link to="/volunteer">
               <button
-                className={`w-full text-left px-4 py-3 font-montserrat rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-3 font-montserrat rounded-xl flex items-center transition-all duration-200 ${
+                  collapsed ? "justify-center" : "gap-3"
+                } ${
                   isActive("/volunteer")
-                    ? "bg-emerald-600 text-white font-montserrat font-semibold shadow-md border-emerald-600"
-                    : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
                 }`}
                 title="Volunteers"
               >
-                <img src={VolunteersIcon} alt="Volunteers" className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>Volunteers</span>}
+                <img src={VolunteersIcon} alt="Volunteers" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Volunteers</span>}
               </button>
             </Link>
 
             <Link to="/manage-reports">
               <button
-                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
+                  collapsed ? "justify-center" : "gap-3"
+                } ${
                   isActive("/manage-reports")
-                    ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-                    : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
                 }`}
                 title="Manage Reports"
               >
-                <img src={ManageReportsIcon} alt="Manage Reports" className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>Manage Reports</span>}
+                <img src={ManageReportsIcon} alt="Manage Reports" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Manage Reports</span>}
               </button>
             </Link>
 
             <Link to="/review-application">
               <button
-                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
+                  collapsed ? "justify-center" : "gap-3"
+                } ${
                   isActive("/review-application")
-                    ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-                    : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
                 }`}
                 title="Review Application"
               >
-                <img src={ReviewAppIcon} alt="Review Application" className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>Review Application</span>}
+                <img src={ReviewAppIcon} alt="Review Application" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Review Application</span>}
               </button>
             </Link>
 
             <Link to="/calendar">
               <button
-                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
+                  collapsed ? "justify-center" : "gap-3"
+                } ${
                   isActive("/calendar")
-                    ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-                    : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
                 }`}
                 title="Calendar"
               >
-                <img src={CalendarIcon} alt="Calendar" className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>Calendar</span>}
+                <img src={CalendarIcon} alt="Calendar" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Calendar</span>}
               </button>
             </Link>
 
             <Link to="/messages">
               <button
-                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
+                  collapsed ? "justify-center" : "gap-3"
+                } ${
                   isActive("/messages")
-                    ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-                    : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
                 }`}
                 title="Messages"
               >
-                <img src={MessagesIcon} alt="Messages" className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>Messages</span>}
+                <img src={MessagesIcon} alt="Messages" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Messages</span>}
               </button>
             </Link>
 
             <Link to="/settings">
               <button
-                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
+                  collapsed ? "justify-center" : "gap-3"
+                } ${
                   isActive("/settings")
-                    ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-                    : "border-emerald-200 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
                 }`}
                 title="Settings"
               >
-                <img src={SettingsIcon} alt="Settings" className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span>Settings</span>}
+                <img src={SettingsIcon} alt="Settings" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Settings</span>}
               </button>
             </Link>
 
             {adminId === "001_CHARITYPHILIPPINESORG" && (
               <Link to="/ngohub">
                 <button
-                  className={`w-full text-left font-montserrat px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 cursor-pointer ${
+                  className={`w-full text-left font-montserrat px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
+                    collapsed ? "justify-center" : "gap-3"
+                  } ${
                     isActive("/ngohub")
-                      ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-                      : "border-gray-200 hover:border-emerald-500 hover:bg-emerald-100"
+                      ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                      : "hover:bg-emerald-100 hover:scale-105"
                   }`}
                   title="NGO Hub"
                 >
-                  <img src={NGOHubIcon} alt="NGO Hub" className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span>NGO Hub</span>}
+                  <img src={NGOHubIcon} alt="NGO Hub" className="w-6 h-6 flex-shrink-0" />
+                  {!collapsed && <span className="truncate">NGO Hub</span>}
                 </button>
               </Link>
             )}
           </nav>
         </div>
 
-        {/* ✅ Logout */}
+        {/* Logout Button */}
         <button
           onClick={() => setShowLogoutConfirm(true)}
-          className="flex items-center gap-2 px-4 py-3 text-base font-montserrat text-red-600 rounded hover:bg-red-100 cursor-pointer transition-colors duration-200"
+          className={`flex items-center gap-3 px-3 py-3 text-base font-montserrat text-red-600 rounded-xl hover:bg-red-100 transition-all duration-200 hover:scale-105 ${
+            collapsed ? "justify-center" : ""
+          }`}
           title="Log Out"
         >
-          <img src={LogoutIcon} alt="Logout" className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span>Log Out</span>}
+          <img src={LogoutIcon} alt="Logout" className="w-6 h-6 flex-shrink-0" />
+          {!collapsed && <span className="truncate">Log Out</span>}
         </button>
       </aside>
 
@@ -288,13 +312,13 @@ function Sidebar({ handleAlert, onCollapseChange }) {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
           <div
-            className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-700"
+            className="relative bg-white rounded-2xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-600"
           >
             <div className="flex justify-center mb-4">
               <div className="flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-red-700 mb-2 font-montserrat">
-                Confirm Logout
-              </h2>
+                <h2 className="text-3xl font-bold text-red-600 mb-2 font-montserrat">
+                  Confirm Logout
+                </h2>
               </div>
             </div>
 
@@ -307,13 +331,13 @@ function Sidebar({ handleAlert, onCollapseChange }) {
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleLogout}
-                  className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-red-600 hover:bg-red-700 hover:border-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-montserrat font-semibold hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
                 >
                   Yes, Log Out
                 </button>
                 <button
                   onClick={handleCloseModal}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-emerald-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-3 rounded-xl text-lg font-montserrat font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
                 >
                   Cancel
                 </button>

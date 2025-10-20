@@ -20,6 +20,7 @@ export default function MessagesPage() {
   const [hasMoreMessages, setHasMoreMessages] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfiles, setUserProfiles] = useState({});
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -700,10 +701,12 @@ export default function MessagesPage() {
         backgroundSize: "cover",
       }}
     >
-      <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 ml-64 flex h-screen">
-        {/* Chat List */}
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >         
+       {/* Chat List */}
         <div className="w-1/3 h-screen flex flex-col bg-gradient-to-b from-emerald-100 to-emerald-200 border-r border-gray-300 shadow-xl">
           <div className="px-5 h-16 flex items-center justify-between border-b border-gray-400 bg-emerald-800">
             <h2 className="text-xl font-bold text-white">Event Chats</h2>

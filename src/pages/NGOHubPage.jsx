@@ -19,6 +19,7 @@ function NGOHubPage() {
   const [showAddNGOModal, setShowAddNGOModal] = useState(false);
   const [step, setStep] = useState(1);
   const [removedCount, setRemovedCount] = useState(0);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const navigate = useNavigate();
 
@@ -319,10 +320,12 @@ const calculateNGOStats = async (ngoCode) => {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar activeButton="NGO Hub" />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen">
-        {/* TOP HEADER */}
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >   
+              {/* TOP HEADER */}
         <div className="mb-6">
           <div className="bg-emerald-900 text-white rounded-full p-2 text-center mb-2 shadow">
             <h1 className="text-3xl font-extrabold">NGO Hub</h1>

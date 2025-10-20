@@ -413,13 +413,14 @@ function DashboardPage() {
     >
       <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main
-        className={`flex-1 p-6 overflow-y-auto transition-all duration-300 ${
-          sidebarCollapsed ? "ml-20" : "ml-64"
-        }`}
-        style={{ filter: modalState.isOpen ? "blur(3px)" : "none" }}
+        <main
+        className="flex-1 p-6 overflow-y-auto transition-all duration-300"
+        style={{ 
+          filter: modalState.isOpen ? "blur(3px)" : "none",
+          marginLeft: sidebarCollapsed ? "5rem" : "16rem"
+        }}
       >
-        <div className="relative z-10 space-y-6 w-full max-w-7xl mx-auto">
+        <div className="relative z-10 space-y-6 w-full mx-auto" style={{ maxWidth: "1400px" }}>
           <h2 className="text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
             {viewingContext?.is_super_admin_view
               ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SUPER ADMIN VIEW)`

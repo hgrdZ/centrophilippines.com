@@ -14,6 +14,7 @@ export default function CalendarPage() {
   const [showEventSelector, setShowEventSelector] = useState(false);
   const [multipleEvents, setMultipleEvents] = useState([]);
   const [todayDate, setTodayDate] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -314,9 +315,12 @@ export default function CalendarPage() {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar handleAlert={handleAlert} />
-        <main className="flex-1 ml-64 p-6 flex items-center justify-center">
-          <div className="text-2xl text-emerald-900 font-semibold">Loading calendar...</div>
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
+        
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >            
+      <div className="text-2xl text-emerald-900 font-semibold">Loading calendar...</div>
         </main>
       </div>
     );

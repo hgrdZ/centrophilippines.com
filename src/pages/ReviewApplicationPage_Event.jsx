@@ -12,6 +12,8 @@ export default function ReviewApplicationEventPage() {
   const [selectedEventDetails, setSelectedEventDetails] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showCentroConfirm, setShowCentroConfirm] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
   
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -234,10 +236,13 @@ export default function ReviewApplicationEventPage() {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-        <main className="flex-1 ml-64 p-4 overflow-y-auto">
-          <div id="review_application" className="relative z-10 space-y-4">
+      <main 
+        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >          
+      <div id="review_application" className="relative z-10 space-y-4">
             <div className="flex gap-4">
               <Link to="/review-application" className="flex-1">
                 <button

@@ -96,6 +96,7 @@ function CreateEvent() {
   const [volunteerOpportunities, setVolunteerOpportunities] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Form states (Page 2 - Completion Tasks) - Fixed 3 tasks
   const [completionTasks, setCompletionTasks] = useState([
@@ -1173,10 +1174,13 @@ function CreateEvent() {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 flex justify-center ml-64 p-6">
-        <div className="w-full max-w-6xl">
+      <main 
+        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >        
+              <div className="w-full max-w-6xl">
           {/* Progress Indicator */}
           <div className="mb-6">
             <div className="flex items-center justify-between bg-white rounded-lg p-4 border-4 border-green-800 shadow-lg">

@@ -29,6 +29,7 @@ const SettingsPage = () => {
   const [showUpdateLogoConfirm, setShowUpdateLogoConfirm] = useState(false);
   const [showSaveChangesConfirm, setShowSaveChangesConfirm] = useState(false);
   const [showCancelEditConfirm, setShowCancelEditConfirm] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // State for notifications and alerts
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -367,10 +368,12 @@ const SettingsPage = () => {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar activeButton="Settings" />
+        <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-        <main className="flex-1 ml-64 p-10 overflow-y-auto">
-          <div className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-5xl mx-auto p-8">
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >   
+            <div className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-5xl mx-auto p-8">
             
             {/* Action Buttons */}
             <div className="absolute top-6 right-6 flex gap-3">
