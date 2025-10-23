@@ -22,32 +22,65 @@ function ReviewAiScheduling() {
   const [showSuccessApprove, setShowSuccessApprove] = useState(false);
   const [showSuccessReject, setShowSuccessReject] = useState(false);
   const [showSuccessAdjust, setShowSuccessAdjust] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [processedVolunteer, setProcessedVolunteer] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // IMPORTANT: This will automatically use Vercel's URL in production
-  const BACKEND_API_URL = process.env.REACT_APP_BACKEND_URL || 
-                          (process.env.NODE_ENV === 'production' 
-                            ? '/api' // In Vercel, use relative path
-                            : 'http://localhost:3001');
+const isLocal = window.location.hostname === "localhost";
+const BACKEND_API_URL = isLocal ? "http://localhost:5000" : "";
+
+useEffect(() => {
+const initializePage = async () => {
+  if (location.state?.volunteer && location.state?.eventDetails) {
+    const { volunteer: selectedVolunteer, eventDetails: selectedEvent } = location.state;
+
+    if (!selectedEvent?.event_id) {
+      console.warn("⚠️ Missing event_id in selectedEvent:", selectedEvent);
+      navigate("/review-application-event");
+      return;
+    }
+
+    setVolunteer(selectedVolunteer);
+    setEventDetails(selectedEvent);
+    fetchEventVolunteers(selectedEvent.event_id, selectedVolunteer);
+    fetchAcceptedVolunteersCount(selectedEvent.event_id);
+
+    const { data: fullEventData, error: eventError } = await supabase
+      .from("Event_Information")
+      .select("*")
+      .eq("event_id", selectedEvent.event_id)
+      .maybeSingle();
+
+    if (eventError) {
+      console.error("Error fetching full event data:", eventError);
+      generateAiSuggestions(selectedVolunteer, selectedEvent);
+    } else if (fullEventData) {
+      setEventDetails(fullEventData);
+      generateAiSuggestions(selectedVolunteer, fullEventData);
+    } else {
+      console.warn("⚠️ Event not found in Event_Information:", selectedEvent.event_id);
+    }
+  } else {
+    navigate("/review-application-event");
+  }
+};
+
+  initializePage();
+}, [location.state, navigate]);
 
   useEffect(() => {
-    if (
-      location.state &&
-      location.state.volunteer &&
-      location.state.eventDetails
-    ) {
-      const { volunteer: selectedVolunteer, eventDetails: selectedEvent } =
-        location.state;
-      setVolunteer(selectedVolunteer);
-      setEventDetails(selectedEvent);
-      fetchEventVolunteers(selectedEvent.event_id);
-      fetchAcceptedVolunteersCount(selectedEvent.event_id);
-      generateAiSuggestions(selectedVolunteer, selectedEvent);
-    } else {
-      navigate("/review-application-event");
+    if (showSuccessApprove || showSuccessReject || showSuccessAdjust) {
+      const timer = setTimeout(() => {
+        setShowSuccessApprove(false);
+        setShowSuccessReject(false);
+        setShowSuccessAdjust(false);
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-  }, [location.state, navigate]);
+  }, [showSuccessApprove, showSuccessReject, showSuccessAdjust]);
 
   const fetchAcceptedVolunteersCount = async (eventId) => {
     try {
@@ -69,65 +102,87 @@ function ReviewAiScheduling() {
     }
   };
 
-  const fetchEventVolunteers = async (eventId) => {
-    try {
-      const { data: eventUsers, error } = await supabase
-        .from("Event_User")
-        .select(
-          "user_id, event_id, status, days_available, time_availability, busy_hours"
-        )
-        .eq("event_id", eventId)
-        .eq("status", "PENDING");
+const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
+  try {
+    const { data: eventUsers, error } = await supabase
+      .from("Event_User")
+      .select(
+        "user_id, event_id, status, days_available, time_availability, busy_hours"
+      )
+      .eq("event_id", eventId)
+      .eq("status", "PENDING");
 
-      if (error) {
-        console.error("Error fetching event volunteers:", error);
-        return;
-      }
-
-      const volunteersWithDetails = await Promise.all(
-        eventUsers.map(async (eventUser) => {
-          const { data: volunteerData, error: userError } = await supabase
-            .from("LoginInformation")
-            .select(
-              "user_id, firstname, lastname, email, profile_picture, preferred_volunteering, contact_number"
-            )
-            .eq("user_id", eventUser.user_id)
-            .single();
-
-          if (userError) {
-            console.error("Error fetching volunteer details:", userError);
-            return null;
-          }
-
-          return {
-            ...volunteerData,
-            days_available: eventUser.days_available,
-            time_availability: eventUser.time_availability,
-            busy_hours: eventUser.busy_hours,
-            event_id: eventUser.event_id,
-          };
-        })
-      );
-
-      const filteredVolunteers = volunteersWithDetails.filter((v) => v !== null);
-      setAllVolunteers(filteredVolunteers);
-
-      const currentIndex = filteredVolunteers.findIndex(
-        (v) => v.user_id === volunteer?.user_id
-      );
-      setCurrentVolunteerIndex(currentIndex >= 0 ? currentIndex : 0);
-    } catch (error) {
-      console.error("Error in fetchEventVolunteers:", error);
+    if (error) {
+      console.error("Error fetching event volunteers:", error);
+      return;
     }
+
+    const volunteersWithDetails = await Promise.all(
+      eventUsers.map(async (eventUser) => {
+        const { data: volunteerData, error: userError } = await supabase
+          .from("LoginInformation")
+          .select(
+            "user_id, firstname, lastname, email, profile_picture, preferred_volunteering, contact_number, location"
+          )
+          .eq("user_id", eventUser.user_id)
+          .maybeSingle();
+
+        if (userError) {
+          console.error("Error fetching volunteer details:", userError);
+          return null;
+        }
+
+        return {
+          ...volunteerData,
+          days_available: eventUser.days_available,
+          time_availability: eventUser.time_availability,
+          busy_hours: eventUser.busy_hours,
+          event_id: eventUser.event_id,
+        };
+      })
+    );
+
+    const filteredVolunteers = volunteersWithDetails.filter((v) => v !== null);
+    setAllVolunteers(filteredVolunteers);
+
+    // CHANGED: Use parameter instead of state
+    const currentIndex = filteredVolunteers.findIndex(
+      (v) => v.user_id === selectedVolunteer?.user_id
+    );
+    setCurrentVolunteerIndex(currentIndex >= 0 ? currentIndex : 0);
+  } catch (error) {
+    console.error("Error in fetchEventVolunteers:", error);
+  }
+};
+
+  const calculateEventDuration = (timeStart, timeEnd, callTime) => {
+    const parseTime = (timeStr) => {
+      const [time, period] = timeStr.split(/\s+/);
+      let [hours, minutes] = time.split(":").map(Number);
+      if (period?.toUpperCase() === "PM" && hours !== 12) hours += 12;
+      if (period?.toUpperCase() === "AM" && hours === 12) hours = 0;
+      return new Date(1970, 0, 1, hours, minutes || 0);
+    };
+
+    const start = parseTime(timeStart);
+    const end = parseTime(timeEnd);
+    let duration = (end - start) / (1000 * 60 * 60);
+
+    // Add call time if provided
+    if (callTime) {
+      const callTimeMatch = callTime.match(/(\d+)/);
+      if (callTimeMatch) {
+        duration += parseInt(callTimeMatch[1]);
+      }
+    }
+
+    return `${Math.round(duration)} hours`;
   };
 
-  // UPDATED: Enhanced error handling and retry logic for Vercel deployment
   const generateAiSuggestions = async (volunteerData, eventData) => {
     setIsLoading(true);
     try {
-      const endpoint = `${BACKEND_API_URL}/ai/generate-suggestions`;
-      
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${BACKEND_API_URL}/api/generate-suggestions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +194,8 @@ function ReviewAiScheduling() {
             days_available: volunteerData.days_available,
             time_availability: volunteerData.time_availability,
             busy_hours: volunteerData.busy_hours,
-            preferred_volunteering: volunteerData.preferred_volunteering
+            preferred_volunteering: volunteerData.preferred_volunteering,
+            location: volunteerData.location
           },
           eventData: {
             event_id: eventData.event_id,
@@ -147,6 +203,7 @@ function ReviewAiScheduling() {
             date: eventData.date,
             time_start: formatTime(eventData.time_start),
             time_end: formatTime(eventData.time_end),
+            call_time: eventData.call_time,
             volunteers_limit: eventData.volunteers_limit,
             event_objectives: eventData.event_objectives,
             description: eventData.description,
@@ -157,7 +214,7 @@ function ReviewAiScheduling() {
       });
 
       if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+        throw new Error('Failed to generate AI suggestions');
       }
 
       const data = await response.json();
@@ -176,7 +233,6 @@ function ReviewAiScheduling() {
       }
     } catch (error) {
       console.error("Error generating AI suggestions:", error);
-      // Always provide fallback suggestions to ensure UI works
       const fallbackSuggestions = createStrictFallbackSuggestions(
         volunteerData,
         eventData
@@ -219,6 +275,9 @@ function ReviewAiScheduling() {
         duration: "0 hours",
         matchingVolunteerTypes: ["General Volunteering"],
         compatibilityScore: "0",
+        proximityScore: "0",
+        timeOverlapScore: "0",
+        skillMatchScore: "0",
         reasoning: "Volunteer has not specified their time availability.",
       };
     }
@@ -232,6 +291,9 @@ function ReviewAiScheduling() {
         duration: "0 hours",
         matchingVolunteerTypes: ["General Volunteering"],
         compatibilityScore: "0",
+        proximityScore: "0",
+        timeOverlapScore: "0",
+        skillMatchScore: "0",
         reasoning: "Could not parse volunteer's time availability format.",
       };
     }
@@ -253,8 +315,11 @@ function ReviewAiScheduling() {
           eventData.volunteer_opportunities
         ),
         compatibilityScore: "0",
+        proximityScore: "0",
+        timeOverlapScore: "0",
+        skillMatchScore: "0",
         reasoning:
-          "Volunteer's availability does not overlap with event time. Event requires different schedule.",
+          "Volunteer's availability does not overlap with event time.",
       };
     }
 
@@ -263,15 +328,16 @@ function ReviewAiScheduling() {
     const totalEventDuration =
       (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
 
-    const timeCompatibility = (overlapDuration / totalEventDuration) * 60;
+    const timeCompatibility = (overlapDuration / totalEventDuration) * 50;
+    const proximityScore = 20; // Default proximity score
     const skillMatch =
       getMatchingTypes(
         volunteerData.preferred_volunteering,
         eventData.volunteer_opportunities
       ).length > 1
-        ? 30
-        : 15;
-    const finalScore = Math.round(timeCompatibility + skillMatch);
+        ? 20
+        : 10;
+    const finalScore = Math.round(timeCompatibility + proximityScore + skillMatch);
 
     return {
       recommendedTimeSlot: `${formatTimeFromDate(
@@ -283,13 +349,10 @@ function ReviewAiScheduling() {
         eventData.volunteer_opportunities
       ),
       compatibilityScore: finalScore.toString(),
-      reasoning: `Volunteer available for ${Math.round(
-        overlapDuration
-      )} of ${Math.round(totalEventDuration)} event hours (${Math.round(
-        (overlapDuration / totalEventDuration) * 100
-      )}% time overlap). ${
-        skillMatch > 15 ? "Good skill match." : "Limited skill match."
-      }`,
+      timeOverlapScore: Math.round(timeCompatibility).toString(),
+      proximityScore: proximityScore.toString(),
+      skillMatchScore: skillMatch.toString(),
+      reasoning: `Time overlap: ${Math.round(timeCompatibility)}%, Proximity: ${proximityScore}%, Skills: ${skillMatch}%`,
     };
   };
 
@@ -331,25 +394,25 @@ function ReviewAiScheduling() {
       }
       if (
         pref.includes("disaster") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("disaster")
       ) {
         commonTypes.push("Disaster Relief & Emergency Response");
       }
       if (
         pref.includes("administrative") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("administrative")
       ) {
         commonTypes.push("Administrative & Technical Support");
       }
       if (
         pref.includes("advocacy") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("advocacy")
       ) {
         commonTypes.push("Human Rights & Advocacy");
       }
       if (
         pref.includes("animal") &&
-        objectives.toLowerCase().includes("community")
+        objectives.toLowerCase().includes("animal")
       ) {
         commonTypes.push("Animal Welfare");
       }
@@ -369,32 +432,85 @@ function ReviewAiScheduling() {
     });
   };
 
-  const handlePreviousApplicant = () => {
-    if (currentVolunteerIndex > 0 && allVolunteers.length > 0) {
-      const prevVolunteer = allVolunteers[currentVolunteerIndex - 1];
-      setVolunteer(prevVolunteer);
-      setCurrentVolunteerIndex(currentVolunteerIndex - 1);
-      generateAiSuggestions(prevVolunteer, eventDetails);
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const sendRejectionEmail = async (volunteerEmail, volunteerName, eventTitle, ngoName, reason) => {
+    try {
+      console.log('📧 Sending rejection email to:', volunteerEmail);
+      const response = await fetch(`/api/send-reject-event`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: volunteerEmail,
+          volunteerName: volunteerName,
+          eventTitle: eventTitle,
+          ngoName: ngoName,
+          reason: reason
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Server responded with error:', response.status);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log('✓ Email sent successfully:', result);
+      return result.success;
+    } catch (error) {
+      console.error('✗ Error sending email:', error);
+      return false;
     }
   };
 
-  const handleNextApplicant = () => {
-    if (
-      currentVolunteerIndex < allVolunteers.length - 1 &&
-      allVolunteers.length > 0
-    ) {
-      const nextVolunteer = allVolunteers[currentVolunteerIndex + 1];
-      setVolunteer(nextVolunteer);
-      setCurrentVolunteerIndex(currentVolunteerIndex + 1);
-      generateAiSuggestions(nextVolunteer, eventDetails);
-    }
-  };
+const handlePreviousApplicant = () => {
+  console.log('Current Index:', currentVolunteerIndex);
+  console.log('All Volunteers:', allVolunteers);
+  console.log('Can go previous?', currentVolunteerIndex > 0);
+
+  if (currentVolunteerIndex > 0 && allVolunteers.length > 0) {
+    const prevVolunteer = allVolunteers[currentVolunteerIndex - 1];
+    console.log('Previous volunteer:', prevVolunteer);
+    setVolunteer(prevVolunteer);
+    setCurrentVolunteerIndex(currentVolunteerIndex - 1);
+    generateAiSuggestions(prevVolunteer, eventDetails);
+  }
+};
+
+const handleNextApplicant = () => {
+  console.log('Current Index:', currentVolunteerIndex);
+  console.log('All Volunteers Length:', allVolunteers.length);
+  console.log('Can go next?', currentVolunteerIndex < allVolunteers.length - 1);
+
+  if (
+    currentVolunteerIndex < allVolunteers.length - 1 &&
+    allVolunteers.length > 0
+  ) {
+    const nextVolunteer = allVolunteers[currentVolunteerIndex + 1];
+    console.log('Next volunteer:', nextVolunteer);
+    setVolunteer(nextVolunteer);
+    setCurrentVolunteerIndex(currentVolunteerIndex + 1);
+    generateAiSuggestions(nextVolunteer, eventDetails);
+  }
+};
 
   const handleShowApproveModal = () => {
     setShowApproveModal(true);
   };
 
   const handleShowRejectModal = () => {
+    setRejectionReason("");
     setShowRejectModal(true);
   };
 
@@ -404,6 +520,7 @@ function ReviewAiScheduling() {
 
   const handleCloseRejectModal = () => {
     setShowRejectModal(false);
+    setRejectionReason("");
   };
 
   const handleConfirmApprove = async () => {
@@ -424,6 +541,7 @@ function ReviewAiScheduling() {
       setShowApproveModal(false);
       setShowSuccessApprove(true);
       setAcceptedVolunteersCount((prev) => prev + 1);
+      setProcessedVolunteer(volunteer);
 
       const updatedVolunteers = allVolunteers.filter(
         (v) => v.user_id !== volunteer.user_id
@@ -447,7 +565,29 @@ function ReviewAiScheduling() {
   };
 
   const handleConfirmReject = async () => {
+    if (!rejectionReason.trim()) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+
+    setIsSendingEmail(true);
+
     try {
+      const adminData = JSON.parse(localStorage.getItem("admin"));
+      if (!adminData) {
+        alert("Admin data not found. Please log in again.");
+        setIsSendingEmail(false);
+        return;
+      }
+
+      const { data: ngoData, error: ngoError } = await supabase
+        .from("NGO_Information")
+        .select("name")
+        .eq("admin_id", adminData.NGO_Information.admin_id)
+        .maybeSingle();
+
+      const ngoName = ngoData?.name || adminData.NGO_Information.name || "Centro Organization";
+
       const { error: updateError } = await supabase
         .from("Event_User")
         .update({ status: "REJECTED" })
@@ -458,11 +598,23 @@ function ReviewAiScheduling() {
       if (updateError) {
         console.error("Error updating volunteer status:", updateError);
         alert("Failed to update status. Please try again.");
+        setIsSendingEmail(false);
         return;
       }
 
+      const volunteerFullName = `${volunteer.firstname} ${volunteer.lastname}`;
+      await sendRejectionEmail(
+        volunteer.email,
+        volunteerFullName,
+        eventDetails.event_title,
+        ngoName,
+        rejectionReason
+      );
+
       setShowRejectModal(false);
+      setIsSendingEmail(false);
       setShowSuccessReject(true);
+      setProcessedVolunteer(volunteer);
 
       const updatedVolunteers = allVolunteers.filter(
         (v) => v.user_id !== volunteer.user_id
@@ -482,6 +634,7 @@ function ReviewAiScheduling() {
     } catch (error) {
       console.error("Unexpected error during rejection:", error);
       alert("An unexpected error occurred. Please try again.");
+      setIsSendingEmail(false);
     }
   };
 
@@ -516,9 +669,9 @@ function ReviewAiScheduling() {
         .from("Event_User")
         .update({
           status: "ONGOING",
-          adjusted_time_slot: adjustedTimeSlot || null,
-          adjusted_duration: adjustedDuration || null,
-          adjusted_volunteer_type: adjustedVolunteerType || null,
+          adjusted_time_slot: adjustedTimeSlot,
+          adjusted_duration: adjustedDuration,
+          adjusted_volunteer_type: adjustedVolunteerType,
           adjustment_notes: `Schedule adjusted: ${adjustedTimeSlot} for ${adjustedDuration} as ${adjustedVolunteerType}`,
         })
         .eq("user_id", volunteer.user_id)
@@ -557,42 +710,9 @@ function ReviewAiScheduling() {
   };
 
   const handleRejectAdjusted = async () => {
-    try {
-      const { error: updateError } = await supabase
-        .from("Event_User")
-        .update({ status: "REJECTED" })
-        .eq("user_id", volunteer.user_id)
-        .eq("event_id", eventDetails.event_id)
-        .eq("status", "PENDING");
-
-      if (updateError) {
-        console.error("Error updating volunteer status:", updateError);
-        alert("Failed to update status. Please try again.");
-        return;
-      }
-
-      handleCloseAdjustModal();
-      setShowSuccessReject(true);
-
-      const updatedVolunteers = allVolunteers.filter(
-        (v) => v.user_id !== volunteer.user_id
-      );
-      setAllVolunteers(updatedVolunteers);
-
-      if (updatedVolunteers.length > 0) {
-        const nextIndex =
-          currentVolunteerIndex >= updatedVolunteers.length
-            ? 0
-            : currentVolunteerIndex;
-        const nextVolunteer = updatedVolunteers[nextIndex];
-        setVolunteer(nextVolunteer);
-        setCurrentVolunteerIndex(nextIndex);
-        generateAiSuggestions(nextVolunteer, eventDetails);
-      }
-    } catch (error) {
-      console.error("Unexpected error during rejection:", error);
-      alert("An unexpected error occurred. Please try again.");
-    }
+    setRejectionReason("");
+    handleCloseAdjustModal();
+    setShowRejectModal(true);
   };
 
   if (!volunteer || !eventDetails) {
@@ -604,9 +724,11 @@ function ReviewAiScheduling() {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar />
-        <main className="flex-1 ml-64 p-4 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow p-8">
+        <Sidebar onCollapseChange={setSidebarCollapsed} />
+
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >                   <div className="bg-white rounded-lg shadow p-8">
             <p className="text-gray-500 text-center text-xl">
               Loading volunteer and event data...
             </p>
@@ -644,8 +766,8 @@ function ReviewAiScheduling() {
             <span className="invisible"></span>
           </div>
 
-          <div className="flex flex-1">
-            <div className="w-1/2 border-r-4 px-8 py-6 overflow-y-auto flex flex-col justify-center">
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-2/5 px-6 py-6 overflow-y-auto flex flex-col justify-center">
               <div className="flex items-center gap-4 mb-6">
                 <img
                   src={
@@ -693,6 +815,15 @@ function ReviewAiScheduling() {
                 </p>
               </div>
 
+              <div className="mb-4">
+                <p className="font-semibold text-lg text-emerald-900">
+                  Location
+                </p>
+                <p className="text-gray-800 text-md">
+                  {volunteer.location || "Not specified"}
+                </p>
+              </div>
+
               <div>
                 <p className="font-semibold text-lg text-emerald-900">
                   Preferred Type of Volunteering
@@ -709,20 +840,76 @@ function ReviewAiScheduling() {
               </div>
             </div>
 
-            <div className="w-1/2 flex justify-center items-center px-6 py-8">
+            <div className="w-2/5 flex justify-center items-center px-4 py-4 overflow-y-auto">
               <div
-                className="rounded-xl p-10 w-full max-w-2xl flex flex-col"
+                className="rounded-xl p-6 w-full flex flex-col"
                 style={{ backgroundColor: "#b8d9c8" }}
               >
-                <h3 className="text-5xl font-bold text-emerald-900 mb-2 text-center font-serif">
+                <h3 className="text-4xl font-bold text-emerald-900 mb-1 text-center font-serif">
                   CENTRO<span className="text-yellow-500">suggests</span>
                 </h3>
-                <p className="text-center text-emerald-800 font-semibold mb-6 text-lg">
+                <p className="text-center text-emerald-800 font-semibold mb-4 text-base">
                   Event ID: {eventDetails.event_id}
                 </p>
 
+                {/* Event Details Section */}
+                <div className="bg-white rounded-lg p-4 mb-4 border border-emerald-300">
+                  <h4 className="font-bold text-emerald-900 text-lg mb-3 border-b border-emerald-300 pb-2">
+                    Event Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="font-semibold text-emerald-800">Description:</p>
+                      <p className="text-gray-700">{eventDetails.description || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Date:</p>
+                      <p className="text-gray-700">{formatDate(eventDetails.date)}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Time:</p>
+                      <p className="text-gray-700">
+                        {formatTime(eventDetails.time_start)} - {formatTime(eventDetails.time_end)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Call Time:</p>
+                      <p className="text-gray-700">{eventDetails.call_time}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Duration:</p>
+                      <p className="text-gray-700">
+                        {calculateEventDuration(
+                          formatTime(eventDetails.time_start),
+                          formatTime(eventDetails.time_end),
+                          eventDetails.call_time
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Location:</p>
+                      <p className="text-gray-700">{eventDetails.location || "N/A"}</p>
+                    </div>
+<div className="col-span-2">
+  <p className="font-semibold text-emerald-800">Volunteering Opportunities:</p>
+
+  {eventDetails.volunteer_opportunities ? (
+    <ul className="list-disc list-inside text-gray-700">
+      {eventDetails.volunteer_opportunities
+        .split("-")
+        .map((item, index) => (
+          <li key={index}>{item.trim()}</li>
+        ))}
+    </ul>
+  ) : (
+    <p className="text-gray-700">N/A</p>
+  )}
+</div>
+                  </div>
+                </div>
+
                 {isLoading ? (
-                  <div className="flex justify-center items-center h-64">
+                  <div className="flex justify-center items-center h-48">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-900"></div>
                     <p className="ml-4 text-emerald-900 font-semibold">
                       Generating AI suggestions...
@@ -730,26 +917,25 @@ function ReviewAiScheduling() {
                   </div>
                 ) : aiSuggestions ? (
                   <>
-                    <div className="flex justify-between items-start mb-8">
-                      {/* Left side - Main content */}
-                      <div className="flex-1 pr-6">
-                        <div className="mb-6">
-                          <p className="font-bold text-lg text-emerald-900">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex-1 pr-4">
+                        <div className="mb-4">
+                          <p className="font-bold text-1xl text-emerald-900">
                             Recommended Time &amp; Duration
                           </p>
-                          <p className="text-gray-800 text-md">
+                          <p className="text-gray-800 text-l">
                             {aiSuggestions.recommendedTimeSlot}{" "}
-                            <span className="text-sm font-bold text-emerald-800">
+                            <span className="text-xs font-bold text-emerald-800">
                               [{aiSuggestions.duration}]
                             </span>
                           </p>
                         </div>
 
-                        <div className="mb-6">
-                          <p className="font-bold text-lg text-emerald-900">
+                        <div className="mb-4">
+                          <p className="font-bold text-1xl text-emerald-900">
                             Matching Volunteer Types
                           </p>
-                          <ul className="list-disc list-inside text-gray-800 text-md space-y-1 mt-2">
+                          <ul className="list-disc list-inside text-gray-800 text-l space-y-1 mt-1">
                             {aiSuggestions.matchingVolunteerTypes?.map(
                               (type, idx) => (
                                 <li key={idx}>{type}</li>
@@ -758,22 +944,37 @@ function ReviewAiScheduling() {
                           </ul>
                         </div>
 
-                        {aiSuggestions.reasoning && (
-                          <div className="mb-6">
-                            <p className="font-bold text-lg text-emerald-900">
-                              AI Analysis
-                            </p>
-                            <p className="text-gray-800 text-sm italic mt-1">
-                              {aiSuggestions.reasoning}
-                            </p>
-                          </div>
-                        )}
+{aiSuggestions.reasoning && (
+  <div className="mb-4">
+    <p className="font-bold text-xl text-emerald-900">
+      AI Analysis
+    </p>
+    <ul className="list-disc list-inside text-gray-800 mt-2 space-y-1">
+      {aiSuggestions.reasoning
+        .split(",")
+        .map((item, idx) => {
+          // i-highlight ang numbers at percentages
+          const formatted = item.replace(
+            /(\d+\.?\d*\s*%?)/g,
+            '<span class="font-bold text-emerald-800">$1</span>'
+          );
+
+          return (
+            <li
+              key={idx}
+              className="italic"
+              dangerouslySetInnerHTML={{ __html: formatted.trim() }}
+            />
+          );
+        })}
+    </ul>
+  </div>
+)}
                       </div>
 
-                      {/* Right side - Stats boxes stacked */}
                       <div className="flex flex-col gap-4 flex-shrink-0">
-                        <div className="border-yellow-400 border-2 bg-white rounded-xl shadow w-52 h-52 flex flex-col items-center justify-center text-center p-4">
-                          <p className="text-base font-semibold text-emerald-800 mb-3">
+                        <div className="border-yellow-400 border-2 bg-white rounded-2xl shadow-lg w-80 h-30 flex flex-col items-center justify-center text-center p-4">
+                          <p className="text-base font-semibold text-emerald-800 mb-2">
                             Compatibility<br/>Score
                           </p>
                           <p className="text-5xl font-extrabold text-yellow-500">
@@ -781,8 +982,8 @@ function ReviewAiScheduling() {
                           </p>
                         </div>
 
-                        <div className="border-blue-400 border-2 bg-white rounded-xl shadow w-52 h-52 flex flex-col items-center justify-center text-center p-4">
-                          <p className="text-base font-semibold text-emerald-800 mb-3">
+                        <div className="border-blue-400 border-2 bg-white rounded-2xl shadow-lg w-80 h-30 flex flex-col items-center justify-center text-center p-4">
+                          <p className="text-base font-semibold text-emerald-800 mb-2">
                             Accepted<br/>Volunteers
                           </p>
                           <p className="text-5xl font-extrabold text-blue-500">
@@ -792,29 +993,41 @@ function ReviewAiScheduling() {
                       </div>
                     </div>
 
-                    <div className="mt-auto flex gap-4 justify-evenly">
-                      <button
-                        onClick={handleShowApproveModal}
-                        className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 text-md font-semibold cursor-pointer"
-                      >
-                        Approve Deployment
-                      </button>
-                      <button
-                        onClick={handleAdjustSchedule}
-                        className="bg-orange-400 text-white px-6 py-3 rounded-lg hover:bg-orange-500 text-md font-semibold cursor-pointer"
-                      >
-                        Adjust Schedule
-                      </button>
-                      <button
-                        onClick={handleShowRejectModal}
-                        className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 text-md font-semibold cursor-pointer"
-                      >
-                        Reject
-                      </button>
-                    </div>
+<div className="mt-auto flex gap-4 justify-center">
+  <button
+    onClick={handleShowApproveModal}
+    disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
+    className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
+      parseInt(aiSuggestions.compatibilityScore) <= 50
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : "bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
+    }`}
+    title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to approve" : ""}
+  >
+    Approve
+  </button>
+  <button
+    onClick={handleAdjustSchedule}
+    disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
+    className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
+      parseInt(aiSuggestions.compatibilityScore) <= 50
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : "bg-orange-400 text-white hover:bg-orange-500 cursor-pointer"
+    }`}
+    title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to adjust" : ""}
+  >
+    Adjust
+  </button>
+  <button
+    onClick={handleShowRejectModal}
+    className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 text-md font-semibold cursor-pointer"
+  >
+    Reject
+  </button>
+</div>
                   </>
                 ) : (
-                  <div className="flex justify-center items-center h-64">
+                  <div className="flex justify-center items-center h-48">
                     <p className="text-emerald-900 font-semibold">
                       Failed to generate suggestions. Please try again.
                     </p>
@@ -824,42 +1037,42 @@ function ReviewAiScheduling() {
             </div>
           </div>
 
-          <div className="flex justify-evenly px-4 py-3 border-gray-300">
-            <button
-              onClick={handlePreviousApplicant}
-              disabled={currentVolunteerIndex <= 0}
-              className={`border font-semibold px-4 py-2 rounded-lg text-md ${
-                currentVolunteerIndex <= 0
-                  ? "border-gray-500 text-gray-300 cursor-not-allowed"
-                  : "border-emerald-600 text-emerald-600 hover:bg-emerald-100"
-              }`}
-            >
-              Previous Applicant ({currentVolunteerIndex + 1} of{" "}
-              {allVolunteers.length})
-            </button>
-            <button
-              onClick={handleNextApplicant}
-              disabled={currentVolunteerIndex >= allVolunteers.length - 1}
-              className={`font-semibold px-4 py-2 rounded-lg text-md ${
-                currentVolunteerIndex >= allVolunteers.length - 1
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-emerald-600 text-white hover:bg-emerald-700"
-              }`}
-            >
-              Next Applicant
-            </button>
-          </div>
+<div className="flex justify-evenly px-4 py-3 border-gray-300">
+  <button
+    onClick={handlePreviousApplicant}
+    disabled={currentVolunteerIndex <= 0}
+    className={`border font-semibold px-4 py-2 rounded-lg text-md ${
+      currentVolunteerIndex <= 0
+        ? "border-gray-500 text-gray-300 cursor-not-allowed"
+        : "border-emerald-600 text-emerald-600 hover:bg-emerald-100"
+    }`}
+  >
+    Previous ({currentVolunteerIndex + 1} of{" "}
+    {allVolunteers.length})
+  </button>
+  <button
+    onClick={handleNextApplicant}
+    disabled={currentVolunteerIndex >= allVolunteers.length - 1}
+    className={`font-semibold px-4 py-2 rounded-lg text-md ${
+      currentVolunteerIndex >= allVolunteers.length - 1
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        : "bg-emerald-600 text-white hover:bg-emerald-700"
+    }`}
+  >
+    Next 
+  </button>
+</div>
         </div>
       </main>
 
-      {/* Modals */}
+      {/* All modals remain the same */}
       {showAdjustConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
                 <h3 className="text-xl font-bold text-orange-900">
-                  Adjust Volunteer Schedule
+                  Adjust
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">
@@ -920,7 +1133,7 @@ function ReviewAiScheduling() {
                 onClick={handleConfirmAdjustSchedule}
                 className="flex-1 bg-orange-500 text-white font-bold py-2 px-3 rounded-lg border-2 border-orange-600 transition-all duration-200 hover:bg-orange-600 cursor-pointer"
               >
-                Yes, Adjust Schedule
+                Adjust 
               </button>
             </div>
           </div>
@@ -1066,39 +1279,31 @@ function ReviewAiScheduling() {
       )}
 
       {showSuccessApprove && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-500 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-500 p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
-              <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-              <h3 className="text-3xl font-bold text-emerald-900 mb-2">
-                Successfully Approved!
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <h3 className="text-3xl font-bold text-emerald-900 mb-2">
+                 Approved
               </h3>
+              </div>
               <p className="text-gray-700 mb-4">
                 <span className="font-bold">
-                  {volunteer?.firstname} {volunteer?.lastname}
+                  {processedVolunteer?.firstname} {processedVolunteer?.lastname}
                 </span>{" "}
                 has been approved for the event.
               </p>
-              <Link to="/review-application-event">
-                <button
-                  onClick={() => setShowSuccessApprove(false)}
-                  className="bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg border-2 border-emerald-700 hover:bg-emerald-700 transition-all duration-200 cursor-pointer"
-                >
-                  Back to Applications
-                </button>
-              </Link>
+              <div className="text-sm text-gray-500">
+                Auto-closing in 3 seconds...
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {showSuccessReject && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500 p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
               <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1110,29 +1315,21 @@ function ReviewAiScheduling() {
               </h3>
               <p className="text-gray-700 mb-4">
                 <span className="font-bold">
-                  {volunteer?.firstname} {volunteer?.lastname}
+                  {processedVolunteer?.firstname} {processedVolunteer?.lastname}
                 </span>{" "}
-                has been notified about the rejection.
+                has been notified about the rejection via email.
               </p>
-              <p className="text-sm text-gray-600 mb-4">
-                Status has been updated in the database.
-              </p>
-              <Link to="/review-application-event">
-                <button
-                  onClick={() => setShowSuccessReject(false)}
-                  className="bg-red-600 text-white font-bold py-2 px-6 rounded-lg border-2 border-red-700 hover:bg-red-700 transition-all duration-200 cursor-pointer"
-                >
-                  Back to Applications
-                </button>
-              </Link>
+              <div className="text-sm text-gray-500">
+                Auto-closing in 3 seconds...
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {showSuccessAdjust && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
               <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1145,7 +1342,7 @@ function ReviewAiScheduling() {
               <p className="text-gray-700 mb-4">
                 The schedule for{" "}
                 <span className="font-bold">
-                  {volunteer?.firstname} {volunteer?.lastname}
+                  {processedVolunteer?.firstname} {processedVolunteer?.lastname}
                 </span>{" "}
                 has been successfully adjusted and approved.
               </p>
@@ -1157,14 +1354,9 @@ function ReviewAiScheduling() {
                   Type: {adjustedVolunteerType}
                 </p>
               </div>
-              <Link to="/review-application-event">
-                <button
-                  onClick={() => setShowSuccessAdjust(false)}
-                  className="bg-orange-600 text-white font-bold py-2 px-6 rounded-lg border-2 border-orange-700 hover:bg-orange-700 transition-all duration-200 cursor-pointer"
-                >
-                  Back to Applications
-                </button>
-              </Link>
+              <div className="text-sm text-gray-500">
+                Auto-closing in 3 seconds...
+              </div>
             </div>
           </div>
         </div>
@@ -1176,7 +1368,7 @@ function ReviewAiScheduling() {
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
                 <h3 className="text-xl font-bold text-emerald-900">
-                  Approve Deployment
+                  Approve 
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">
@@ -1229,7 +1421,7 @@ function ReviewAiScheduling() {
                 onClick={handleConfirmApprove}
                 className="flex-1 bg-emerald-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-emerald-700 transition-all duration-200 hover:bg-emerald-700 cursor-pointer"
               >
-                Yes, Approve
+                Approve
               </button>
             </div>
           </div>
@@ -1237,12 +1429,15 @@ function ReviewAiScheduling() {
       )}
 
       {showRejectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={(e) => e.target === e.currentTarget && handleCloseRejectModal()}
+        >
           <div className="bg-white rounded-2xl shadow-xl border-2 border-red-700 p-6 max-w-md w-full mx-4">
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
                 <h3 className="text-xl font-bold text-red-600">
-                  Reject Application
+                  Reject 
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">
@@ -1277,31 +1472,71 @@ function ReviewAiScheduling() {
               </div>
             </div>
 
+            <div className="mb-4">
+              <label className="block text-emerald-900 font-bold mb-2 text-lg">
+                Reason for Rejection: <span className="text-red-700">*</span>
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Please provide a reason for rejecting this application..."
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:border-emerald-700 resize-none"
+                rows="4"
+                disabled={isSendingEmail}
+              />
+            </div>
+
             <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-700 rounded-lg p-3 mb-4">
               <p className="text-red-700 text-sm font-semibold leading-relaxed">
-                <span className="font-bold">Warning:</span> The volunteer
-                will be notified and cannot participate unless they apply
-                again.
+                <span className="font-bold">Warning:</span> The volunteer will receive an email notification with your reason.
               </p>
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={handleCloseRejectModal}
-                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 cursor-pointer"
+                disabled={isSendingEmail}
+                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmReject}
-                className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 cursor-pointer"
+                disabled={isSendingEmail}
+                className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                Yes, Reject
+                {isSendingEmail ? "Rejecting..." : "Reject"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slideIn {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

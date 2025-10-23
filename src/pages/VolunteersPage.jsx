@@ -25,7 +25,6 @@ const VolunteersPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [removalReason, setRemovalReason] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Result modal states
   const [showResultModal, setShowResultModal] = useState(false);
@@ -36,6 +35,7 @@ const VolunteersPage = () => {
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("asc");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const adminData = JSON.parse(localStorage.getItem("admin"));
@@ -107,7 +107,7 @@ const VolunteersPage = () => {
   const sendRemovalEmail = async (volunteerEmail, volunteerName, reason, ngoName) => {
     try {
       console.log('Sending email to:', volunteerEmail);
-      const response = await fetch('http://localhost:5000/api/send-removal-notification', {
+      const response = await fetch('/api/send-removal-notification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -346,22 +346,17 @@ const VolunteersPage = () => {
 
   return (
     <div
-      className="flex min-h-screen bg-no-repeat bg-center bg-fixed"
+      className="flex min-h-screen bg-no-repeat bg-center"
       style={{
         backgroundImage: `url(${CentroAdminBg})`,
-        backgroundSize: "cover",
+        backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar activeButton="Volunteers" onCollapseChange={setSidebarCollapsed} />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main 
-        className="flex-1 p-6 overflow-y-auto transition-all duration-300"
-        style={{ 
-          filter: (showConfirmModal || showResultModal) ? "blur(3px)" : "none",
-          marginLeft: sidebarCollapsed ? "5rem" : "16rem"
-        }}
-      >
-        <div className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-7xl mx-auto p-8">
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >         <div className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-7xl mx-auto p-8">
           <div className="grid grid-cols-12 gap-8 items-start">
             <div className="col-span-12">
               <h2 className="text-3xl font-bold font-montserrat text-emerald-900">
@@ -471,7 +466,7 @@ const VolunteersPage = () => {
                 <button
                   onClick={handleRemoveClick}
                   className="absolute top-2.5 right-1 bg-red-500 border-red-700 border-2 
-                   text-white font-bold mb-2 font-montserrat px-2 py-0.5 rounded-full shadow-sm hover:bg-red-700 hover:scale-105 transform transition-all duration-200"
+                   text-white font-bold mb-2 font-montserrat px-2 py-0.5 rounded-full shadow-sm hover:bg-red-700 hover:scale-105 transform transition-all duration-200 cursor-pointer"
                 >
                   Remove
                 </button>
@@ -570,7 +565,7 @@ const VolunteersPage = () => {
           >
             <div className="text-center mb-6">
               <h3 className="text-3xl font-bold text-red-700 font-montserrat mb-2">
-                Remove Volunteer
+                Remove
               </h3>
               <p className="text-lg text-gray-700 font-montserrat">
                 Are you sure you want to remove <br />
@@ -632,7 +627,7 @@ const VolunteersPage = () => {
                 disabled={isSendingEmail}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSendingEmail ? "Removing..." : "Yes, Remove"}
+                {isSendingEmail ? "Removing..." : "Remove"}
               </button>
             </div>
           </div>

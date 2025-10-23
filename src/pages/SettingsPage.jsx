@@ -16,7 +16,8 @@ const SettingsPage = () => {
     email: "",
     ngo_location: "",
     ngo_logo: "",
-    ngo_code: ""
+    ngo_code: "",
+    preferred_volunteering: ""
   });
 
   // State for edit mode and loading
@@ -83,7 +84,8 @@ const SettingsPage = () => {
               email: data.email || "",
               ngo_location: data.ngo_location || "",
               ngo_logo: data.ngo_logo || "",
-              ngo_code: data.ngo_code || ""
+              ngo_code: data.ngo_code || "",
+              preferred_volunteering: data.preferred_volunteering || ""
             });
           }
         } catch (err) {
@@ -226,7 +228,8 @@ const SettingsPage = () => {
           phone_number: ngoInfo.phone_number.trim(),
           email: ngoInfo.email.trim(),
           ngo_location: ngoInfo.ngo_location.trim(),
-          ngo_logo: logoUrl
+          ngo_logo: logoUrl,
+          preferred_volunteering: ngoInfo.preferred_volunteering.trim()
         })
         .eq("admin_id", adminData.admin_id);
 
@@ -286,7 +289,8 @@ const SettingsPage = () => {
           email: data.email || "",
           ngo_location: data.ngo_location || "",
           ngo_logo: data.ngo_logo || "",
-          ngo_code: data.ngo_code || ""
+          ngo_code: data.ngo_code || "",
+          preferred_volunteering: data.preferred_volunteering || ""
         });
       }
     } catch (err) {
@@ -338,7 +342,7 @@ const SettingsPage = () => {
     if (!isOpen) return null;
 
     const alertColors = {
-      success: "bg-green-100 border-green-500 text-green-700",
+      success: "bg-emerald-100 border-emerald-500 text-emerald-700",
       error: "bg-red-100 border-red-500 text-red-700"
     };
 
@@ -368,149 +372,151 @@ const SettingsPage = () => {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar onCollapseChange={setSidebarCollapsed} />
+<Sidebar onCollapseChange={setSidebarCollapsed} />
 
       <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
         style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >   
-            <div className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-5xl mx-auto p-8">
-            
-            {/* Action Buttons */}
-            <div className="absolute top-6 right-6 flex gap-3">
-              {editMode ? (
-                <>
-                  <button
-                    onClick={() => setShowSaveChangesConfirm(true)}
-                    disabled={loading || logoUploading}
-                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
-                  >
-                    {loading ? "Saving..." : "Save Changes"}
-                  </button>
-                  <button
-                    onClick={() => setShowCancelEditConfirm(true)}
-                    disabled={loading || logoUploading}
-                    className="bg-gray-500 hover:bg-gray-600 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setShowEditProfileConfirm(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
-                >
-                  Edit Profile
-                </button>
-              )}
-            </div>
+      >  
+    <div
+    className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-6xl mx-auto p-6 md:p-10 
+    flex flex-col gap-10"
+  >
+    {/* Action Buttons */}
+    <div className="absolute top-6 right-6 flex flex-wrap gap-3">
+      {editMode ? (
+        <>
+          <button
+            onClick={() => setShowSaveChangesConfirm(true)}
+            disabled={loading || logoUploading}
+            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
+          >
+            {loading ? "Saving..." : "Save"}
+          </button>
+          <button
+            onClick={() => setShowCancelEditConfirm(true)}
+            disabled={loading || logoUploading}
+            className="bg-gray-500 hover:bg-gray-600 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={() => setShowEditProfileConfirm(true)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
+        >
+          Edit 
+        </button>
+      )}
+    </div>
 
-            {/* Header row */}
-            <div className="grid grid-cols-12 gap-8 items-start">
-              {/* Logo */}
-              <div className="col-span-12 md:col-span-4">
-                <div className="rounded-xl border-4 border-emerald-700/70 px-4 py-3 w-full flex items-center justify-center bg-white min-h-[200px]">
-                  {ngoInfo.ngo_logo ? (
-                    <img
-                      src={ngoInfo.ngo_logo}
-                      alt="Organization Logo"
-                      className="w-full h-auto object-contain max-h-48"
-                    />
-                  ) : (
-                    <span className="text-gray-500">No Logo</span>
-                  )}
-                </div>
-                
-                <input
-                  id="logo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                
-                <div className="mt-3 flex justify-center">
-                  <button
-                    onClick={() => setShowUpdateLogoConfirm(true)}
-                    disabled={logoUploading || loading}
-                    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-full transition-colors cursor-pointer"
-                  >
-                    {logoUploading ? "Uploading..." : "Update Logo"}
-                  </button>
-                </div>
-                
-                {selectedFile && (
-                  <div className="mt-2 text-center text-sm text-gray-600">
-                    Selected: {selectedFile.name}
-                  </div>
-                )}
-              </div>
+    {/* Header row (Logo + Info) */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start w-full">
+      {/* Logo Section */}
+      <div className="col-span-1 flex flex-col items-center">
+        <div className="rounded-xl border-4 border-emerald-700/70 w-full flex items-center justify-center bg-white min-h-[220px] p-4">
+          {ngoInfo.ngo_logo ? (
+            <img
+              src={ngoInfo.ngo_logo}
+              alt="Organization Logo"
+              className="w-full h-auto object-contain max-h-52"
+            />
+          ) : (
+            <span className="text-gray-500">No Logo</span>
+          )}
+        </div>
 
-              {/* Organization Info */}
-              <div className="col-span-12 md:col-span-8 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Organization Name
-                  </label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      value={ngoInfo.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  ) : (
-                    <p className="text-xl font-semibold text-emerald-900">
-                      {ngoInfo.name || "Not specified"}
-                    </p>
-                  )}
-                </div>
+        <input
+          id="logo-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Organization Code
-                  </label>
-                  <p className="text-lg text-gray-700 font-mono bg-gray-100 px-3 py-2 rounded-lg">
-                    {ngoInfo.ngo_code || "Not specified"}
-                  </p>
-                </div>
+        <button
+          onClick={() => setShowUpdateLogoConfirm(true)}
+          disabled={logoUploading || loading}
+          className="mt-3 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-full transition-colors cursor-pointer"
+        >
+          {logoUploading ? "Uploading..." : "Update"}
+        </button>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  {editMode ? (
-                    <input
-                      type="email"
-                      value={ngoInfo.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  ) : (
-                    <p className="text-gray-700">
-                      {ngoInfo.email || "Not specified"}
-                    </p>
-                  )}
-                </div>
+        {selectedFile && (
+          <p className="mt-2 text-center text-sm text-gray-600 break-words w-full">
+            Selected: {selectedFile.name}
+          </p>
+        )}
+      </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  {editMode ? (
-                    <input
-                      type="tel"
-                      value={ngoInfo.phone_number}
-                      onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  ) : (
-                    <p className="text-gray-700">
-                      {ngoInfo.phone_number || "Not specified"}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
+      {/* Organization Info */}
+      <div className="col-span-2 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Organization Name
+          </label>
+          {editMode ? (
+            <input
+              type="text"
+              value={ngoInfo.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+            />
+          ) : (
+            <p className="text-xl font-semibold text-emerald-900 break-words">
+              {ngoInfo.name || "Not specified"}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Organization Code
+          </label>
+          <p className="text-lg text-gray-700 font-mono bg-gray-100 px-3 py-2 rounded-lg break-words">
+            {ngoInfo.ngo_code || "Not specified"}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            {editMode ? (
+              <input
+                type="email"
+                value={ngoInfo.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+            ) : (
+              <p className="text-gray-700 break-words">
+                {ngoInfo.email || "Not specified"}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phone Number
+            </label>
+            {editMode ? (
+              <input
+                type="tel"
+                value={ngoInfo.phone_number}
+                onChange={(e) => handleInputChange("phone_number", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+            ) : (
+              <p className="text-gray-700 break-words">
+                {ngoInfo.phone_number || "Not specified"}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
 
             {/* Additional Information */}
             <div className="mt-8 space-y-6">
@@ -568,6 +574,38 @@ const SettingsPage = () => {
                   <p className="text-gray-700">
                     {ngoInfo.ngo_location || "Not specified"}
                   </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-lg font-semibold text-gray-900 mb-2">
+                  Preferred Volunteering Types
+                </label>
+                {editMode ? (
+                  <>
+                    <input
+                      type="text"
+                      value={ngoInfo.preferred_volunteering}
+                      onChange={(e) => handleInputChange('preferred_volunteering', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Enter types separated by dash (e.g., Education - Healthcare - Environment)"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Separate different types with a dash (-)
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-gray-700">
+                    {ngoInfo.preferred_volunteering ? (
+                      <ul className="list-disc list-inside space-y-1">
+                        {ngoInfo.preferred_volunteering.split(',').map((type, index) => (
+                          <li key={index}>{type.trim()}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>Not specified</p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -667,7 +705,7 @@ const SettingsPage = () => {
       {/* Edit Profile Confirmation Modal */}
       {showEditProfileConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 flex items-center justify-center animate-fadeIn  "
           onClick={handleBackdropClick}
           style={{ zIndex: 99999999 }}
         >
@@ -677,7 +715,7 @@ const SettingsPage = () => {
             <div className="flex justify-center mb-4">
               <div className="rounded-full flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
-                  Edit Profile
+                  Edit 
                 </h2>
               </div>
             </div>
@@ -692,7 +730,7 @@ const SettingsPage = () => {
                   onClick={handleEditProfile}
                   className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Start Editing
+                  Proceed
                 </button>
                 <button
                   onClick={() => setShowEditProfileConfirm(false)}
@@ -719,7 +757,7 @@ const SettingsPage = () => {
             <div className="flex justify-center mb-4">
               <div className=" flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
-                  Update Logo
+                  Update
                 </h2>
               </div>
             </div>
@@ -757,11 +795,11 @@ const SettingsPage = () => {
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-green-700">
+          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-emerald-700">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-green-700 mb-2 font-montserrat">
-                  Save Changes
+              <div className="w-16 h-16rounded-full flex items-center justify-center">
+                <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
+                  Save 
                 </h2>
               </div>
             </div>
@@ -774,13 +812,13 @@ const SettingsPage = () => {
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleSaveChanges}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-green-600 hover:bg-green-700 hover:border-green-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Yes, Save
+                  Save
                 </button>
                 <button
                   onClick={() => setShowSaveChangesConfirm(false)}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-green-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-emerald-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -801,9 +839,9 @@ const SettingsPage = () => {
 
           <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-700">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-red-700 mb-2 font-montserrat">
-                  Cancel Editing
+                  Cancel
                 </h2>
               </div>
             </div>
@@ -818,13 +856,13 @@ const SettingsPage = () => {
                   onClick={handleCancelEdit}
                   className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-red-600 hover:bg-red-700 hover:border-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Yes, Cancel
+                  Confirm
                 </button>
                 <button
                   onClick={() => setShowCancelEditConfirm(false)}
                   className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-red-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Keep Editing
+                  Resume
                 </button>
               </div>
             </div>

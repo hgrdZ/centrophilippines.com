@@ -11,6 +11,7 @@ import MessagesIcon from "../images/messages.png";
 import SettingsIcon from "../images/settings.png";
 import NGOHubIcon from "../images/ngohub.png";
 import LogoutIcon from "../images/logout.png";
+import HamburgerIcon from "../images/hamburger.svg"; 
 
 // Supabase client
 import supabase from "../config/supabaseClient";
@@ -19,7 +20,9 @@ function Sidebar({ handleAlert, onCollapseChange }) {
   const [ngoLogo, setNgoLogo] = useState(localStorage.getItem("ngoLogo") || "");
   const [adminId, setAdminId] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -67,10 +70,11 @@ function Sidebar({ handleAlert, onCollapseChange }) {
     }
   };
 
-  // Toggle collapse when clicking arrow
+  // Toggle collapse with localStorage persistence
   const toggleCollapse = () => {
     setCollapsed((prev) => {
       const newValue = !prev;
+      localStorage.setItem("sidebarCollapsed", newValue);
       if (onCollapseChange) {
         onCollapseChange(newValue);
       }
@@ -112,37 +116,37 @@ function Sidebar({ handleAlert, onCollapseChange }) {
   return (
     <>
       <aside 
-        className={`fixed top-0 left-0 h-screen shadow-xl border-r-2 border-emerald-300 flex flex-col justify-between p-4 z-30 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-screen shadow-xl border-r-2 border-emerald-300 flex flex-col justify-between transition-all duration-300 ease-in-out ${
           collapsed ? "w-20" : "w-64"
         }`}
         style={{ backgroundColor: "#d8eeeb" }}
       >
-        <div>
-          {/* Toggle Arrow Button - Above Logo */}
-          <div className="flex justify-end mb-2">
-            <button
-              onClick={toggleCollapse}
-              className="bg-emerald-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-emerald-700 transition-all duration-200 hover:scale-110"
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <span className={`inline-block transition-transform duration-300 text-sm font-bold ${collapsed ? "rotate-0" : "rotate-180"}`}>
-                ◀
-              </span>
-            </button>
-          </div>
+        <div className="p-4 relative">
+          {/* Hamburger Menu Button - Fixed to Right Edge */}
+          <button
+            onClick={toggleCollapse}
+            className="absolute text-gray-700 p-2 flex items-center justify-center transition-all duration-200 group rounded-lg bg-transparent hover:bg-white hover:scale-110 z-50 cursor-e-resize"
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <img 
+              src={HamburgerIcon} 
+              alt="Menu" 
+              className="w-6 h-6 transition-all duration-200"
+            />
+          </button>
 
           {/* Logo Section */}
-          <div className="relative mb-4">
+          <div className="relative mb-6 mt-12">
             <div 
               className={`w-full bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 ${
-                collapsed ? "h-16" : "h-40"
+                collapsed ? "h-14" : "h-40"
               }`}
             >
               {ngoLogo ? (
                 <img
                   src={ngoLogo}
                   alt="Organization Logo"
-                  className="w-full h-full object-contain p-1"
+                  className="w-full h-full object-contain p-2"
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full text-gray-400 font-montserrat font-semibold">
@@ -156,14 +160,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
           <nav className="space-y-2 text-base font-montserrat text-gray-700" id="sidebarButtons">
             <Link to="/dashboard">
               <button
-                className={`w-full text-left font-montserrat px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
-                  collapsed ? "justify-center" : "gap-3"
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/dashboard")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                     : "hover:bg-emerald-100 hover:scale-105"
                 }`}
-                title="Dashboard"
+                title={collapsed ? "Dashboard" : ""}
               >
                 <img src={DashboardIcon} alt="Dashboard" className="w-6 h-6 flex-shrink-0" />
                 {!collapsed && <span className="truncate">Dashboard</span>}
@@ -172,14 +176,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
 
             <Link to="/volunteer">
               <button
-                className={`w-full text-left px-3 py-3 font-montserrat rounded-xl flex items-center transition-all duration-200 ${
-                  collapsed ? "justify-center" : "gap-3"
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/volunteer")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                     : "hover:bg-emerald-100 hover:scale-105"
                 }`}
-                title="Volunteers"
+                title={collapsed ? "Volunteers" : ""}
               >
                 <img src={VolunteersIcon} alt="Volunteers" className="w-6 h-6 flex-shrink-0" />
                 {!collapsed && <span className="truncate">Volunteers</span>}
@@ -188,14 +192,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
 
             <Link to="/manage-reports">
               <button
-                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
-                  collapsed ? "justify-center" : "gap-3"
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/manage-reports")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                     : "hover:bg-emerald-100 hover:scale-105"
                 }`}
-                title="Manage Reports"
+                title={collapsed ? "Manage Reports" : ""}
               >
                 <img src={ManageReportsIcon} alt="Manage Reports" className="w-6 h-6 flex-shrink-0" />
                 {!collapsed && <span className="truncate">Manage Reports</span>}
@@ -204,14 +208,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
 
             <Link to="/review-application">
               <button
-                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
-                  collapsed ? "justify-center" : "gap-3"
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/review-application")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                     : "hover:bg-emerald-100 hover:scale-105"
                 }`}
-                title="Review Application"
+                title={collapsed ? "Review Application" : ""}
               >
                 <img src={ReviewAppIcon} alt="Review Application" className="w-6 h-6 flex-shrink-0" />
                 {!collapsed && <span className="truncate">Review Application</span>}
@@ -220,14 +224,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
 
             <Link to="/calendar">
               <button
-                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
-                  collapsed ? "justify-center" : "gap-3"
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/calendar")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                     : "hover:bg-emerald-100 hover:scale-105"
                 }`}
-                title="Calendar"
+                title={collapsed ? "Calendar" : ""}
               >
                 <img src={CalendarIcon} alt="Calendar" className="w-6 h-6 flex-shrink-0" />
                 {!collapsed && <span className="truncate">Calendar</span>}
@@ -236,14 +240,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
 
             <Link to="/messages">
               <button
-                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
-                  collapsed ? "justify-center" : "gap-3"
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/messages")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                     : "hover:bg-emerald-100 hover:scale-105"
                 }`}
-                title="Messages"
+                title={collapsed ? "Messages" : ""}
               >
                 <img src={MessagesIcon} alt="Messages" className="w-6 h-6 flex-shrink-0" />
                 {!collapsed && <span className="truncate">Messages</span>}
@@ -252,14 +256,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
 
             <Link to="/settings">
               <button
-                className={`w-full text-left px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
-                  collapsed ? "justify-center" : "gap-3"
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/settings")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                     : "hover:bg-emerald-100 hover:scale-105"
                 }`}
-                title="Settings"
+                title={collapsed ? "Settings" : ""}
               >
                 <img src={SettingsIcon} alt="Settings" className="w-6 h-6 flex-shrink-0" />
                 {!collapsed && <span className="truncate">Settings</span>}
@@ -269,14 +273,14 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             {adminId === "001_CHARITYPHILIPPINESORG" && (
               <Link to="/ngohub">
                 <button
-                  className={`w-full text-left font-montserrat px-3 py-3 rounded-xl flex items-center transition-all duration-200 ${
-                    collapsed ? "justify-center" : "gap-3"
+                  className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                    collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
                   } ${
                     isActive("/ngohub")
                       ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
                       : "hover:bg-emerald-100 hover:scale-105"
                   }`}
-                  title="NGO Hub"
+                  title={collapsed ? "NGO Hub" : ""}
                 >
                   <img src={NGOHubIcon} alt="NGO Hub" className="w-6 h-6 flex-shrink-0" />
                   {!collapsed && <span className="truncate">NGO Hub</span>}
@@ -287,16 +291,18 @@ function Sidebar({ handleAlert, onCollapseChange }) {
         </div>
 
         {/* Logout Button */}
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
-          className={`flex items-center gap-3 px-3 py-3 text-base font-montserrat text-red-600 rounded-xl hover:bg-red-100 transition-all duration-200 hover:scale-105 ${
-            collapsed ? "justify-center" : ""
-          }`}
-          title="Log Out"
-        >
-          <img src={LogoutIcon} alt="Logout" className="w-6 h-6 flex-shrink-0" />
-          {!collapsed && <span className="truncate">Log Out</span>}
-        </button>
+        <div className="p-4">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className={`w-full flex items-center text-base font-montserrat text-red-600 rounded-xl hover:bg-red-100 transition-all duration-200 hover:scale-105 cursor-pointer ${
+              collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+            }`}
+            title={collapsed ? "Log Out" : ""}
+          >
+            <img src={LogoutIcon} alt="Logout" className="w-6 h-6 flex-shrink-0" />
+            {!collapsed && <span className="truncate">Log Out</span>}
+          </button>
+        </div>
       </aside>
 
       
@@ -317,7 +323,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <div className="flex justify-center mb-4">
               <div className="flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-red-600 mb-2 font-montserrat">
-                  Confirm Logout
+                   Logout
                 </h2>
               </div>
             </div>
@@ -333,7 +339,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
                   onClick={handleLogout}
                   className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-montserrat font-semibold hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
                 >
-                  Yes, Log Out
+                  Log Out
                 </button>
                 <button
                   onClick={handleCloseModal}

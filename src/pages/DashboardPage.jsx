@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -402,8 +401,8 @@ function DashboardPage() {
       </div>
     );
   }
-  
-   return (
+
+  return (
     <div
       className="flex min-h-screen bg-no-repeat bg-center"
       style={{
@@ -413,24 +412,25 @@ function DashboardPage() {
     >
       <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-        <main
+      <main
         className="flex-1 p-6 overflow-y-auto transition-all duration-300"
         style={{ 
           filter: modalState.isOpen ? "blur(3px)" : "none",
           marginLeft: sidebarCollapsed ? "5rem" : "16rem"
         }}
       >
+
         <div className="relative z-10 space-y-6 w-full mx-auto" style={{ maxWidth: "1400px" }}>
           <h2 className="text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
             {viewingContext?.is_super_admin_view
-              ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SUPER ADMIN VIEW)`
+              ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SAV)`
               : "ORGANIZATION DASHBOARD"}
           </h2>
 
           {viewingContext?.is_super_admin_view && (
             <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
               <p className="font-semibold">
-                You are viewing {dashboardData.ngoName}'s dashboard as Super Admin.
+                You are viewing {dashboardData.ngoName}'s dashboard.
                 <Link
                   to="/ngohub"
                   onClick={() => localStorage.removeItem("viewingNGO")}

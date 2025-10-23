@@ -26,6 +26,7 @@ function EventPage() {
   const [ngoName, setNgoName] = useState("");
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const eventColors = ["bg-emerald-800/90"];
 
@@ -410,7 +411,7 @@ function EventPage() {
 
       doc.setDrawColor(0, 100, 0);
       doc.setFillColor(245, 250, 245);
-      doc.roundedRect(20, y, pageW - 40, 45, 3, 3, "FD");
+      doc.roundedRect(20, y, pageW - 40, 60, 3, 3, "FD");
       y += 10;
       doc.setFontSize(14);
       doc.setTextColor(0, 100, 0);
@@ -547,9 +548,13 @@ function EventPage() {
 
   if (loading) return (
     <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
-      <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
-      <main className="flex-1 ml-64 p-4 overflow-hidden flex items-center justify-center">
-        <div className="text-center">
+      
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
+      
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >    
+          <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-900 mx-auto"></div>
           <p className="mt-4 text-emerald-900 font-montserrat font-semibold text-lg">Loading event data...</p>
         </div>
@@ -604,7 +609,7 @@ function EventPage() {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  <span className="text-xs">Generate Report</span>
+                  <span className="text-xs font-bold">Generate Report</span>
                 </>
               )}
             </button>
@@ -723,7 +728,7 @@ function EventPage() {
               <div className="flex justify-center pt-1">
                 <Link to={`/event/${eventData.event_id}/first`}>
                   <button className="bg-emerald-900 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-emerald-700 shadow-lg transition-colors cursor-pointer">
-                    Review Certifications
+                    Verify 
                   </button>
                 </Link>
               </div>
@@ -749,7 +754,9 @@ function EventPage() {
                 <p className="text-5xl font-bold text-yellow-400 mb-2">{volunteerStats.submissions}</p>
                 <p className="text-l text-yellow-500 font-bold">out of {eventData.volunteers_limit || "unlimited"} volunteers</p>
                 <Link to={`/folder/${eventId}`}>
-                  <button className="bg-emerald-600 text-white font-semibold font-montserrat px-8 py-2 rounded-full mt-4 hover:bg-emerald-700 transition-colors cursor-pointer">Open Folder</button>
+                  <button className="bg-emerald-600 text-white font-semibold font-montserrat px-8 py-2 rounded-full mt-4 hover:bg-emerald-700 transition-colors cursor-pointer">
+                  Files
+                    </button>
                 </Link>
               </div>
 
@@ -775,7 +782,7 @@ function EventPage() {
               {/* Back Button */}
               <div className="text-center pt-4">
                 <Link to="/manage-reports">
-                  <button className="bg-orange-500 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-yellow-500 shadow-lg transition-colors cursor-pointer w-full">Back to Events</button>
+                  <button className="bg-orange-500 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-yellow-500 shadow-lg transition-colors cursor-pointer w-full">Back</button>
                 </Link>
               </div>
             </div>

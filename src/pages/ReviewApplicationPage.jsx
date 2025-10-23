@@ -17,8 +17,6 @@ export default function ReviewApplicationPage() {
   const [rejectedVolunteerName, setRejectedVolunteerName] = useState("");
   const [rejectReason, setRejectReason] = useState(""); // Added for rejection reason
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-
   const location = useLocation();
 
   // Fetch volunteer applications from the database
@@ -43,7 +41,7 @@ export default function ReviewApplicationPage() {
             data.map(async (application) => {
               const { data: volunteerData, error: userError } = await supabase
                 .from("LoginInformation")
-                .select("user_id, firstname, lastname, email, profile_picture, preferred_volunteering")
+                .select("user_id, firstname, lastname, email, profile_picture, contact_number, preferred_volunteering")
                 .eq("user_id", application.user_id)
                 .single();
 
@@ -237,6 +235,9 @@ export default function ReviewApplicationPage() {
         setShowRejectModal(false);
         return;
       }
+    const volunteerFullName = selectedVolunteer.firstname && selectedVolunteer.lastname
+      ? `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`
+      : selectedVolunteer.name || 'Volunteer';
 
       const { error: deleteError } = await supabase
         .from("Volunteer_Application")
@@ -253,17 +254,19 @@ export default function ReviewApplicationPage() {
       // Send rejection email
       try {
         console.log("🔵 Attempting to send rejection email...");
+        console.log('📝 Volunteer Full Name:', volunteerFullName);
         console.log("📧 Recipient:", selectedVolunteer.email);
         console.log("🏢 NGO Name:", ngoName);
         console.log("📝 Reason:", rejectReason);
 
-        const response = await fetch('http://localhost:5000/api/send-reject-org', {
+        const response = await fetch('/api/send-reject-org', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             recipientEmail: selectedVolunteer.email,
+            volunteerName: `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`,
             ngoName: ngoName,
             reason: rejectReason,
           })
@@ -356,10 +359,10 @@ export default function ReviewApplicationPage() {
     >
       <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main 
-        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
         style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >        <div id="review_application" className="relative z-10 space-y-4">
+      >                
+      <div id="review_application" className="relative z-10 space-y-4">
           {/* Header with Navigation Buttons */}
           <div className="flex gap-4">
             <Link to="/review-application" className="flex-1">
@@ -388,7 +391,7 @@ export default function ReviewApplicationPage() {
 
           {/* Pending Applications Counter */}
           <div className="bg-white rounded-lg shadow-md border border-gray-200 px-6 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-lg">
+            <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2">
               <span className="text-emerald-900 text-lg font-medium">Pending Applications:</span>
               <span className="bg-emerald-600 text-white font-bold text-lg px-3 py-1 rounded-full shadow-sm">
                 {pendingApplications.length}
@@ -448,6 +451,11 @@ export default function ReviewApplicationPage() {
                         <span className="font-bold text-xl">Email Address</span>
                         <br />
                         {selectedVolunteer.email}
+                      </p>
+                                            <p className="text-m text-emerald-900 mb-4">
+                        <span className="font-bold text-xl">Contact Number</span>
+                        <br />
+                        {selectedVolunteer.contact_number}
                       </p>
                       <p className="text-m text-emerald-900 mb-4">
                         <span className="font-bold text-xl">Application ID</span>
@@ -604,7 +612,7 @@ export default function ReviewApplicationPage() {
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
                 <h3 className="text-2xl font-bold text-red-700">Reject Application</h3>
               </div>
               <p className="text-lg text-gray-700">

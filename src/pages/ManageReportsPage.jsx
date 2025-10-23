@@ -1,3 +1,4 @@
+// src/pages/ManageReports.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
@@ -24,12 +25,6 @@ function ManageReports() {
   const [ngoLogo, setNgoLogo] = useState("");
   const [ngoName, setNgoName] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  const eventColors = [
-    "bg-orange-400", "bg-yellow-400", "bg-red-400",
-    "bg-gray-500", "bg-purple-500", "bg-amber-800",
-    "bg-emerald-900", "bg-green-500", "bg-pink-500", "bg-gray-400",
-  ];
 
   const handleButtonClick = (button) => setActiveButton(button);
 
@@ -156,9 +151,26 @@ function ManageReports() {
     } catch { return ""; }
   };
 
-  // Render event card
+  // Render event card with status-based colors
   const renderEventCard = (event, index) => {
-    const colorClass = eventColors[index % eventColors.length];
+    // Determine color based on event status/category
+    const eventCategory = categorizeEventByDate(event);
+    let headerBgColor;
+    let textColor;
+    
+    if (eventCategory === "ongoing" || event.status === "ONGOING") {
+      headerBgColor = "#4a7c59"; // Professional forest green
+      textColor = "#ffffff";
+    } else if (eventCategory === "upcoming" && event.status === "UPCOMING") {
+      headerBgColor = "#d4a574"; // Warm caramel
+      textColor = "#2c2416";
+    } else if (eventCategory === "completed" || event.status === "COMPLETED") {
+      headerBgColor = "#6b7280"; // Neutral slate gray
+      textColor = "#ffffff";
+    } else {
+      headerBgColor = "#4a7c59"; // Default to ongoing color
+      textColor = "#ffffff";
+    }
 
     return (
       <Link
@@ -166,15 +178,20 @@ function ManageReports() {
         key={event.event_id}
         className="group block rounded-2xl overflow-hidden backdrop-blur-md bg-white/90 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200"
       >
+        {/* Header */}
         <div
-          className={`${colorClass} relative text-lg font-montserrat text-white font-semibold px-4 py-2 text-center`}
+          style={{ backgroundColor: headerBgColor, color: textColor }}
+          className="relative text-lg font-montserrat font-semibold px-4 py-2 text-center"
         >
           <span className="tracking-wider drop-shadow-md">
             {event.event_id}
           </span>
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-white/40"></div>
+
+          {/* Decorative bottom bar */}
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-black/10"></div>
         </div>
 
+        {/* Body */}
         <div className="p-4 text-center">
           <h3 className="font-bold font-montserrat text-emerald-900 mb-2 text-xl group-hover:text-emerald-700 transition-colors duration-200">
             {event.event_title}
@@ -196,12 +213,14 @@ function ManageReports() {
           </div>
         </div>
 
+        {/* Hover Accent Bar */}
         <div className="h-1 bg-emerald-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
       </Link>
     );
   };
 
-  // PDF HELPERS
+  // --- PDF HELPERS ---
+
   const splitToBullets = (text) => {
     if (!text) return [];
     return String(text).replace(/\r\n/g, "\n").replace(/\n/g, " - ").split("-").map(s=>s.trim()).filter(Boolean);
@@ -280,6 +299,7 @@ function ManageReports() {
     doc.line(40, pageH/2 + 22, pageW - 40, pageH/2 + 22);
   };
 
+  // PDF generation main function
   const handleGenerateMonthlyReport = async () => {
     if (!selectedMonth || !selectedYear) {
       alert("Please select a month and year first.");
@@ -415,6 +435,7 @@ function ManageReports() {
     doc.text(`•  Total Unique Volunteers: ${totalVolunteers}`, 30, y); y+=6;
     doc.text(`•  Total New Applications: ${monthlyApplications.length}`, 30, y);
 
+    // Helper to render a single event
     const renderEvent = async (doc, event) => {
       let y = 25;
 
@@ -507,6 +528,7 @@ function ManageReports() {
       }
     };
 
+    // Render events
     if (isAnnualReport) {
       const eventsByMonth = {};
       sortedEvents.forEach((e) => {
@@ -531,6 +553,7 @@ function ManageReports() {
       }
     }
 
+    // FOOTER
     const totalPages = doc.internal.getNumberOfPages();
     const generatedDate = new Date().toLocaleString("en-US", {
       year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -558,11 +581,8 @@ function ManageReports() {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar onCollapseChange={setSidebarCollapsed} />
-        <main 
-          className="flex-1 p-4 overflow-y-auto transition-all duration-300"
-          style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-        >
+        <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
+        <main className="flex-1 ml-64 p-4 overflow-y-auto">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-900 mx-auto"></div>
@@ -584,10 +604,9 @@ function ManageReports() {
     >
       <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main 
-        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
         style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >
+      >  
         <div id="manage_reports" className="relative z-10 space-y-6">
           {/* Search Bar and Actions */}
           <div className="bg-white rounded-lg shadow border border-gray-300 px-4 py-3 flex justify-between items-center">
@@ -617,7 +636,7 @@ function ManageReports() {
               </button>
             </div>
           </div>
-          
+
           {/* Report Generation Modal */}
           {showReportModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

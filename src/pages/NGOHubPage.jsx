@@ -324,8 +324,8 @@ const calculateNGOStats = async (ngoCode) => {
 
       <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
         style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >   
-              {/* TOP HEADER */}
+      >             
+      {/* TOP HEADER */}
         <div className="mb-6">
           <div className="bg-emerald-900 text-white rounded-full p-2 text-center mb-2 shadow">
             <h1 className="text-3xl font-extrabold">NGO Hub</h1>
@@ -350,9 +350,9 @@ const calculateNGOStats = async (ngoCode) => {
                 <>
                   <button
                     onClick={handleRemoveNGOs}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow text-sm border-2 border-red-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow text-sm border-2 border-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
                   >
-                    Confirm Remove
+                    Confirm
                   </button>
                   <button
                     onClick={() => {
@@ -367,16 +367,16 @@ const calculateNGOStats = async (ngoCode) => {
               ) : (
                 <button
                   onClick={() => setRemoveMode(true)}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-700 border-2 border-red-800 text-white font-semibold rounded-lg shadow text-sm cursor-pointer transition-all duration-200 transform hover:scale-105 active:scale-95"
+                  className="px-4 py-2 bg-red-500 hover:bg-red-700 border-2 border-red-700 text-white font-semibold rounded-lg shadow text-sm cursor-pointer transition-all duration-200 transform hover:scale-105 active:scale-95"
                 >
-                  Remove NGO
+                  Remove 
                 </button>
               )}
               <button
                 onClick={handleAddNGO}
                 className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow text-sm cursor-pointer border-2 border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95"
               >
-                + Add New NGO
+                Register 
               </button>
             </div>
           </div>
@@ -462,7 +462,7 @@ const calculateNGOStats = async (ngoCode) => {
                     onClick={() => toggleSelect(ngo.id)}
                     className={`self-start px-6 py-3 border-2 rounded-lg shadow-lg text-lg font-bold transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer ${
                       selectedNGOs.includes(ngo.id)
-                        ? "bg-red-600 text-white border-red-800 hover:bg-red-700"
+                        ? "bg-red-600 text-white border-red-700 hover:bg-red-700"
                         : "bg-gray-200 hover:bg-gray-300 border-gray-400 text-gray-800"
                     }`}
                   >
@@ -473,7 +473,7 @@ const calculateNGOStats = async (ngoCode) => {
                     onClick={() => viewNGODashboard(ngo)}
                     className="self-start px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white border-2 border-emerald-800 rounded-lg shadow-lg text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
                   >
-                    View Dashboard
+                    Overview
                   </button>
                 )}
               </div>
@@ -529,13 +529,13 @@ const calculateNGOStats = async (ngoCode) => {
                 onClick={confirmRemove}
                 className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-lg border-2 border-red-500 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                {step === 1 ? "Yes, Continue" : "Yes, Remove"}
+                {step === 1 ? "Continue" : "Remove"}
               </button>
               <button
                 onClick={cancelRemove}
                 className="px-8 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold shadow-lg border-2 border-gray-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                No, Cancel
+                Cancel
               </button>
             </div>
           </div>
@@ -573,7 +573,7 @@ const calculateNGOStats = async (ngoCode) => {
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 rounded-full flex items-center justify-center">
                 <h2 className="text-2xl font-bold text-emerald-600 mb-4">
-              Add New NGO
+              Register
             </h2>
               </div>
             </div>
@@ -588,7 +588,7 @@ const calculateNGOStats = async (ngoCode) => {
                 onClick={confirmAddNGO}
                 className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-lg border-2 border-emerald-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                Yes, Proceed
+                Proceed
               </button>
               <button
                 onClick={cancelAddNGO}

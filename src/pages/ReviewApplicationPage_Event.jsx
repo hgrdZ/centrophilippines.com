@@ -12,8 +12,6 @@ export default function ReviewApplicationEventPage() {
   const [selectedEventDetails, setSelectedEventDetails] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showCentroConfirm, setShowCentroConfirm] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
   
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -21,6 +19,7 @@ export default function ReviewApplicationEventPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -238,10 +237,9 @@ export default function ReviewApplicationEventPage() {
       >
       <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main 
-        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
         style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >          
+      >                   
       <div id="review_application" className="relative z-10 space-y-4">
             <div className="flex gap-4">
               <Link to="/review-application" className="flex-1">
@@ -523,9 +521,9 @@ export default function ReviewApplicationEventPage() {
                         <button
                           onClick={() => setShowCentroConfirm(true)}
                           disabled={isNavigating}
-                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center text-sm"
+                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center text-lg"
                         >
-                          Review CENTROsuggests Deployment
+                          Review
                         </button>
                       </div>
                     </>
@@ -558,9 +556,9 @@ export default function ReviewApplicationEventPage() {
 
           <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform transition-all scale-100 border-2 border-orange-400 z-50">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                <h2 className="text-2xl font-bold text-orange-600 mb-2">
-                Review AI Deployment
+              <div className="w-16 h-16 rounded-full flex items-center justify-center">
+                <h2 className="text-2xl font-bold text-black mb-2">
+                Review
               </h2>
               </div>
             </div>
@@ -587,7 +585,7 @@ export default function ReviewApplicationEventPage() {
                       Loading...
                     </>
                   ) : (
-                    "Yes, Proceed"
+                    "Proceed"
                   )}
                 </button>
                 <button
