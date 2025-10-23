@@ -163,7 +163,7 @@ function ManageReports() {
       textColor = "#ffffff";
     } else if (eventCategory === "upcoming" && event.status === "UPCOMING") {
       headerBgColor = "#d4a574"; // Warm caramel
-      textColor = "#2c2416";
+      textColor = "#ffffff";
     } else if (eventCategory === "completed" || event.status === "COMPLETED") {
       headerBgColor = "#6b7280"; // Neutral slate gray
       textColor = "#ffffff";

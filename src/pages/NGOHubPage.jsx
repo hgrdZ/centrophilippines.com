@@ -17,6 +17,7 @@ function NGOHubPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAddNGOModal, setShowAddNGOModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
   const [step, setStep] = useState(1);
   const [removedCount, setRemovedCount] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -38,7 +39,7 @@ function NGOHubPage() {
 
   // Prevent body scroll when modals are open
   useEffect(() => {
-    if (showConfirmModal || showSuccessModal || showAddNGOModal) {
+    if (showConfirmModal || showSuccessModal || showAddNGOModal || showWarningModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -47,7 +48,7 @@ function NGOHubPage() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showConfirmModal, showSuccessModal, showAddNGOModal]);
+  }, [showConfirmModal, showSuccessModal, showAddNGOModal, showWarningModal]);
 
   // Fetch NGOs with calculated statistics
   const fetchNGOsWithStats = async () => {
@@ -188,7 +189,7 @@ const calculateNGOStats = async (ngoCode) => {
   // Open confirmation modal
   const handleRemoveNGOs = () => {
     if (selectedNGOs.length === 0) {
-      alert("⚠️ Please select at least one NGO to remove.");
+      setShowWarningModal(true);
       return;
     }
     setShowConfirmModal(true);
@@ -284,6 +285,8 @@ const calculateNGOStats = async (ngoCode) => {
         closeSuccessModal();
       } else if (showAddNGOModal) {
         cancelAddNGO();
+      } else if (showWarningModal) {
+        setShowWarningModal(false);
       }
     }
   };
@@ -402,17 +405,20 @@ const calculateNGOStats = async (ngoCode) => {
             filteredNGOs.map((ngo) => (
               <div
                 key={ngo.id}
-                className="bg-white border-2 border-emerald-200 rounded-xl shadow-lg p-6 flex items-center justify-between hover:shadow-xl hover:border-emerald-300 transition-all duration-200"
+                className="bg-white border-2 border-emerald-200 rounded-xl shadow-lg p-6 hover:shadow-xl hover:border-emerald-300 transition-all duration-200"
               >
-                {/* Checkbox (only in remove mode) */}
-                {removeMode && (
-                  <input
-                    type="checkbox"
-                    checked={selectedNGOs.includes(ngo.id)}
-                    onChange={() => toggleSelect(ngo.id)}
-                    className="w-6 h-6 text-emerald-600 accent-emerald-600 mr-4"
-                  />
-                )}
+                <div className="flex items-center justify-between gap-6">
+                  {/* Checkbox (only in remove mode) */}
+                  {removeMode && (
+                    <div className="flex items-center justify-center flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedNGOs.includes(ngo.id)}
+                        onChange={() => toggleSelect(ngo.id)}
+                        className="w-6 h-6 text-emerald-600 accent-emerald-600 cursor-pointer"
+                      />
+                    </div>
+                  )}
 
                 {/* Logo + Info */}
                 <div className="flex items-center gap-4 w-full md:w-1/3">
@@ -452,7 +458,7 @@ const calculateNGOStats = async (ngoCode) => {
                     <p className="text-base text-gray-600">
                       Participation Rate
                     </p>
-                    <p className="text-2xl font-bold text-green-600">{ngo.rate}</p>
+                    <p className="text-2xl font-bold text-emerald-600">{ngo.rate}</p>
                   </div>
                 </div>
 
@@ -477,10 +483,56 @@ const calculateNGOStats = async (ngoCode) => {
                   </button>
                 )}
               </div>
+              </div>
             ))
           )}
         </div>
       </main>
+
+      {/* Warning Modal */}
+      {showWarningModal && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          onClick={handleBackdropClick}
+          style={{ 
+            zIndex: 99999999,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh'
+          }}
+        >
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: 99999998 }}
+          ></div>
+
+          <div 
+            className="relative bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4 border-2 border-yellow-500 transform animate-scaleIn"
+            style={{ 
+              zIndex: 100000000,
+              position: 'relative'
+            }}
+          >
+            <div className="text-yellow-500 text-6xl mb-4"></div>
+            <h2 className="text-2xl font-bold text-yellow-600 mb-4">
+              Unselected!
+            </h2>
+            <p className="text-lg text-gray-700 mb-6">
+              Please select at least one NGO to remove.
+            </p>
+            <button
+              onClick={() => setShowWarningModal(false)}
+              className="px-8 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-bold shadow-lg text-lg border-2 border-yellow-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Enhanced Confirmation Modal for Remove */}
       {showConfirmModal && (
@@ -623,15 +675,15 @@ const calculateNGOStats = async (ngoCode) => {
           ></div>
 
           <div 
-            className="relative bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-green-400 transform animate-scaleIn"
+            className="relative bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-emerald-400 transform animate-scaleIn"
             style={{ 
               zIndex: 100000000,
               position: 'relative'
             }}
           >
-            <div className="text-green-600 text-6xl mb-4">✅</div>
-            <h2 className="text-2xl font-bold text-green-600 mb-4">
-              Successfully Removed!
+            <div className="text-emerald-600 text-6xl mb-4">✅</div>
+            <h2 className="text-2xl font-bold text-emerald-600 mb-4">
+              Removed
             </h2>
             <p className="text-lg text-gray-700 mb-6">
               {removedCount === 1 
@@ -643,9 +695,9 @@ const calculateNGOStats = async (ngoCode) => {
             </p>
             <button
               onClick={closeSuccessModal}
-              className="px-10 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-lg text-lg border-2 border-green-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-lg text-lg border-2 border-emerald-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
             >
-              OK
+              Ok
             </button>
           </div>
         </div>

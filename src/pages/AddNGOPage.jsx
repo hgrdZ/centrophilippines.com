@@ -111,7 +111,7 @@ function AddNGOPage() {
 
     if (hasFormData) {
       setModalConfig({
-        title: "Confirm Exit",
+        title: "Exit",
         message: "You have unsaved changes. Are you sure you want to leave? All data will be lost.",
         onConfirm: () => {
           setModalConfig(null);
