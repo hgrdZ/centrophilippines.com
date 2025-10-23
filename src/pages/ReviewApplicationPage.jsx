@@ -16,8 +16,9 @@ export default function ReviewApplicationPage() {
   const [acceptedVolunteerName, setAcceptedVolunteerName] = useState("");
   const [rejectedVolunteerName, setRejectedVolunteerName] = useState("");
   const [rejectReason, setRejectReason] = useState(""); // Added for rejection reason
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );  const location = useLocation();
 
   // Fetch volunteer applications from the database
   useEffect(() => {

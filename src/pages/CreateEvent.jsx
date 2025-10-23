@@ -96,8 +96,10 @@ function CreateEvent() {
   const [volunteerOpportunities, setVolunteerOpportunities] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   // Form states (Page 2 - Completion Tasks) - Fixed 3 tasks
   const [completionTasks, setCompletionTasks] = useState([
     { id: 1, description: ""},

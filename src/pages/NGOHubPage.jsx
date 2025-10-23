@@ -20,8 +20,9 @@ function NGOHubPage() {
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [step, setStep] = useState(1);
   const [removedCount, setRemovedCount] = useState(0);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
   const navigate = useNavigate();
 
   useEffect(() => {

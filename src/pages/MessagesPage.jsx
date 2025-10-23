@@ -25,8 +25,9 @@ export default function MessagesPage() {
   const messagesContainerRef = useRef(null);
   const scrollPositionRef = useRef(0);
   const realtimeChannelRef = useRef(null);
-   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
 
   const MESSAGES_PER_PAGE = 20;
 

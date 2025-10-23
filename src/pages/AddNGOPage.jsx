@@ -60,8 +60,10 @@ function AddNGOPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   const [formData, setFormData] = useState({
     loginId: "",
     password: "",

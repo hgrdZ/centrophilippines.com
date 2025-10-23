@@ -19,8 +19,10 @@ export default function ReviewApplicationEventPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   useEffect(() => {
     const fetchEvents = async () => {
       const adminData = JSON.parse(localStorage.getItem("admin"));

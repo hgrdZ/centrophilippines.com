@@ -423,6 +423,9 @@ function FirstEventPage() {
   const [individualModalOpen, setIndividualModalOpen] = useState(false);
   const [individualAction, setIndividualAction] = useState("");
   const [individualVolunteerId, setIndividualVolunteerId] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
 
   const fetchEventDetails = async () => {
     try {
@@ -762,9 +765,11 @@ function FirstEventPage() {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 ml-64 p-6">
+      <main className="flex-1 p-6 transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >
         <div className="bg-white rounded-lg shadow-lg max-w-full">
           <div className="bg-emerald-900 text-center rounded-t-lg py-2 font-bold text-3xl text-white">
             {eventId}

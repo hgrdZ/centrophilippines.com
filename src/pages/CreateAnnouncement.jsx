@@ -90,8 +90,9 @@ function CreateAnnouncement() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [expiryDate, setExpiryDate] = useState("");
- const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
   // Event options
   const [events, setEvents] = useState([]);
 

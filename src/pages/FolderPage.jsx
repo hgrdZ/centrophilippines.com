@@ -14,8 +14,10 @@ function FolderPage() {
   const [loading, setLoading] = useState(true);
   const [eventTitle, setEventTitle] = useState("");
   const [activeTask, setActiveTask] = useState(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   const handleButtonClick = (button) => {
     setActiveButton(button);
   };

@@ -24,8 +24,10 @@ function ManageReports() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [ngoLogo, setNgoLogo] = useState("");
   const [ngoName, setNgoName] = useState("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   const handleButtonClick = (button) => setActiveButton(button);
 
   useEffect(() => {

@@ -30,8 +30,9 @@ const SettingsPage = () => {
   const [showUpdateLogoConfirm, setShowUpdateLogoConfirm] = useState(false);
   const [showSaveChangesConfirm, setShowSaveChangesConfirm] = useState(false);
   const [showCancelEditConfirm, setShowCancelEditConfirm] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );  
   // State for notifications and alerts
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);

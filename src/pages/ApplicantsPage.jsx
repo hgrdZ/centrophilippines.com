@@ -11,6 +11,9 @@ function ApplicantsPage() {
   const [eventTitle, setEventTitle] = useState(""); // event title state
   const [applicants, setApplicants] = useState([]); // fetched applicants
   const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
 
   // Fetch event title
   const fetchEventDetails = async () => {
@@ -74,10 +77,12 @@ function ApplicantsPage() {
       }}
     >
       {/* SIDEBAR */}
-      <Sidebar />
-
-      {/* MAIN CONTENT */}
-      <main className="flex-1 ml-64 p-6">
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
+             
+                   <main 
+                     className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+                     style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+                   >   
         <div className="bg-white rounded-lg shadow-lg max-w-full border">
           {/* Header (Event ID) */}
           <div

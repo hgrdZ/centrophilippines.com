@@ -84,8 +84,10 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [viewingContext, setViewingContext] = useState(null);
   const [modalState, setModalState] = useState({ isOpen: false, type: null });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   useEffect(() => {
     initializeDashboard();
   }, [ngoCode]);
