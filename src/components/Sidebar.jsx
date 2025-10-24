@@ -121,11 +121,13 @@ function Sidebar({ handleAlert, onCollapseChange }) {
         }`}
         style={{ backgroundColor: "#d8eeeb" }}
       >
-        <div className="p-4 relative">
-          {/* Hamburger Menu Button - Fixed to Right Edge */}
+        <div className={`${collapsed ? "p-2" : "p-4"} relative`}>
+          {/* Hamburger Menu Button - Centered when collapsed */}
           <button
             onClick={toggleCollapse}
-            className="absolute text-gray-700 p-2 flex items-center justify-center transition-all duration-200 group rounded-lg bg-transparent hover:bg-white hover:scale-110 z-50 cursor-e-resize"
+            className={`text-gray-700 p-2 flex items-center justify-center transition-all duration-200 group rounded-lg bg-white hover:bg-emerald-100 hover:scale-110 z-50 cursor-e-resize ${
+              collapsed ? "w-full mb-2" : "absolute"
+            }`}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <img 
@@ -136,7 +138,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
           </button>
 
           {/* Logo Section */}
-          <div className="relative mb-6 mt-12">
+          <div className={`relative mb-4 ${collapsed ? "mt-0" : "mt-12"}`}>
             <div 
               className={`w-full bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 ${
                 collapsed ? "h-14" : "h-40"
@@ -161,7 +163,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <Link to="/dashboard">
               <button
                 className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/dashboard")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -177,7 +179,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <Link to="/volunteer">
               <button
                 className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/volunteer")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -193,7 +195,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <Link to="/manage-reports">
               <button
                 className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/manage-reports")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -209,7 +211,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <Link to="/review-application">
               <button
                 className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/review-application")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -225,7 +227,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <Link to="/calendar">
               <button
                 className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/calendar")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -241,7 +243,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <Link to="/messages">
               <button
                 className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/messages")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -257,7 +259,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
             <Link to="/settings">
               <button
                 className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                  collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                 } ${
                   isActive("/settings")
                     ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -274,7 +276,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
               <Link to="/ngohub">
                 <button
                   className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
-                    collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+                    collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
                   } ${
                     isActive("/ngohub")
                       ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
@@ -291,11 +293,11 @@ function Sidebar({ handleAlert, onCollapseChange }) {
         </div>
 
         {/* Logout Button */}
-        <div className="p-4">
+        <div className={`${collapsed ? "p-2" : "p-4"}`}>
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className={`w-full flex items-center text-base font-montserrat text-red-600 rounded-xl hover:bg-red-100 transition-all duration-200 hover:scale-105 cursor-pointer ${
-              collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-3"
+              collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
             }`}
             title={collapsed ? "Log Out" : ""}
           >
@@ -337,13 +339,13 @@ function Sidebar({ handleAlert, onCollapseChange }) {
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleLogout}
-                  className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-montserrat font-semibold hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+                  className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-montserrat font-semibold hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
                   Log Out
                 </button>
                 <button
                   onClick={handleCloseModal}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-xl text-lg font-montserrat font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+                  className="bg-white text-gray-800 px-6 py-3 rounded-xl text-lg font-montserrat font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
                   Cancel
                 </button>

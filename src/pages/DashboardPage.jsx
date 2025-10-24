@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import supabase from "../config/supabaseClient";
-
 import CreateAnnouncementIcon from "../images/create-announcement.svg";
 import CreateEventIcon from "../images/create-event.svg";
-
 import {
   PieChart,
   Pie,
@@ -29,6 +27,192 @@ const COLORS = {
   applications: "#f39c12",
   events: ["#27ae60", "#2980b9", "#f39c12", "#e74c3c"],
 };
+
+// Three Dots Menu Component
+function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+      >
+        <svg
+          className="w-5 h-5 text-gray-600 cursor-pointer"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="12" cy="5" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="12" cy="19" r="2" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[160px]">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownloadPDF();
+              setIsOpen(false);
+            }}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download as PDF
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownloadWord();
+              setIsOpen(false);
+            }}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-t"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download as Word
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Filter Modal Component
+function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
+  const [dateRange, setDateRange] = useState("all");
+  const [selectedEvent, setSelectedEvent] = useState("all");
+  const [gender, setGender] = useState("all");
+
+  const handleApply = () => {
+    onApplyFilters({ dateRange, selectedEvent, gender });
+    onClose();
+  };
+
+  const handleReset = () => {
+    setDateRange("all");
+    setSelectedEvent("all");
+    setGender("all");
+    onApplyFilters({ dateRange: "all", selectedEvent: "all", gender: "all" });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+      style={{ backdropFilter: "blur(4px)" }}
+    >
+      <div
+        className="bg-white rounded-xl shadow-2xl border-2 border-emerald-500 max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-emerald-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+          <h3 className="text-xl font-bold font-montserrat flex items-center gap-2">
+            Filters
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-white hover:bg-emerald-700 text-3xl font-bold w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Date Range Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Time Period
+            </label>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <option value="all">All Time</option>
+              <option value="1month">Last Month</option>
+              <option value="3months">Last 3 Months</option>
+              <option value="6months">Last 6 Months</option>
+              <option value="1year">Last Year</option>
+            </select>
+          </div>
+
+          {/* Event Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Specific Event
+            </label>
+            <select
+              value={selectedEvent}
+              onChange={(e) => setSelectedEvent(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <option value="all">All Events</option>
+              {events.map((event) => (
+                <option key={event.event_id} value={event.event_id}>
+                  {event.event_title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Gender Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Volunteer Gender
+            </label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <option value="all">All Genders</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={handleReset}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold transition-colors cursor-pointer"
+            >
+              Reset
+            </button>
+            <button
+              onClick={handleApply}
+              className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold transition-colors cursor-pointer"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ChartModal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
@@ -88,9 +272,36 @@ function DashboardPage() {
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
   
+  // Draggable state
+  const [draggableItems, setDraggableItems] = useState(() => {
+    const saved = localStorage.getItem("dashboardLayout");
+    return saved ? JSON.parse(saved) : [
+      { id: "completion", order: 0 },
+      { id: "volunteers", order: 1 },
+      { id: "participation", order: 2 },
+      { id: "applications", order: 3 },
+      { id: "growth", order: 4 },
+      { id: "feedback", order: 5 },
+      { id: "beneficiary", order: 6 },
+      { id: "activeEvents", order: 7 },
+    ];
+  });
+  
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    dateRange: "all",
+    selectedEvent: "all",
+    gender: "all",
+  });
+
   useEffect(() => {
     initializeDashboard();
   }, [ngoCode]);
+
+  useEffect(() => {
+    localStorage.setItem("dashboardLayout", JSON.stringify(draggableItems));
+  }, [draggableItems]);
 
   const initializeDashboard = async () => {
     try {
@@ -390,8 +601,84 @@ function DashboardPage() {
     }));
   };
 
+  // Drag and Drop Functions
+  const handleDragStart = (e, itemId) => {
+    setDraggedItem(itemId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    
+    if (!draggedItem || draggedItem === targetId) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const draggedIndex = draggableItems.findIndex(item => item.id === draggedItem);
+    const targetIndex = draggableItems.findIndex(item => item.id === targetId);
+
+    const newItems = [...draggableItems];
+    const [draggedElement] = newItems.splice(draggedIndex, 1);
+    newItems.splice(targetIndex, 0, draggedElement);
+
+    // Update order values
+    const reorderedItems = newItems.map((item, index) => ({
+      ...item,
+      order: index
+    }));
+
+    setDraggableItems(reorderedItems);
+    setDraggedItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  // Download Functions
+  const downloadAsPDF = (cardType) => {
+    alert(`Downloading ${cardType} report as PDF... (Feature to be implemented)`);
+    // TODO: Implement PDF generation using libraries like jsPDF
+  };
+
+  const downloadAsWord = (cardType) => {
+    alert(`Downloading ${cardType} report as Word document... (Feature to be implemented)`);
+    // TODO: Implement Word document generation
+  };
+
+  const handleApplyFilters = (filters) => {
+    setActiveFilters(filters);
+    // TODO: Apply filters to dashboard data
+    console.log("Filters applied:", filters);
+  };
+
   const openModal = (type) => setModalState({ isOpen: true, type });
   const closeModal = () => setModalState({ isOpen: false, type: null });
+
+  const getSortedItems = () => {
+    return [...draggableItems].sort((a, b) => a.order - b.order);
+  };
+
+  const renderDraggableCard = (itemId, content) => {
+    return (
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, itemId)}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, itemId)}
+        onDragEnd={handleDragEnd}
+        className={`cursor-move ${draggedItem === itemId ? 'opacity-50' : ''}`}
+      >
+        {content}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -403,6 +690,243 @@ function DashboardPage() {
       </div>
     );
   }
+
+  const cardComponents = {
+    completion: (
+      <div
+        onClick={() => openModal("completion")}
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Completion Rate")}
+            onDownloadWord={() => downloadAsWord("Completion Rate")}
+          />
+        </div>
+        <h4 className="font-bold font-montserrat text-sm mb-2">
+          Project & Event Completion Rate
+        </h4>
+        <ResponsiveContainer width="100%" height={100}>
+          <PieChart>
+            <Pie
+              data={[
+                { name: "Completed", value: dashboardData.completionRate },
+                { name: "Remaining", value: 100 - dashboardData.completionRate },
+              ]}
+              dataKey="value"
+              innerRadius={30}
+              outerRadius={45}
+              startAngle={90}
+              endAngle={-270}
+            >
+              {[0, 1].map((index) => (
+                <Cell key={`cell-${index}`} fill={COLORS.completion[index]} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <p className="text-2xl font-extrabold font-montserrat text-emerald-600">
+          {dashboardData.completionRate}%
+        </p>
+        <p className="text-xs text-gray-500 font-montserrat mt-1">Success Rate</p>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+    volunteers: (
+      <div
+        onClick={() => openModal("volunteers")}
+        className="bg-white p-4 text-center flex flex-col justify-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Total Volunteers")}
+            onDownloadWord={() => downloadAsWord("Total Volunteers")}
+          />
+        </div>
+        <h4 className="font-bold font-montserrat text-sm mb-2">
+          Total Registered Volunteers
+        </h4>
+        <p className="text-4xl font-extrabold font-montserrat text-emerald-700">
+          {dashboardData.totalVolunteers}
+        </p>
+        <p className="text-xs mt-2 font-montserrat">
+          As of {new Date().toLocaleDateString()}
+        </p>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+    participation: (
+      <div
+        onClick={() => openModal("participation")}
+        className="bg-white p-4 text-center font-montserrat rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Participation Rate")}
+            onDownloadWord={() => downloadAsWord("Participation Rate")}
+          />
+        </div>
+        <h4 className="font-bold mb-2 font-montserrat text-sm">
+          Volunteer Participation Rate
+        </h4>
+        <ResponsiveContainer width="100%" height={100}>
+          <PieChart>
+            <Pie
+              data={[
+                { name: "Active", value: dashboardData.participationRate },
+                { name: "Inactive", value: 100 - dashboardData.participationRate },
+              ]}
+              dataKey="value"
+              innerRadius={30}
+              outerRadius={45}
+              startAngle={90}
+              endAngle={-270}
+            >
+              {[0, 1].map((index) => (
+                <Cell key={`cell-${index}`} fill={COLORS.participation[index]} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <p className="text-2xl font-extrabold font-montserrat mt-2 text-emerald-600">
+          {dashboardData.participationRate}%
+        </p>
+        <p className="text-xs text-gray-500 font-montserrat mt-2">Active Volunteers</p>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+    applications: (
+      <div
+        onClick={() => openModal("applications")}
+        className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Applications")}
+            onDownloadWord={() => downloadAsWord("Applications")}
+          />
+        </div>
+        <h4 className="font-bold mb-4 mt-2 font-montserrat text-sm">
+          Expected Volunteer Applications - Current Week
+        </h4>
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart data={chartData.applications?.data || []}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="applications"
+              stroke={COLORS.applications}
+              strokeWidth={3}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="mt-4 text-center">
+          <p className="text-lg font-montserrat">
+            Projected Today:{" "}
+            <span className="font-bold text-emerald-700 text-xl">
+              {chartData.applications?.forecast || 0}
+            </span>
+          </p>
+        </div>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+    growth: (
+      <div
+        onClick={() => openModal("growth")}
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Growth Rate")}
+            onDownloadWord={() => downloadAsWord("Growth Rate")}
+          />
+        </div>
+        <h4 className="font-bold font-montserrat text-sm mb-3">
+          Volunteer Growth Rate
+        </h4>
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart data={chartData.growth}>
+            <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 10 }} />
+            <Bar dataKey="volunteers" fill={COLORS.growth} />
+          </BarChart>
+        </ResponsiveContainer>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+    feedback: (
+      <div
+        onClick={() => openModal("feedback")}
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Feedback Score")}
+            onDownloadWord={() => downloadAsWord("Feedback Score")}
+          />
+        </div>
+        <h4 className="font-bold font-montserrat text-sm">
+          Volunteer Feedback Score
+        </h4>
+        <p className="text-yellow-500 text-2xl mt-2">
+          {"⭐".repeat(dashboardData.feedbackScore)}
+        </p>
+        <p className="text-xs font-montserrat mt-2">High satisfaction</p>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+    beneficiary: (
+      <div
+        onClick={() => openModal("beneficiary")}
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Beneficiary Reach")}
+            onDownloadWord={() => downloadAsWord("Beneficiary Reach")}
+          />
+        </div>
+        <h4 className="font-bold font-montserrat text-sm">
+          Beneficiary Reach
+        </h4>
+        <p className="text-3xl font-extrabold text-emerald-700 mt-2">
+          {dashboardData.beneficiaryReach.toLocaleString()}
+        </p>
+        <p className="text-xs font-montserrat mt-1">Total served</p>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+    activeEvents: (
+      <div
+        onClick={() => openModal("activeEvents")}
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+      >
+        <div className="absolute top-2 right-2">
+          <ThreeDotsMenu
+            onDownloadPDF={() => downloadAsPDF("Active Events")}
+            onDownloadWord={() => downloadAsWord("Active Events")}
+          />
+        </div>
+        <h4 className="font-bold font-montserrat text-sm">
+          Active Events This Month
+        </h4>
+        <p className="text-3xl font-extrabold text-emerald-700 mt-2">
+          {dashboardData.activeEvents}
+        </p>
+        <p className="text-xs font-montserrat mt-1">
+          {new Date().toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      </div>
+    ),
+  };
 
   return (
     <div
@@ -417,17 +941,24 @@ function DashboardPage() {
       <main
         className="flex-1 p-6 overflow-y-auto transition-all duration-300"
         style={{ 
-          filter: modalState.isOpen ? "blur(3px)" : "none",
+          filter: modalState.isOpen || filterModalOpen ? "blur(3px)" : "none",
           marginLeft: sidebarCollapsed ? "5rem" : "16rem"
         }}
       >
-
         <div className="relative z-10 space-y-6 w-full mx-auto" style={{ maxWidth: "1400px" }}>
-          <h2 className="text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
-            {viewingContext?.is_super_admin_view
-              ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SAV)`
-              : "ORGANIZATION DASHBOARD"}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="flex-1 text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
+              {viewingContext?.is_super_admin_view
+                ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SAV)`
+                : "ORGANIZATION DASHBOARD"}
+            </h2>
+            <button
+              onClick={() => setFilterModalOpen(true)}
+              className="ml-4 px-4 py-3 bg-white text-emerald-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-50 cursor-pointer"
+            >
+              Filters
+            </button>
+          </div>
 
           {viewingContext?.is_super_admin_view && (
             <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
@@ -444,7 +975,39 @@ function DashboardPage() {
             </div>
           )}
 
-          {/* ROW 1: Greetings, Create Announcement, Create Event (3 columns) */}
+          {/* Active Filters Display */}
+          {(activeFilters.dateRange !== "all" || activeFilters.selectedEvent !== "all" || activeFilters.gender !== "all") && (
+            <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-emerald-800">Active Filters:</span>
+                  {activeFilters.dateRange !== "all" && (
+                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                      {activeFilters.dateRange}
+                    </span>
+                  )}
+                  {activeFilters.selectedEvent !== "all" && (
+                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                      Event: {dashboardData.events.find(e => e.event_id === activeFilters.selectedEvent)?.event_title || activeFilters.selectedEvent}
+                    </span>
+                  )}
+                  {activeFilters.gender !== "all" && (
+                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                      Gender: {activeFilters.gender}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleApplyFilters({ dateRange: "all", selectedEvent: "all", gender: "all" })}
+                  className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ROW 1: Fixed - Greetings, Create Announcement, Create Event */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             <div
               className="p-5 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
@@ -481,218 +1044,47 @@ function DashboardPage() {
             </Link>
           </div>
 
-          {/* ROW 2: Completion Rate, Total Volunteers, Participation Rate (3 columns) */}
+          {/* ROW 2: Draggable Cards - 3 columns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            {/* Completion Rate */}
-            <div
-              onClick={() => openModal("completion")}
-              className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-            >
-              <h4 className="font-bold font-montserrat text-sm mb-2">
-                Project & Event Completion Rate
-              </h4>
-              <ResponsiveContainer width="100%" height={100}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Completed", value: dashboardData.completionRate },
-                      {
-                        name: "Remaining",
-                        value: 100 - dashboardData.completionRate,
-                      },
-                    ]}
-                    dataKey="value"
-                    innerRadius={30}
-                    outerRadius={45}
-                    startAngle={90}
-                    endAngle={-270}
-                  >
-                    {[0, 1].map((index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS.completion[index]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <p className="text-2xl font-extrabold font-montserrat text-emerald-600">
-                {dashboardData.completionRate}%
-              </p>
-              <p className="text-xs text-gray-500 font-montserrat mt-1">
-                Success Rate
-              </p>
-              <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+            {getSortedItems().slice(0, 3).map(item => (
+              <div key={item.id}>
+                {renderDraggableCard(item.id, cardComponents[item.id])}
+              </div>
+            ))}
+          </div>
+
+          {/* ROW 3: Draggable Cards - Mixed layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
+            {/* First two large cards */}
+            <div>
+              {getSortedItems()[3] && renderDraggableCard(getSortedItems()[3].id, cardComponents[getSortedItems()[3].id])}
+            </div>
+            <div>
+              {getSortedItems()[4] && renderDraggableCard(getSortedItems()[4].id, cardComponents[getSortedItems()[4].id])}
             </div>
 
-            {/* Total Volunteers */}
-            <div
-              onClick={() => openModal("volunteers")}
-              className="bg-white p-4 text-center flex flex-col justify-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-            >
-              <h4 className="font-bold font-montserrat text-sm mb-2">
-                Total Registered Volunteers
-              </h4>
-              <p className="text-4xl font-extrabold font-montserrat text-emerald-700">
-                {dashboardData.totalVolunteers}
-              </p>
-              <p className="text-xs mt-2 font-montserrat">
-                As of {new Date().toLocaleDateString()}
-              </p>
-              <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-            </div>
-
-            {/* Participation Rate */}
-            <div
-              onClick={() => openModal("participation")}
-              className="bg-white p-4 text-center font-montserrat rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-            >
-              <h4 className="font-bold mb-2 font-montserrat text-sm">
-                Volunteer Participation Rate
-              </h4>
-              <ResponsiveContainer width="100%" height={100}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Active", value: dashboardData.participationRate },
-                      {
-                        name: "Inactive",
-                        value: 100 - dashboardData.participationRate,
-                      },
-                    ]}
-                    dataKey="value"
-                    innerRadius={30}
-                    outerRadius={45}
-                    startAngle={90}
-                    endAngle={-270}
-                  >
-                    {[0, 1].map((index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS.participation[index]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <p className="text-2xl font-extrabold font-montserrat mt-2 text-emerald-600">
-                {dashboardData.participationRate}%
-              </p>
-              <p className="text-xs text-gray-500 font-montserrat mt-2">
-                Active Volunteers
-              </p>
-              <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+            {/* Three stacked small cards */}
+            <div className="flex flex-col gap-4">
+              {getSortedItems().slice(5, 8).map(item => (
+                <div key={item.id}>
+                  {renderDraggableCard(item.id, cardComponents[item.id])}
+                </div>
+              ))}
             </div>
           </div>
 
-{/* ROW 3: Expected Applications | Growth Rate | 3 Stacked Cards */}
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
-  {/* COLUMN 1 - Expected Volunteer Applications */}
-  <div
-    onClick={() => openModal("applications")}
-    className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-  >
-    <h4 className="font-bold mb-4 mt-2 font-montserrat text-sm">
-      Expected Volunteer Applications - Current Week
-    </h4>
-    <ResponsiveContainer width="100%" height={320}>
-      <LineChart data={chartData.applications?.data || []}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-        <YAxis tick={{ fontSize: 10 }} />
-        <Tooltip />
-        <Line
-          type="monotone"
-          dataKey="applications"
-          stroke={COLORS.applications}
-          strokeWidth={3}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-    <div className="mt-4 text-center">
-      <p className="text-lg font-montserrat">
-        Projected Today:{" "}
-        <span className="font-bold text-emerald-700 text-xl">
-          {chartData.applications?.forecast || 0}
-        </span>
-      </p>
-    </div>
-    <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-  </div>
-
-  {/* COLUMN 2 - Volunteer Growth Rate */}
-  <div
-    onClick={() => openModal("growth")}
-    className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-  >
-    <h4 className="font-bold font-montserrat text-sm mb-3">
-      Volunteer Growth Rate
-    </h4>
-    <ResponsiveContainer width="100%" height={320}>
-      <BarChart data={chartData.growth}>
-        <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-        <YAxis tick={{ fontSize: 10 }} />
-        <Bar dataKey="volunteers" fill={COLORS.growth} />
-      </BarChart>
-    </ResponsiveContainer>
-    <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-  </div>
-
-  {/* COLUMN 3 - 3 Stacked Cards */}
-  <div className="flex flex-col gap-4">
-    {/* Feedback */}
-    <div
-      onClick={() => openModal("feedback")}
-      className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-    >
-      <h4 className="font-bold font-montserrat text-sm">
-        Volunteer Feedback Score
-      </h4>
-      <p className="text-yellow-500 text-2xl mt-2">
-        {"⭐".repeat(dashboardData.feedbackScore)}
-      </p>
-      <p className="text-xs font-montserrat mt-2">High satisfaction</p>
-      <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-    </div>
-
-    {/* Beneficiary Reach */}
-    <div
-      onClick={() => openModal("beneficiary")}
-      className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-    >
-      <h4 className="font-bold font-montserrat text-sm">
-        Beneficiary Reach
-      </h4>
-      <p className="text-3xl font-extrabold text-emerald-700 mt-2">
-        {dashboardData.beneficiaryReach.toLocaleString()}
-      </p>
-      <p className="text-xs font-montserrat mt-1">Total served</p>
-      <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-    </div>
-
-    {/* Active Events */}
-    <div
-      onClick={() => openModal("activeEvents")}
-      className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
-    >
-      <h4 className="font-bold font-montserrat text-sm">
-        Active Events This Month
-      </h4>
-      <p className="text-3xl font-extrabold text-emerald-700 mt-2">
-        {dashboardData.activeEvents}
-      </p>
-      <p className="text-xs font-montserrat mt-1">
-        {new Date().toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        })}
-      </p>
-      <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
-    </div>
-  </div>
-</div>
-
-
-          {/* ROW 4: Events Performance - Full Width */}
+          {/* ROW 4: Events Performance - Full Width with Three Dots Menu */}
           {chartData.eventsPerformance.length > 0 && (
             <div
               onClick={() => openModal("eventsPerformance")}
-              className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105"
+              className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
             >
+              <div className="absolute top-2 right-2 cursor-pointer">
+                <ThreeDotsMenu
+                  onDownloadPDF={() => downloadAsPDF("Events Performance")}
+                  onDownloadWord={() => downloadAsWord("Events Performance")}
+                />
+              </div>
               <h4 className="font-bold mt-2 mb-4 font-montserrat text-sm">
                 Events Performance Comparison
               </h4>
@@ -718,7 +1110,15 @@ function DashboardPage() {
         </div>
       </main>
 
-      {/* MODALS */}
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        events={dashboardData.events}
+      />
+
+      {/* ALL MODALS - Keeping your original modals intact */}
       <ChartModal
         isOpen={modalState.isOpen && modalState.type === "completion"}
         onClose={closeModal}
@@ -730,10 +1130,7 @@ function DashboardPage() {
               <Pie
                 data={[
                   { name: "Completed", value: dashboardData.completionRate },
-                  {
-                    name: "Remaining",
-                    value: 100 - dashboardData.completionRate,
-                  },
+                  { name: "Remaining", value: 100 - dashboardData.completionRate },
                 ]}
                 dataKey="value"
                 innerRadius={100}
@@ -825,10 +1222,7 @@ function DashboardPage() {
               <Pie
                 data={[
                   { name: "Active", value: dashboardData.participationRate },
-                  {
-                    name: "Inactive",
-                    value: 100 - dashboardData.participationRate,
-                  },
+                  { name: "Inactive", value: 100 - dashboardData.participationRate },
                 ]}
                 dataKey="value"
                 innerRadius={100}
@@ -889,18 +1283,18 @@ function DashboardPage() {
               <Bar dataKey="volunteers" fill={COLORS.growth} />
             </BarChart>
           </ResponsiveContainer>
-<div className="mt-8 flex gap-4 overflow-x-auto">
-  {chartData.growth.map((data, index) => (
-    <div
-      key={index}
-      className="bg-purple-50 p-4 rounded-lg text-center min-w-[150px] flex-shrink-0"
-    >
-      <p className="text-sm text-gray-600 font-semibold">{data.month}</p>
-      <p className="text-2xl font-bold text-purple-700">{data.volunteers}</p>
-      <p className="text-xs text-gray-500">volunteers</p>
-    </div>
-  ))}
-</div>
+          <div className="mt-8 flex gap-4 overflow-x-auto">
+            {chartData.growth.map((data, index) => (
+              <div
+                key={index}
+                className="bg-purple-50 p-4 rounded-lg text-center min-w-[150px] flex-shrink-0"
+              >
+                <p className="text-sm text-gray-600 font-semibold">{data.month}</p>
+                <p className="text-2xl font-bold text-purple-700">{data.volunteers}</p>
+                <p className="text-xs text-gray-500">volunteers</p>
+              </div>
+            ))}
+          </div>
         </div>
       </ChartModal>
 

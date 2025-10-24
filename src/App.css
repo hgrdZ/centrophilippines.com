@@ -403,6 +403,9 @@
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
   }
+  .mr-3 {
+    margin-right: calc(var(--spacing) * 3);
+  }
   .mr-6 {
     margin-right: calc(var(--spacing) * 6);
   }
@@ -673,6 +676,9 @@
   .cursor-pointer {
     cursor: pointer;
   }
+  .cursor-move{
+    cursor: move;
+  }
   .cursor-e-resize{
     cursor: e-resize;
   }
@@ -827,6 +833,14 @@
     border-top-left-radius: var(--radius-lg);
     border-top-right-radius: var(--radius-lg);
   }
+   .rounded-t-xl {
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+  }
+  .rounded-t-2xl {
+    border-top-left-radius: var(--radius-2xl);
+    border-top-right-radius: var(--radius-2xl);
+  }
   .border {
     border-style: var(--tw-border-style);
     border-width: 1px;
@@ -850,6 +864,9 @@
   .border-none {
     --tw-border-style: none;
     border-style: none;
+  }
+  .border-emerald-200 {
+    border-color: var(--color-emerald-200);
   }
   .border-emerald-500 {
     border-color: var(--color-emerald-500);
@@ -949,6 +966,9 @@
   }
   .bg-cyan-500 {
     background-color: var(--color-cyan-500);
+  }
+  .bg-emerald-50 {
+    background-color: var(--color-emerald-50);
   }
   .bg-emerald-100 {
     background-color: var(--color-emerald-100);
@@ -1581,6 +1601,13 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-gray-50);
+      }
+    }
+  }
+  .hover\:bg-gray-300 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-gray-300);
       }
     }
   }

@@ -23,6 +23,7 @@ function NGOHubPage() {
 const [sidebarCollapsed, setSidebarCollapsed] = useState(
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
+  
   const navigate = useNavigate();
 
   useEffect(() => {

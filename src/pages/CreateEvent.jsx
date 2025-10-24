@@ -32,10 +32,10 @@ function ConfirmationModal({ title, message, onConfirm, onCancel, type = "confir
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       <div
-        className="relative rounded-lg shadow-2xl p-6 w-96 text-center z-[10000] border-4 border-green-800 transform animate-scaleIn"
+        className="relative rounded-lg shadow-2xl p-6 w-96 text-center z-[10000] border-4 border-emerald-800 transform animate-scaleIn"
         style={{ backgroundColor: "#fade97" }}
       >
-        <h2 className="text-xl font-bold text-green-800 mb-4">{title}</h2>
+        <h2 className="text-xl font-bold text-emerald-800 mb-4">{title}</h2>
         <p className="text-gray-700 mb-6">{message}</p>
 
         <div className="flex justify-center gap-4">
@@ -43,7 +43,7 @@ function ConfirmationModal({ title, message, onConfirm, onCancel, type = "confir
             <>
               <button
                 onClick={onConfirm}
-                className="bg-green-700 text-white px-5 py-2 rounded-lg hover:bg-green-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+                className="bg-emerald-700 text-white px-5 py-2 rounded-lg hover:bg-emerald-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
                 Yes
               </button>
@@ -57,7 +57,7 @@ function ConfirmationModal({ title, message, onConfirm, onCancel, type = "confir
           ) : (
             <button
               onClick={onCancel}
-              className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+              className="bg-emerald-700 text-white px-6 py-2 rounded-lg hover:bg-emerald-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
             >
               OK
             </button>
@@ -642,14 +642,14 @@ function CreateEvent() {
   // Render Step 1 - Event Details
   const renderStep1 = () => (
     <div
-      className="rounded-lg shadow-xl p-6 w-full border-4 border-green-800"
+      className="rounded-lg shadow-xl p-6 w-full border-4 border-emerald-800"
       style={{ backgroundColor: "#fade97" }}
     >
-      <h3 className="text-xl font-bold text-green-800 mb-4">Step 1: Event Details</h3>
+      <h3 className="text-xl font-bold text-emerald-800 mb-4">Step 1: Event Details</h3>
 
       {/* Event Title */}
       <div className="mb-4">
-        <label className="block font-semibold text-lg text-green-800 mb-1">
+        <label className="block font-semibold text-lg text-emerald-800 mb-1">
           Event Title
         </label>
         <input
@@ -664,7 +664,7 @@ function CreateEvent() {
       {/* Date & Time Container */}
       <div className="w-full flex flex-wrap gap-6 mb-6">
         <div className="flex-1 min-w-[250px]">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+          <label className="block font-semibold text-lg text-emerald-800 mb-1">
             Date
           </label>
           <div className="flex items-center border bg-white border-gray-300 rounded px-4 py-2">
@@ -680,7 +680,7 @@ function CreateEvent() {
         </div>
 
         <div className="flex-1 min-w-[200px]">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+          <label className="block font-semibold text-lg text-emerald-800 mb-1">
             Time
           </label>
     <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3">
@@ -715,7 +715,7 @@ function CreateEvent() {
 
       {/* Location with Google Maps Autocomplete */}
   <div className="flex-1 min-w-[250px]">
-        <label className="block mb-2 font-semibold text-lg text-green-900">
+        <label className="block mb-2 font-semibold text-lg text-emerald-900">
           Location
         </label>
         <input
@@ -727,8 +727,8 @@ function CreateEvent() {
         className="w-full border border-gray-300 focus:outline-none rounded-lg mb-2 cursor-pointer p-2 bg-white text-gray-700"
         />
         {locationDetails && (
-          <div className="mt-2 p-2 bg-green-50 rounded border border-green-200 text-sm">
-            <p className="text-green-800">
+          <div className="mt-2 p-2 bg-emerald-50 rounded border border-emerald-200 text-sm">
+            <p className="text-emerald-800">
               <span className="font-semibold">Selected:</span> {locationDetails.name}
             </p>
             <p className="text-gray-600 text-xs">{locationDetails.address}</p>
@@ -738,31 +738,31 @@ function CreateEvent() {
 
       {/* Event Description */}
       <div className="mb-4">
-        <label className="block mb-2 font-semibold text-lg text-green-900">
+        <label className="block mb-2 font-semibold text-lg text-emerald-900">
           Event Description
         </label>
         <textarea
           placeholder="Enter Event Description"
           value={eventDescription}
           onChange={(e) => setEventDescription(e.target.value)}
-          className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+          className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-emerald-700 cursor-pointer"
           rows={3}
         />
       </div>
 
       {/* Event Objectives */}
       <div className="mb-4">
-        <label className="block font-semibold text-lg text-green-800 mb-1">
+        <label className="block font-semibold text-lg text-emerald-800 mb-1">
           Event Objectives
         </label>
         <textarea
           placeholder="Enter Objectives (separate each objective with a dash '-')"
           value={eventObjectives}
           onChange={(e) => setEventObjectives(e.target.value)}
-          className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-green-700 cursor-pointer"
+          className="w-full p-3 rounded bg-white border border-gray-300 h-40 focus:outline-none focus:ring-2 focus:ring-emerald-700 cursor-pointer"
           rows={2}
         />
-        <p className="text-sm text-green-700 mt-1">
+        <p className="text-sm text-emerald-700 mt-1">
           Example: Increase community awareness-Promote environmental conservation-Foster volunteer engagement
         </p>
       </div>
@@ -770,7 +770,7 @@ function CreateEvent() {
       {/* Volunteers Limit and Call Time */}
       <div className="w-full flex flex-wrap gap-6 mb-3">
         <div className="flex-1 min-w-[250px]">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+          <label className="block font-semibold text-lg text-emerald-800 mb-1">
             Volunteers Limit
           </label>
           <input
@@ -784,7 +784,7 @@ function CreateEvent() {
         </div>
 
   <div className="flex-1 min-w-[250px]">
-          <label className="block font-semibold text-lg text-green-800 mb-2">
+          <label className="block font-semibold text-lg text-emerald-800 mb-2">
             Call Time
           </label>
           <div className="flex items-center border bg-white border-gray-300 rounded px-4 py-2">
@@ -807,7 +807,7 @@ function CreateEvent() {
 
       {/* Event Tasks */}
       <div className="mb-4">
-        <label className="block font-semibold text-lg text-green-800 mb-1">
+        <label className="block font-semibold text-lg text-emerald-800 mb-1">
           Event Tasks (What to Expect)
         </label>
         <textarea
@@ -817,14 +817,14 @@ function CreateEvent() {
           className="w-full px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer"
           rows={2}
         />
-        <p className="text-sm text-green-700 mt-1">
+        <p className="text-sm text-emerald-700 mt-1">
           Example: Setup event materials-Assist participants-Clean up after event
         </p>
       </div>
 
       {/* Volunteer Guidelines */}
       <div className="mb-4">
-        <label className="block font-semibold text-lg text-green-800 mb-1">
+        <label className="block font-semibold text-lg text-emerald-800 mb-1">
           Volunteer Guidelines
         </label>
         <textarea
@@ -834,7 +834,7 @@ function CreateEvent() {
           className="w-full px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer"
           rows={2}
         />
-        <p className="text-sm text-green-700 mt-1">
+        <p className="text-sm text-emerald-700 mt-1">
           Example: Arrive on time-Wear appropriate attire-Follow safety protocols
         </p>
       </div>
@@ -842,7 +842,7 @@ function CreateEvent() {
       {/* Upload Poster & Volunteer Opportunities */}
       <div className="w-full flex flex-wrap gap-6 mb-3">
         <div className="flex-1 min-w-[250px]">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+          <label className="block font-semibold text-lg text-emerald-800 mb-1">
             Upload Event Poster/Image
           </label>
     <div className="flex items-center border bg-white border-gray-300 rounded px-3">
@@ -851,10 +851,10 @@ function CreateEvent() {
               type="file"
               accept={supportedImageTypes.join(',')}
               onChange={handleFileSelect}
-              className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
-          <p className="text-xs text-green-700 mt-1">
+          <p className="text-xs text-emerald-700 mt-1">
             Supported formats: {supportedExtensions.join(', ')}. Max size: 10MB.
           </p>
           
@@ -876,7 +876,7 @@ function CreateEvent() {
           )}
           
           {selectedFile && !imagePreview && (
-            <div className="mt-2 p-2 bg-green-100 rounded text-sm text-green-800">
+            <div className="mt-2 p-2 bg-emerald-100 rounded text-sm text-emerald-800">
               <p>File selected: {selectedFile.name}</p>
               <button
                 type="button"
@@ -890,7 +890,7 @@ function CreateEvent() {
         </div>
 
   <div className="flex-1 min-w-[300px]">
-          <label className="block font-semibold text-lg text-green-800 mb-1">
+          <label className="block font-semibold text-lg text-emerald-800 mb-1">
             Volunteer Opportunities
           </label>
     <div className="border bg-white border-gray-300 rounded p-3 flex-1">
@@ -904,7 +904,7 @@ function CreateEvent() {
             </div>
       <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
               {opportunityOptions.map((option) => (
-                <label key={option} className="flex items-center text-sm cursor-pointer group hover:bg-green-50 p-2 rounded transition-colors">
+                <label key={option} className="flex items-center text-sm cursor-pointer group hover:bg-emerald-50 p-2 rounded transition-colors">
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
@@ -914,8 +914,8 @@ function CreateEvent() {
                     />
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                       volunteerOpportunities.includes(option) 
-                        ? 'bg-green-600 border-green-600' 
-                        : 'border-gray-300 group-hover:border-green-400'
+                        ? 'bg-emerald-600 border-emerald-600' 
+                        : 'border-gray-300 group-hover:border-emerald-400'
                     }`}>
                       {volunteerOpportunities.includes(option) && (
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -923,9 +923,9 @@ function CreateEvent() {
                         </svg>
                       )}
                     </div>
-                    <span className={`ml-3 group-hover:text-green-800 transition-all duration-200 ${
+                    <span className={`ml-3 group-hover:text-emerald-800 transition-all duration-200 ${
                       volunteerOpportunities.includes(option) 
-                        ? 'text-green-800 font-bold' 
+                        ? 'text-emerald-800 font-bold' 
                         : 'text-gray-700 font-normal'
                     }`}>
                       {option}
@@ -956,7 +956,7 @@ function CreateEvent() {
         </button>
         <button
           onClick={goToStep2}
-          className="bg-green-700 text-white px-6 py-2 rounded-full hover:bg-green-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="bg-emerald-700 text-white px-6 py-2 rounded-full hover:bg-emerald-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           Next
         </button>
@@ -967,30 +967,30 @@ function CreateEvent() {
   // Render Step 2 - Completion Tasks (Simple design with 3 fixed tasks)
   const renderStep2 = () => (
     <div
-      className="rounded-lg shadow-xl p-6 w-full border-4 border-green-800"
+      className="rounded-lg shadow-xl p-6 w-full border-4 border-emerald-800"
       style={{ backgroundColor: "#fade97" }}
     >
-      <h3 className="text-xl font-bold text-green-800 mb-4">Step 2: Completion Tasks</h3>
+      <h3 className="text-xl font-bold text-emerald-800 mb-4">Step 2: Completion Tasks</h3>
       
-      <p className="text-green-700 mb-6">
+      <p className="text-emerald-700 mb-6">
         Define three tasks that need to be completed for this event. These will be used to track event progress.
       </p>
 
       <div className="space-y-4 mb-6">
         {completionTasks.map((task, index) => (
-          <div key={task.id} className="bg-white rounded-lg border border-green-300 p-4">
+          <div key={task.id} className="bg-white rounded-lg border border-emerald-300 p-4">
             <div className="mb-3">
-              <label className="block font-semibold text-lg text-green-800 mb-2">
+              <label className="block font-semibold text-lg text-emerald-800 mb-2">
                 Task {index + 1}
               </label>
               <textarea
                 placeholder="Enter task description..."
                 value={task.description}
                 onChange={(e) => handleTaskChange(task.id, e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 resize-none"
                 rows={3}
               />
-              <p className="text-sm text-green-600 mt-1">
+              <p className="text-sm text-emerald-600 mt-1">
                 Separate multiple task points with dashes (-). Example: Setup materials-Assign roles-Monitor progress
               </p>
             </div>
@@ -1008,7 +1008,7 @@ function CreateEvent() {
         </button>
         <button
           onClick={goToStep3}
-          className="bg-green-700 text-white px-6 py-2 rounded-full hover:bg-green-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="bg-emerald-700 text-white px-6 py-2 rounded-full hover:bg-emerald-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           Confirm
         </button>
@@ -1019,76 +1019,76 @@ function CreateEvent() {
   // Render Step 3 - Overview (Updated to show task names and descriptions)
   const renderStep3 = () => (
     <div
-      className="rounded-lg shadow-xl p-6 w-full border-4 border-green-800"
+      className="rounded-lg shadow-xl p-6 w-full border-4 border-emerald-800"
       style={{ backgroundColor: "#fade97" }}
     >
-      <h3 className="text-xl font-bold text-green-800 mb-4">Step 3: Event Overview</h3>
+      <h3 className="text-xl font-bold text-emerald-800 mb-4">Step 3: Event Overview</h3>
       
-      <p className="text-green-700 mb-6">
+      <p className="text-emerald-700 mb-6">
         Review all event details before publishing. Make sure everything is correct.
       </p>
 
       <div className="space-y-6">
         {/* Event Details Section */}
-        <div className="bg-white rounded-lg p-4 border border-green-300">
-          <h4 className="font-semibold text-green-800 mb-3 text-lg border-b border-green-200 pb-2">
+        <div className="bg-white rounded-lg p-4 border border-emerald-300">
+          <h4 className="font-semibold text-emerald-800 mb-3 text-lg border-b border-emerald-200 pb-2">
             Event Details
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-green-600 font-medium">Event Title:</p>
+              <p className="text-sm text-emerald-600 font-medium">Event Title:</p>
               <p className="text-gray-800">{eventTitle}</p>
             </div>
             <div>
-              <p className="text-sm text-green-600 font-medium">Date:</p>
+              <p className="text-sm text-emerald-600 font-medium">Date:</p>
               <p className="text-gray-800">{eventDate}</p>
             </div>
             <div>
-              <p className="text-sm text-green-600 font-medium">Time:</p>
+              <p className="text-sm text-emerald-600 font-medium">Time:</p>
               <p className="text-gray-800">{startTime} - {endTime}</p>
             </div>
             <div>
-              <p className="text-sm text-green-600 font-medium">Location:</p>
+              <p className="text-sm text-emerald-600 font-medium">Location:</p>
               <p className="text-gray-800">{location}</p>
             </div>
             <div>
-              <p className="text-sm text-green-600 font-medium">Volunteers Limit:</p>
+              <p className="text-sm text-emerald-600 font-medium">Volunteers Limit:</p>
               <p className="text-gray-800">{volunteersLimit}</p>
             </div>
             <div>
-              <p className="text-sm text-green-600 font-medium">Call Time:</p>
+              <p className="text-sm text-emerald-600 font-medium">Call Time:</p>
               <p className="text-gray-800">{callTime}</p>
             </div>
           </div>
           
           <div className="mt-4">
-            <p className="text-sm text-green-600 font-medium">Description:</p>
+            <p className="text-sm text-emerald-600 font-medium">Description:</p>
             <p className="text-gray-800 text-sm">{eventDescription}</p>
           </div>
           
           <div className="mt-4">
-            <p className="text-sm text-green-600 font-medium">Objectives:</p>
+            <p className="text-sm text-emerald-600 font-medium">Objectives:</p>
             <p className="text-gray-800 text-sm">{eventObjectives}</p>
           </div>
           
           <div className="mt-4">
-            <p className="text-sm text-green-600 font-medium">What to Expect:</p>
+            <p className="text-sm text-emerald-600 font-medium">What to Expect:</p>
             <p className="text-gray-800 text-sm">{eventTasks}</p>
           </div>
           
           <div className="mt-4">
-            <p className="text-sm text-green-600 font-medium">Volunteer Guidelines:</p>
+            <p className="text-sm text-emerald-600 font-medium">Volunteer Guidelines:</p>
             <p className="text-gray-800 text-sm">{volunteerGuidelines}</p>
           </div>
           
           <div className="mt-4">
-            <p className="text-sm text-green-600 font-medium">Volunteer Opportunities:</p>
+            <p className="text-sm text-emerald-600 font-medium">Volunteer Opportunities:</p>
             <p className="text-gray-800 text-sm">{volunteerOpportunities.join(", ")}</p>
           </div>
           
           {selectedFile && (
             <div className="mt-4">
-              <p className="text-sm text-green-600 font-medium">Event Image:</p>
+              <p className="text-sm text-emerald-600 font-medium">Event Image:</p>
               {imagePreview ? (
                 <img 
                   src={imagePreview} 
@@ -1103,19 +1103,19 @@ function CreateEvent() {
         </div>
 
         {/* Completion Tasks Section - Updated to show only descriptions */}
-        <div className="bg-white rounded-lg p-4 border border-green-300">
-          <h4 className="font-semibold text-green-800 mb-3 text-lg border-b border-green-200 pb-2">
+        <div className="bg-white rounded-lg p-4 border border-emerald-300">
+          <h4 className="font-semibold text-emerald-800 mb-3 text-lg border-b border-emerald-200 pb-2">
             Completion Tasks
           </h4>
           <div className="space-y-4">
             {completionTasks.map((task, index) => (
-              <div key={task.id} className="border border-green-200 rounded-lg p-4 bg-green-50">
+              <div key={task.id} className="border border-emerald-200 rounded-lg p-4 bg-emerald-50">
                 <div className="flex items-start">
-                  <span className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 flex-shrink-0 mt-1">
+                  <span className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 flex-shrink-0 mt-1">
                     {index + 1}
                   </span>
                   <div className="flex-1">
-                    <h5 className="font-semibold text-green-800 mb-2">Task {index + 1}</h5>
+                    <h5 className="font-semibold text-emerald-800 mb-2">Task {index + 1}</h5>
                     <p className="text-gray-700 text-sm">{task.description}</p>
                   </div>
                 </div>
@@ -1130,13 +1130,13 @@ function CreateEvent() {
         <div className="flex gap-3">
           <button
             onClick={goToStep1}
-            className="bg-cyan-500 text-white px-6 py-2 rounded-full hover:bg-cyan-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             Edit
           </button>
           <button
             onClick={() => setModalConfig({
-              title: "Discard Event",
+              title: "Discard",
               message: "Are you sure you want to discard this event? All progress will be lost.",
               onConfirm: () => {
                 setModalConfig(null);
@@ -1144,14 +1144,14 @@ function CreateEvent() {
               },
               onCancel: () => setModalConfig(null),
             })}
-            className="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             Discard
           </button>
         </div>
         <button
           onClick={() => setModalConfig({
-            title: "Publish Event",
+            title: "Publish",
             message: "Are you sure you want to publish this event? Once published, it will be visible to volunteers and tasks will be created in the Task Reports system.",
             onConfirm: () => {
               setModalConfig(null);
@@ -1160,7 +1160,7 @@ function CreateEvent() {
             onCancel: () => setModalConfig(null),
           })}
           disabled={loading || imageUploading}
-          className="bg-green-700 text-white px-6 py-2 rounded-full hover:bg-green-900 disabled:opacity-50 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="bg-emerald-700 text-white px-6 py-2 rounded-full hover:bg-emerald-900 disabled:opacity-50 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           {loading ? "Publishing..." : imageUploading ? "Uploading Image..." : "Publish"}
         </button>
@@ -1185,29 +1185,29 @@ function CreateEvent() {
               <div className="w-full max-w-6xl">
           {/* Progress Indicator */}
           <div className="mb-6">
-            <div className="flex items-center justify-between bg-white rounded-lg p-4 border-4 border-green-800 shadow-lg">
+            <div className="flex items-center justify-between bg-white rounded-lg p-4 border-4 border-emerald-800 shadow-lg">
               <div className="flex items-center space-x-4">
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-bold ${
-                  currentStep >= 1 ? 'bg-green-700' : 'bg-gray-400'
+                  currentStep >= 1 ? 'bg-emerald-700' : 'bg-gray-400'
                 }`}>
                   1
                 </div>
-                <div className={`h-1 w-20 ${currentStep > 1 ? 'bg-green-700' : 'bg-gray-300'}`}></div>
+                <div className={`h-1 w-20 ${currentStep > 1 ? 'bg-emerald-700' : 'bg-gray-300'}`}></div>
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-bold ${
-                  currentStep >= 2 ? 'bg-green-700' : 'bg-gray-400'
+                  currentStep >= 2 ? 'bg-emerald-700' : 'bg-gray-400'
                 }`}>
                   2
                 </div>
-                <div className={`h-1 w-20 ${currentStep > 2 ? 'bg-green-700' : 'bg-gray-300'}`}></div>
+                <div className={`h-1 w-20 ${currentStep > 2 ? 'bg-emerald-700' : 'bg-gray-300'}`}></div>
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full text-white font-bold ${
-                  currentStep >= 3 ? 'bg-green-700' : 'bg-gray-400'
+                  currentStep >= 3 ? 'bg-emerald-700' : 'bg-gray-400'
                 }`}>
                   3
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600">Step {currentStep} of 3</p>
-                <p className="font-semibold text-green-800">
+                <p className="font-semibold text-emerald-800">
                   {currentStep === 1 && "Event Details"}
                   {currentStep === 2 && "Completion Tasks"}
                   {currentStep === 3 && "Review & Publish"}
