@@ -5,6 +5,8 @@ import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import supabase from "../config/supabaseClient";
 import CreateAnnouncementIcon from "../images/create-announcement.svg";
 import CreateEventIcon from "../images/create-event.svg";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import {
   PieChart,
   Pie,
@@ -148,7 +150,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
       style={{ backdropFilter: "blur(4px)" }}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl border-2 border-emerald-500 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-2xl border-2 border-emerald-500 max-w-xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-emerald-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center sticky top-0 z-10">
@@ -248,38 +250,15 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Gender
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setGender("all")}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                  gender === "all"
-                    ? "bg-emerald-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setGender("Male")}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                  gender === "Male"
-                    ? "bg-emerald-700 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                Male
-              </button>
-              <button
-                onClick={() => setGender("Female")}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                  gender === "Female"
-                    ? "bg-pink-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                Female
-              </button>
-            </div>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <option value="all">All Genders</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
           </div>
 
           {/* Volunteer Count Range */}
@@ -312,9 +291,95 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               onClick={handleApply}
               className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold transition-colors cursor-pointer"
             >
-              Filters
+              Apply
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Report Generation Modal
+function ReportModal({ isOpen, onClose, onGenerate, events }) {
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+
+  const handleGenerate = () => {
+    if (!selectedMonth || !selectedYear) {
+      alert("Please select a month and year first.");
+      return;
+    }
+    onGenerate(selectedMonth, selectedYear);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-emerald-900">Generate Report</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Select Month
+            </label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">-- Select Month --</option>
+              <option value="all">All Months</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {new Date(0, i).toLocaleString("default", { month: "long" })}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Select Year
+            </label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">-- Select Year --</option>
+              {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-8">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-300 text-gray-700 font-semibold px-4 py-3 rounded-lg hover:bg-gray-400 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleGenerate}
+            className="flex-1 bg-emerald-900 text-white font-semibold px-4 py-3 rounded-lg hover:bg-emerald-800 transition"
+          >
+            Generate PDF
+          </button>
         </div>
       </div>
     </div>
@@ -356,6 +421,7 @@ function DashboardPage() {
   const [dashboardData, setDashboardData] = useState({
     ngoName: "",
     ngoCode: "",
+    ngoLogo: "",
     totalVolunteers: 0,
     pendingApplications: 0,
     completionRate: 0,
@@ -379,7 +445,6 @@ function DashboardPage() {
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
   
-  // Enhanced Draggable state with visual feedback
   const [draggableItems, setDraggableItems] = useState(() => {
     const saved = localStorage.getItem("dashboardLayout");
     return saved ? JSON.parse(saved) : [
@@ -397,6 +462,7 @@ function DashboardPage() {
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOverItem, setDragOverItem] = useState(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     dateRange: "all",
     selectedEvent: "all",
@@ -549,6 +615,7 @@ function DashboardPage() {
       setDashboardData({
         ngoName: ngoInfo?.name || "Organization",
         ngoCode: ngoCode,
+        ngoLogo: ngoInfo?.ngo_logo || "",
         totalVolunteers,
         pendingApplications,
         completionRate,
@@ -713,6 +780,383 @@ function DashboardPage() {
     }));
   };
 
+  // PDF HELPERS
+  const splitToBullets = (text) => {
+    if (!text) return [];
+    return String(text).replace(/\r\n/g, "\n").replace(/\n/g, " - ").split("-").map(s=>s.trim()).filter(Boolean);
+  };
+
+  const addLogo = async (doc, x, y, width, height, opacity = 1) => {
+    if (!dashboardData.ngoLogo) return;
+    try {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = dashboardData.ngoLogo;
+      await new Promise((resolve) => {
+        img.onload = () => {
+          try { if (doc.setGState) doc.setGState(new doc.GState({ opacity })); } catch {}
+          const aspect = img.width / img.height;
+          let finalW = width, finalH = height;
+          if (aspect > 1) {
+            finalH = width / aspect;
+            if (finalH > height) { finalH = height; finalW = height * aspect; }
+          } else {
+            finalW = height * aspect;
+            if (finalW > width) { finalW = width; finalH = width / aspect; }
+          }
+          const offsetX = (width - finalW)/2, offsetY = (height - finalH)/2;
+          try { doc.addImage(img, "PNG", x + offsetX, y + offsetY, finalW, finalH); } catch (e) { console.warn(e); }
+          try { if (doc.setGState) doc.setGState(new doc.GState({ opacity: 1 })); } catch {}
+          resolve();
+        };
+        img.onerror = () => resolve();
+      });
+    } catch (err) { console.error("addLogo err", err); }
+  };
+
+  const addEventImageRight = async (doc, imageUrl, currentY, pageWidth, pageHeight) => {
+    if (!imageUrl) return { imageHeight: 0, imageAdded: false };
+    try {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = imageUrl;
+      return await new Promise((resolve) => {
+        img.onload = () => {
+          const maxImgWidth = 60;
+          const aspectRatio = img.width / img.height || 1;
+          const imgWidth = maxImgWidth;
+          const imgHeight = maxImgWidth / aspectRatio;
+          if (currentY + imgHeight + 10 > pageHeight - 20) {
+            resolve({ imageHeight: 0, imageAdded: false });
+            return;
+          }
+          const imgX = pageWidth - imgWidth - 16;
+          doc.setDrawColor(0); doc.setLineWidth(0.3);
+          doc.rect(imgX - 1, currentY - 1, imgWidth + 2, imgHeight + 2);
+          try { doc.addImage(img, "JPEG", imgX, currentY, imgWidth, imgHeight); } catch (e) { console.warn(e); }
+          resolve({ imageHeight: imgHeight, imageAdded: true });
+        };
+        img.onerror = () => resolve({ imageHeight: 0, imageAdded: false });
+      });
+    } catch (err) { console.error("addEventImageRight err", err); return { imageHeight: 0, imageAdded: false }; }
+  };
+
+  const createMonthSeparatorPage = async (doc, monthName, year, pageW, pageH) => {
+    doc.addPage();
+    await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(36);
+    doc.setTextColor(0, 100, 0);
+    doc.text(monthName, pageW/2, pageH/2 - 10, { align: "center" });
+
+    doc.setFontSize(24);
+    doc.setTextColor(80,80,80);
+    doc.text(String(year), pageW/2, pageH/2 + 12, { align: "center" });
+
+    doc.setDrawColor(0, 100, 0);
+    doc.setLineWidth(0.5);
+    doc.line(40, pageH/2 + 22, pageW - 40, pageH/2 + 22);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "TBA";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return "TBA";
+    const [hours, minutes] = timeString.split(":");
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    const mm = minutes ? minutes.padStart(2, "0") : "00";
+    return `${hour12}:${mm} ${ampm}`;
+  };
+
+  const calculateDuration = (start, end) => {
+    if (!start || !end) return "";
+    try {
+      const [sh, sm] = start.split(":").map((n) => parseInt(n||"0"));
+      const [eh, em] = end.split(":").map((n) => parseInt(n||"0"));
+      let diff = (eh*60+em) - (sh*60+sm);
+      if (diff < 0) diff += 24*60;
+      const hours = Math.floor(diff/60);
+      const minutes = diff % 60;
+      if (hours>0 && minutes>0) return `${hours} hour${hours>1?'s':''} ${minutes} mins`;
+      if (hours>0) return `${hours} hour${hours>1?'s':''}`;
+      return `${minutes} mins`;
+    } catch { return ""; }
+  };
+
+  const handleGenerateReport = async (selectedMonth, selectedYear) => {
+    try {
+      const ngoCode = dashboardData.ngoCode;
+      
+      const { data: events } = await supabase
+        .from("Event_Information")
+        .select("*")
+        .eq("ngo_id", ngoCode);
+
+      if (!events || events.length === 0) {
+        alert("No events found.");
+        return;
+      }
+
+      const { data: eventUsers } = await supabase
+        .from("Event_User")
+        .select("user_id, event_id, status")
+        .in("event_id", events.map((e) => e.event_id));
+
+      const { data: applications } = await supabase
+        .from("Application_Status")
+        .select("*")
+        .eq("ngo_id", ngoCode);
+
+      const isAnnualReport = selectedMonth === "all";
+      let filteredEvents;
+      let reportTitle;
+
+      if (isAnnualReport) {
+        filteredEvents = events.filter(
+          (ev) => new Date(ev.date).getFullYear() === parseInt(selectedYear)
+        );
+        reportTitle = `Year ${selectedYear}`;
+      } else {
+        filteredEvents = events.filter((ev) => {
+          const d = new Date(ev.date);
+          return (
+            d.getMonth() + 1 === parseInt(selectedMonth) &&
+            d.getFullYear() === parseInt(selectedYear)
+          );
+        });
+        reportTitle = new Date(selectedYear, selectedMonth - 1).toLocaleString(
+          "default",
+          { month: "long", year: "numeric" }
+        );
+      }
+
+      if (!filteredEvents || filteredEvents.length === 0) {
+        alert("No events found for the selected period.");
+        return;
+      }
+
+      const sortedEvents = filteredEvents.sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+
+      const doc = new jsPDF("p", "mm", "a4");
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      let y = 25;
+
+      // COVER PAGE
+      if (dashboardData.ngoLogo) {
+        try {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.src = dashboardData.ngoLogo;
+          await new Promise((resolve) => {
+            img.onload = () => {
+              const w = 70, h = 70;
+              const cx = pageW / 2 - w / 2;
+              doc.addImage(img, "PNG", cx, 20, w, h);
+              resolve();
+            };
+            img.onerror = () => resolve();
+          });
+        } catch {}
+      }
+
+      y = 100;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(0, 100, 0);
+      doc.text(dashboardData.ngoName || "CENTRO Organization", pageW / 2, y, { align: "center" });
+      y += 12;
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Organization Accomplishment Report", pageW / 2, y, { align: "center" });
+      y += 12;
+      doc.setFontSize(14);
+      doc.text(`Period: ${reportTitle}`, pageW / 2, y, { align: "center" });
+      y += 20;
+
+      // SUMMARY BOX
+      const totalEvents = sortedEvents.length;
+      const totalVolunteers = eventUsers ? new Set(eventUsers.map((v) => v.user_id)).size : 0;
+      const completedCount = sortedEvents.filter((e) => e.status === "COMPLETED").length;
+      const ongoingCount = sortedEvents.filter((e) => e.status === "ONGOING").length;
+      const upcomingCount = sortedEvents.filter((e) => e.status === "UPCOMING").length;
+      const monthlyApplications = (applications || []).filter((app) => {
+        const appDate = new Date(app.date_application);
+        return isAnnualReport
+          ? appDate.getFullYear() === parseInt(selectedYear)
+          : appDate.getFullYear() === parseInt(selectedYear) &&
+            appDate.getMonth() + 1 === parseInt(selectedMonth);
+      });
+
+      doc.setDrawColor(0, 100, 0);
+      doc.setFillColor(245, 250, 245);
+      doc.roundedRect(20, y, pageW - 40, 50, 3, 3, "FD");
+      y += 10;
+      doc.setFontSize(14);
+      doc.setTextColor(0, 100, 0);
+      doc.text("Summary Overview", 25, y);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      y += 8;
+      doc.text(`•  Total Events: ${totalEvents}`, 30, y); y+=6;
+      doc.text(`•  Completed: ${completedCount}`, 30, y); y+=6;
+      doc.text(`•  Ongoing: ${ongoingCount}`, 30, y); y+=6;
+      doc.text(`•  Upcoming: ${upcomingCount}`, 30, y); y+=6;
+      doc.text(`•  Total Unique Volunteers: ${totalVolunteers}`, 30, y); y+=6;
+      doc.text(`•  Total New Applications: ${monthlyApplications.length}`, 30, y);
+
+      // Helper to render a single event
+      const renderEvent = async (doc, event) => {
+        let y = 25;
+
+        if (dashboardData.ngoLogo) {
+          try {
+            await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
+          } catch {}
+        }
+
+        doc.setFillColor(235, 247, 235);
+        doc.roundedRect(14, y - 5, pageW - 28, 10, 2, 2, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(event.event_title || "Untitled Event", 16, y);
+        y += 10;
+
+        const imageStartY = y;
+        const { imageHeight, imageAdded } = await addEventImageRight(doc, event.event_image, imageStartY, pageW, pageH);
+
+        const leftColWidth = imageAdded ? pageW - 90 : pageW - 32;
+
+        const printKV = (label, value) => {
+          if (y > pageH - 30) { doc.addPage(); y = 25; }
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.text(label, 16, y);
+          doc.setFont("helvetica", "normal");
+          const wrapped = doc.splitTextToSize(String(value || "-"), leftColWidth - 24);
+          wrapped.forEach((line, i) => {
+            if (y + i * 5 > pageH - 30) { doc.addPage(); y = 25; }
+            doc.text(line, 40, y + i * 5);
+          });
+          y += Math.max(6, wrapped.length * 5);
+        };
+
+        printKV("Event ID:", event.event_id || "-");
+        printKV("Status:", event.status || "TBA");
+        printKV("Date:", formatDate(event.date));
+        printKV("Time:", `${formatTime(event.time_start)} – ${formatTime(event.time_end)}${calculateDuration(event.time_start, event.time_end) ? ` (${calculateDuration(event.time_start, event.time_end)})` : ""}`);
+        printKV("Call Time:", event.call_time ? formatTime(event.call_time) : "TBA");
+        printKV("Location:", event.location || "TBA");
+
+        if (imageAdded && y < imageStartY + imageHeight + 5) {
+          y = imageStartY + imageHeight + 5;
+        }
+
+        const sections = [
+          { label: "Event Objectives:", content: splitToBullets(event.event_objectives) },
+          { label: "Event Description:", content: event.description ? [event.description] : [] },
+          { label: "What to Expect:", content: splitToBullets(event.what_expect) },
+          { label: "Volunteer Guidelines:", content: splitToBullets(event.volunteer_guidelines) },
+          { label: "Volunteer Opportunities:", content: splitToBullets(event.volunteer_opportunities) }
+        ];
+
+        const fullWidth = pageW - 32;
+        for (const sec of sections) {
+          if (sec.content.length > 0) {
+            if (y > pageH - 30) { doc.addPage(); y = 25; }
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.text(sec.label, 16, y);
+            y += 6;
+            doc.setFont("helvetica", "normal");
+            sec.content.forEach((line) => {
+              const wrapped = doc.splitTextToSize(line, fullWidth - 12);
+              wrapped.forEach((ln) => {
+                if (y > pageH - 30) { doc.addPage(); y = 25; }
+                doc.text(`•  ${ln}`, 20, y);
+                y += 5;
+              });
+            });
+            y += 3;
+          }
+        }
+
+        const eventVols = eventUsers?.filter((v) => v.event_id === event.event_id) || [];
+        if (eventVols.length > 0) {
+          if (y > pageH - 30) { doc.addPage(); y = 25; }
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.text("Volunteer Engagement:", 16, y); y += 6;
+          doc.setFont("helvetica", "normal");
+          const approved = eventVols.filter((v) => v.status === "APPROVED").length;
+          const pending = eventVols.filter((v) => v.status === "PENDING").length;
+          const rejected = eventVols.filter((v) => v.status === "REJECTED").length;
+          doc.text(`•  Total Volunteers Joined: ${eventVols.length}`, 20, y); y+=5;
+          doc.text(`•  Approved: ${approved}`, 20, y); y+=5;
+          doc.text(`•  Pending: ${pending}`, 20, y); y+=5;
+          doc.text(`•  Rejected: ${rejected}`, 20, y); y+=8;
+        }
+      };
+
+      // Render events
+      if (isAnnualReport) {
+        const eventsByMonth = {};
+        sortedEvents.forEach((e) => {
+          const m = new Date(e.date).getMonth();
+          if (!eventsByMonth[m]) eventsByMonth[m] = [];
+          eventsByMonth[m].push(e);
+        });
+
+        for (const monthNum of Object.keys(eventsByMonth).sort((a,b)=>a-b)) {
+          const monthName = new Date(selectedYear, monthNum).toLocaleString("default", { month: "long" });
+          await createMonthSeparatorPage(doc, monthName, selectedYear, pageW, pageH);
+
+          for (const event of eventsByMonth[monthNum]) {
+            doc.addPage();
+            await renderEvent(doc, event);
+          }
+        }
+      } else {
+        for (const event of sortedEvents) {
+          doc.addPage();
+          await renderEvent(doc, event);
+        }
+      }
+
+      // FOOTER
+      const totalPages = doc.internal.getNumberOfPages();
+      const generatedDate = new Date().toLocaleString("en-US", {
+        year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
+      });
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 10, { align: "center" });
+        doc.text(`Generated: ${generatedDate}`, 14, pageH - 10);
+      }
+
+      const fileName = isAnnualReport
+        ? `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`
+        : `${dashboardData.ngoName || "NGO"}_Monthly_Report_${selectedYear}-${selectedMonth}.pdf`;
+      doc.save(fileName);
+      
+      setReportModalOpen(false);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      alert("An error occurred while generating the report.");
+    }
+  };
+
   // Enhanced Drag and Drop Functions
   const handleDragStart = (e, itemId) => {
     setDraggedItem(itemId);
@@ -753,7 +1197,6 @@ function DashboardPage() {
     const [draggedElement] = newItems.splice(draggedIndex, 1);
     newItems.splice(targetIndex, 0, draggedElement);
 
-    // Update order values
     const reorderedItems = newItems.map((item, index) => ({
       ...item,
       order: index
@@ -769,44 +1212,17 @@ function DashboardPage() {
     setDragOverItem(null);
   };
 
-  // Download Functions
   const downloadAsPDF = (cardType) => {
     alert(`Downloading ${cardType} report as PDF... (Feature to be implemented)`);
-    // TODO: Implement PDF generation using libraries like jsPDF
   };
 
   const downloadAsWord = (cardType) => {
     alert(`Downloading ${cardType} report as Word document... (Feature to be implemented)`);
-    // TODO: Implement Word document generation
   };
 
   const handleApplyFilters = (filters) => {
     setActiveFilters(filters);
-    // TODO: Apply filters to dashboard data
     console.log("Filters applied:", filters);
-  };
-
-  // Generate Report Function
-  const handleGenerateReport = () => {
-    const reportData = {
-      ngo: dashboardData.ngoName,
-      generatedDate: new Date().toLocaleString(),
-      summary: {
-        totalVolunteers: dashboardData.totalVolunteers,
-        pendingApplications: dashboardData.pendingApplications,
-        completionRate: dashboardData.completionRate,
-        participationRate: dashboardData.participationRate,
-        activeEvents: dashboardData.activeEvents,
-        beneficiaryReach: dashboardData.beneficiaryReach,
-        feedbackScore: dashboardData.feedbackScore
-      },
-      filters: activeFilters,
-      events: dashboardData.events.length
-    };
-
-    console.log("Generating Report:", reportData);
-    alert("Report generation initiated! This will export your dashboard data.\n\nReport includes:\n- All metrics and statistics\n- Chart data\n- Applied filters\n- Event performance data");
-    // TODO: Implement actual report generation with PDF/Excel export
   };
 
   const openModal = (type) => setModalState({ isOpen: true, type });
@@ -1106,7 +1522,7 @@ function DashboardPage() {
       <main
         className="flex-1 p-6 overflow-y-auto transition-all duration-300"
         style={{ 
-          filter: modalState.isOpen || filterModalOpen ? "blur(3px)" : "none",
+          filter: modalState.isOpen || filterModalOpen || reportModalOpen ? "blur(3px)" : "none",
           marginLeft: sidebarCollapsed ? "5rem" : "16rem"
         }}
       >
@@ -1124,7 +1540,7 @@ function DashboardPage() {
               Filter
             </button>
             <button
-              onClick={handleGenerateReport}
+              onClick={() => setReportModalOpen(true)}
               className="px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-700 cursor-pointer"
             >
              <svg
@@ -1318,6 +1734,14 @@ function DashboardPage() {
         isOpen={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
         onApplyFilters={handleApplyFilters}
+        events={dashboardData.events}
+      />
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        onGenerate={handleGenerateReport}
         events={dashboardData.events}
       />
 
@@ -1719,7 +2143,7 @@ function DashboardPage() {
                   >
                     {event.value}%
                   </p>
-                  <p className="text-xs text-gray-500">participation rate</p>
+                  <p className="text-xs text-gray-500">participation</p>
                 </div>
               </div>
             ))}
