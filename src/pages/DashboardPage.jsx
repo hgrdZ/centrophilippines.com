@@ -97,14 +97,26 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
   );
 }
 
-// Filter Modal Component
+// Enhanced Filter Modal Component
 function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   const [dateRange, setDateRange] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState("all");
   const [gender, setGender] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [volunteerRange, setVolunteerRange] = useState("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
 
   const handleApply = () => {
-    onApplyFilters({ dateRange, selectedEvent, gender });
+    onApplyFilters({ 
+      dateRange, 
+      selectedEvent, 
+      gender, 
+      status, 
+      volunteerRange,
+      customDateFrom,
+      customDateTo 
+    });
     onClose();
   };
 
@@ -112,7 +124,19 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
     setDateRange("all");
     setSelectedEvent("all");
     setGender("all");
-    onApplyFilters({ dateRange: "all", selectedEvent: "all", gender: "all" });
+    setStatus("all");
+    setVolunteerRange("all");
+    setCustomDateFrom("");
+    setCustomDateTo("");
+    onApplyFilters({ 
+      dateRange: "all", 
+      selectedEvent: "all", 
+      gender: "all", 
+      status: "all",
+      volunteerRange: "all",
+      customDateFrom: "",
+      customDateTo: ""
+    });
   };
 
   if (!isOpen) return null;
@@ -124,10 +148,10 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
       style={{ backdropFilter: "blur(4px)" }}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl border-2 border-emerald-500 max-w-md w-full"
+        className="bg-white rounded-xl shadow-2xl border-2 border-emerald-500 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-emerald-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+        <div className="bg-emerald-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center sticky top-0 z-10">
           <h3 className="text-xl font-bold font-montserrat flex items-center gap-2">
             Filters
           </h3>
@@ -141,9 +165,9 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
 
         <div className="p-6 space-y-6">
           {/* Date Range Filter */}
-          <div>
+          <div className="border-b pb-4">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Time Period
+              Time
             </label>
             <select
               value={dateRange}
@@ -151,17 +175,42 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
               <option value="all">All Time</option>
+              <option value="1week">Last Week</option>
               <option value="1month">Last Month</option>
               <option value="3months">Last 3 Months</option>
               <option value="6months">Last 6 Months</option>
               <option value="1year">Last Year</option>
+              <option value="custom">Custom Range</option>
             </select>
+
+            {dateRange === "custom" && (
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">From</label>
+                  <input
+                    type="date"
+                    value={customDateFrom}
+                    onChange={(e) => setCustomDateFrom(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">To</label>
+                  <input
+                    type="date"
+                    value={customDateTo}
+                    onChange={(e) => setCustomDateTo(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Event Filter */}
-          <div>
+          <div className="border-b pb-4">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Specific Event
+              Event
             </label>
             <select
               value={selectedEvent}
@@ -177,19 +226,77 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
             </select>
           </div>
 
-          {/* Gender Filter */}
-          <div>
+          {/* Event Status Filter */}
+          <div className="border-b pb-4">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Volunteer Gender
+              Status
             </label>
             <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
-              <option value="all">All Genders</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
+              <option value="all">All Statuses</option>
+              <option value="UPCOMING">Upcoming</option>
+              <option value="ONGOING">Ongoing</option>
+              <option value="COMPLETED">Completed</option>
+            </select>
+          </div>
+
+          {/* Gender Filter */}
+          <div className="border-b pb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Gender
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setGender("all")}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  gender === "all"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setGender("Male")}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  gender === "Male"
+                    ? "bg-emerald-700 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Male
+              </button>
+              <button
+                onClick={() => setGender("Female")}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  gender === "Female"
+                    ? "bg-pink-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Female
+              </button>
+            </div>
+          </div>
+
+          {/* Volunteer Count Range */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Volunteers
+            </label>
+            <select
+              value={volunteerRange}
+              onChange={(e) => setVolunteerRange(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <option value="all">All Ranges</option>
+              <option value="1-50">1 - 50 volunteers</option>
+              <option value="51-100">51 - 100 volunteers</option>
+              <option value="101-200">101 - 200 volunteers</option>
+              <option value="201+">201+ volunteers</option>
             </select>
           </div>
 
@@ -205,7 +312,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               onClick={handleApply}
               className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold transition-colors cursor-pointer"
             >
-              Apply
+              Filters
             </button>
           </div>
         </div>
@@ -272,7 +379,7 @@ function DashboardPage() {
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
   
-  // Draggable state
+  // Enhanced Draggable state with visual feedback
   const [draggableItems, setDraggableItems] = useState(() => {
     const saved = localStorage.getItem("dashboardLayout");
     return saved ? JSON.parse(saved) : [
@@ -288,11 +395,16 @@ function DashboardPage() {
   });
   
   const [draggedItem, setDraggedItem] = useState(null);
+  const [dragOverItem, setDragOverItem] = useState(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     dateRange: "all",
     selectedEvent: "all",
     gender: "all",
+    status: "all",
+    volunteerRange: "all",
+    customDateFrom: "",
+    customDateTo: ""
   });
 
   useEffect(() => {
@@ -601,10 +713,11 @@ function DashboardPage() {
     }));
   };
 
-  // Drag and Drop Functions
+  // Enhanced Drag and Drop Functions
   const handleDragStart = (e, itemId) => {
     setDraggedItem(itemId);
     e.dataTransfer.effectAllowed = "move";
+    e.currentTarget.style.opacity = "0.5";
   };
 
   const handleDragOver = (e) => {
@@ -612,8 +725,21 @@ function DashboardPage() {
     e.dataTransfer.dropEffect = "move";
   };
 
+  const handleDragEnter = (e, targetId) => {
+    e.preventDefault();
+    if (draggedItem && draggedItem !== targetId) {
+      setDragOverItem(targetId);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragOverItem(null);
+  };
+
   const handleDrop = (e, targetId) => {
     e.preventDefault();
+    setDragOverItem(null);
     
     if (!draggedItem || draggedItem === targetId) {
       setDraggedItem(null);
@@ -637,8 +763,10 @@ function DashboardPage() {
     setDraggedItem(null);
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e) => {
+    e.currentTarget.style.opacity = "1";
     setDraggedItem(null);
+    setDragOverItem(null);
   };
 
   // Download Functions
@@ -658,6 +786,29 @@ function DashboardPage() {
     console.log("Filters applied:", filters);
   };
 
+  // Generate Report Function
+  const handleGenerateReport = () => {
+    const reportData = {
+      ngo: dashboardData.ngoName,
+      generatedDate: new Date().toLocaleString(),
+      summary: {
+        totalVolunteers: dashboardData.totalVolunteers,
+        pendingApplications: dashboardData.pendingApplications,
+        completionRate: dashboardData.completionRate,
+        participationRate: dashboardData.participationRate,
+        activeEvents: dashboardData.activeEvents,
+        beneficiaryReach: dashboardData.beneficiaryReach,
+        feedbackScore: dashboardData.feedbackScore
+      },
+      filters: activeFilters,
+      events: dashboardData.events.length
+    };
+
+    console.log("Generating Report:", reportData);
+    alert("Report generation initiated! This will export your dashboard data.\n\nReport includes:\n- All metrics and statistics\n- Chart data\n- Applied filters\n- Event performance data");
+    // TODO: Implement actual report generation with PDF/Excel export
+  };
+
   const openModal = (type) => setModalState({ isOpen: true, type });
   const closeModal = () => setModalState({ isOpen: false, type: null });
 
@@ -666,16 +817,30 @@ function DashboardPage() {
   };
 
   const renderDraggableCard = (itemId, content) => {
+    const isDragOver = dragOverItem === itemId;
+    
     return (
       <div
         draggable
         onDragStart={(e) => handleDragStart(e, itemId)}
         onDragOver={handleDragOver}
+        onDragEnter={(e) => handleDragEnter(e, itemId)}
+        onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, itemId)}
         onDragEnd={handleDragEnd}
-        className={`cursor-move ${draggedItem === itemId ? 'opacity-50' : ''}`}
+        className={`transition-all duration-200 h-full ${
+          isDragOver ? 'ring-4 ring-emerald-400 scale-105' : ''
+        }`}
+        style={{ cursor: 'grab' }}
       >
-        {content}
+        <div className="relative h-full">
+          <div className="absolute top-2 left-2 text-gray-400 z-10 cursor-move">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 5h2v14H9V5zm4 0h2v14h-2V5z"/>
+            </svg>
+          </div>
+          {content}
+        </div>
       </div>
     );
   };
@@ -695,15 +860,15 @@ function DashboardPage() {
     completion: (
       <div
         onClick={() => openModal("completion")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Completion Rate")}
             onDownloadWord={() => downloadAsWord("Completion Rate")}
           />
         </div>
-        <h4 className="font-bold font-montserrat text-sm mb-2">
+        <h4 className="font-bold font-montserrat text-base mb-2 mt-6">
           Project & Event Completion Rate
         </h4>
         <ResponsiveContainer width="100%" height={100}>
@@ -735,15 +900,15 @@ function DashboardPage() {
     volunteers: (
       <div
         onClick={() => openModal("volunteers")}
-        className="bg-white p-4 text-center flex flex-col justify-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 text-center flex flex-col justify-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px]"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Total Volunteers")}
             onDownloadWord={() => downloadAsWord("Total Volunteers")}
           />
         </div>
-        <h4 className="font-bold font-montserrat text-sm mb-2">
+        <h4 className="font-bold font-montserrat text-base mb-2 mt-6">
           Total Registered Volunteers
         </h4>
         <p className="text-4xl font-extrabold font-montserrat text-emerald-700">
@@ -758,15 +923,15 @@ function DashboardPage() {
     participation: (
       <div
         onClick={() => openModal("participation")}
-        className="bg-white p-4 text-center font-montserrat rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 text-center font-montserrat rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Participation Rate")}
             onDownloadWord={() => downloadAsWord("Participation Rate")}
           />
         </div>
-        <h4 className="font-bold mb-2 font-montserrat text-sm">
+        <h4 className="font-bold mb-2 font-montserrat text-base mt-6">
           Volunteer Participation Rate
         </h4>
         <ResponsiveContainer width="100%" height={100}>
@@ -798,18 +963,18 @@ function DashboardPage() {
     applications: (
       <div
         onClick={() => openModal("applications")}
-        className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Applications")}
             onDownloadWord={() => downloadAsWord("Applications")}
           />
         </div>
-        <h4 className="font-bold mb-4 mt-2 font-montserrat text-sm">
+        <h4 className="font-bold mb-4 mt-8 font-montserrat text-sm">
           Expected Volunteer Applications - Current Week
         </h4>
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={280}>
           <LineChart data={chartData.applications?.data || []}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="day" tick={{ fontSize: 10 }} />
@@ -824,7 +989,7 @@ function DashboardPage() {
           </LineChart>
         </ResponsiveContainer>
         <div className="mt-4 text-center">
-          <p className="text-lg font-montserrat">
+          <p className="text-lg mb-2 font-montserrat">
             Projected Today:{" "}
             <span className="font-bold text-emerald-700 text-xl">
               {chartData.applications?.forecast || 0}
@@ -837,18 +1002,18 @@ function DashboardPage() {
     growth: (
       <div
         onClick={() => openModal("growth")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Growth Rate")}
             onDownloadWord={() => downloadAsWord("Growth Rate")}
           />
         </div>
-        <h4 className="font-bold font-montserrat text-sm mb-3">
+        <h4 className="font-bold font-montserrat text-base mb-6 mt-8">
           Volunteer Growth Rate
         </h4>
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData.growth}>
             <XAxis dataKey="month" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} />
@@ -861,15 +1026,15 @@ function DashboardPage() {
     feedback: (
       <div
         onClick={() => openModal("feedback")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Feedback Score")}
             onDownloadWord={() => downloadAsWord("Feedback Score")}
           />
         </div>
-        <h4 className="font-bold font-montserrat text-sm">
+        <h4 className="font-bold font-montserrat text-base mt-6">
           Volunteer Feedback Score
         </h4>
         <p className="text-yellow-500 text-2xl mt-2">
@@ -882,15 +1047,15 @@ function DashboardPage() {
     beneficiary: (
       <div
         onClick={() => openModal("beneficiary")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Beneficiary Reach")}
             onDownloadWord={() => downloadAsWord("Beneficiary Reach")}
           />
         </div>
-        <h4 className="font-bold font-montserrat text-sm">
+        <h4 className="font-bold font-montserrat text-base mt-6">
           Beneficiary Reach
         </h4>
         <p className="text-3xl font-extrabold text-emerald-700 mt-2">
@@ -903,15 +1068,15 @@ function DashboardPage() {
     activeEvents: (
       <div
         onClick={() => openModal("activeEvents")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
+        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Active Events")}
             onDownloadWord={() => downloadAsWord("Active Events")}
           />
         </div>
-        <h4 className="font-bold font-montserrat text-sm">
+        <h4 className="font-bold font-montserrat text-base mt-6">
           Active Events This Month
         </h4>
         <p className="text-3xl font-extrabold text-emerald-700 mt-2">
@@ -946,7 +1111,7 @@ function DashboardPage() {
         }}
       >
         <div className="relative z-10 space-y-6 w-full mx-auto" style={{ maxWidth: "1400px" }}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <h2 className="flex-1 text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
               {viewingContext?.is_super_admin_view
                 ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SAV)`
@@ -954,9 +1119,29 @@ function DashboardPage() {
             </h2>
             <button
               onClick={() => setFilterModalOpen(true)}
-              className="ml-4 px-4 py-3 bg-white text-emerald-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-50 cursor-pointer"
+              className="px-4 py-3 bg-white text-emerald-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-50 cursor-pointer"
             >
-              Filters
+              Filter
+            </button>
+            <button
+              onClick={handleGenerateReport}
+              className="px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-700 cursor-pointer"
+            >
+             <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+              Generate Report
             </button>
           </div>
 
@@ -976,32 +1161,50 @@ function DashboardPage() {
           )}
 
           {/* Active Filters Display */}
-          {(activeFilters.dateRange !== "all" || activeFilters.selectedEvent !== "all" || activeFilters.gender !== "all") && (
+          {(activeFilters.dateRange !== "all" || activeFilters.selectedEvent !== "all" || activeFilters.gender !== "all" || activeFilters.status !== "all" || activeFilters.volunteerRange !== "all") && (
             <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-emerald-800">Active Filters:</span>
+                  <span className="font-semibold text-emerald-800">Filters:</span>
                   {activeFilters.dateRange !== "all" && (
                     <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {activeFilters.dateRange}
+                      {activeFilters.dateRange === "custom" ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}` : activeFilters.dateRange}
                     </span>
                   )}
                   {activeFilters.selectedEvent !== "all" && (
                     <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      Event: {dashboardData.events.find(e => e.event_id === activeFilters.selectedEvent)?.event_title || activeFilters.selectedEvent}
+                      {dashboardData.events.find(e => e.event_id === activeFilters.selectedEvent)?.event_title || activeFilters.selectedEvent}
+                    </span>
+                  )}
+                  {activeFilters.status !== "all" && (
+                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                      {activeFilters.status}
                     </span>
                   )}
                   {activeFilters.gender !== "all" && (
                     <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      Gender: {activeFilters.gender}
+                      {activeFilters.gender}
+                    </span>
+                  )}
+                  {activeFilters.volunteerRange !== "all" && (
+                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                      {activeFilters.volunteerRange}
                     </span>
                   )}
                 </div>
                 <button
-                  onClick={() => handleApplyFilters({ dateRange: "all", selectedEvent: "all", gender: "all" })}
+                  onClick={() => handleApplyFilters({ 
+                    dateRange: "all", 
+                    selectedEvent: "all", 
+                    gender: "all", 
+                    status: "all",
+                    volunteerRange: "all",
+                    customDateFrom: "",
+                    customDateTo: ""
+                  })}
                   className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
                 >
-                  Clear
+                  Clear 
                 </button>
               </div>
             </div>
@@ -1044,10 +1247,10 @@ function DashboardPage() {
             </Link>
           </div>
 
-          {/* ROW 2: Draggable Cards - 3 columns */}
+          {/* ROW 2: Draggable Cards - 3 columns with equal height */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             {getSortedItems().slice(0, 3).map(item => (
-              <div key={item.id}>
+              <div key={item.id} className="h-full">
                 {renderDraggableCard(item.id, cardComponents[item.id])}
               </div>
             ))}
@@ -1056,36 +1259,36 @@ function DashboardPage() {
           {/* ROW 3: Draggable Cards - Mixed layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
             {/* First two large cards */}
-            <div>
+            <div className="h-full">
               {getSortedItems()[3] && renderDraggableCard(getSortedItems()[3].id, cardComponents[getSortedItems()[3].id])}
             </div>
-            <div>
+            <div className="h-full">
               {getSortedItems()[4] && renderDraggableCard(getSortedItems()[4].id, cardComponents[getSortedItems()[4].id])}
             </div>
 
-            {/* Three stacked small cards */}
-            <div className="flex flex-col gap-4">
+            {/* Three stacked small cards with equal heights */}
+            <div className="flex flex-col gap-4 h-full">
               {getSortedItems().slice(5, 8).map(item => (
-                <div key={item.id}>
+                <div key={item.id} className="flex-1">
                   {renderDraggableCard(item.id, cardComponents[item.id])}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ROW 4: Events Performance - Full Width with Three Dots Menu */}
+          {/* ROW 4: Events Performance - Full Width */}
           {chartData.eventsPerformance.length > 0 && (
             <div
               onClick={() => openModal("eventsPerformance")}
               className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
             >
-              <div className="absolute top-2 right-2 cursor-pointer">
+              <div className="absolute top-2 right-2 cursor-pointer" onClick={(e) => e.stopPropagation()}>
                 <ThreeDotsMenu
                   onDownloadPDF={() => downloadAsPDF("Events Performance")}
                   onDownloadWord={() => downloadAsWord("Events Performance")}
                 />
               </div>
-              <h4 className="font-bold mt-2 mb-4 font-montserrat text-sm">
+              <h4 className="font-bold mt-2 mb-4 font-montserrat text-base">
                 Events Performance Comparison
               </h4>
               <ResponsiveContainer width="100%" height={250}>
@@ -1118,7 +1321,7 @@ function DashboardPage() {
         events={dashboardData.events}
       />
 
-      {/* ALL MODALS - Keeping your original modals intact */}
+      {/* ALL MODALS */}
       <ChartModal
         isOpen={modalState.isOpen && modalState.type === "completion"}
         onClose={closeModal}

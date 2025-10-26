@@ -668,7 +668,7 @@ function EventPage() {
 
               <div>
                 <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors">Event Objectives:</h3>
-                <ul className="list-disc pl-6 space-y-2 text-gray-800 bg-emerald-50 p-2 rounded-lg">
+                <ul className="list-disc pl-6 space-y-2 text-gray-800 p-2 rounded-lg">
                   {parseObjectives(eventData.event_objectives).map((objective, index) => (
                     <li key={index} className="leading-relaxed">{objective.trim()}</li>
                   ))}
