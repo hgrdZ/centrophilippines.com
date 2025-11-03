@@ -24,13 +24,10 @@ function ManageReports() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [ngoLogo, setNgoLogo] = useState("");
   const [ngoName, setNgoName] = useState("");
-
-  const eventColors = [
-    "bg-orange-400", "bg-yellow-400", "bg-red-400",
-    "bg-gray-500", "bg-purple-500", "bg-amber-800",
-    "bg-emerald-900", "bg-green-500", "bg-pink-500", "bg-gray-400",
-  ];
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   const handleButtonClick = (button) => setActiveButton(button);
 
   useEffect(() => {
@@ -124,7 +121,7 @@ function ManageReports() {
     .filter((event) => event.status === "COMPLETED" || categorizeEventByDate(event) === "completed")
     .sort((a, b) => (a.event_id || "").localeCompare(b.event_id || ""));
 
-  // Formatting (restored to original sizes / style)
+  // Formatting
   const formatDate = (dateString) => {
     if (!dateString) return "TBA";
     const date = new Date(dateString);
@@ -156,65 +153,81 @@ function ManageReports() {
     } catch { return ""; }
   };
 
- // Render event card (Enhanced Modern Design)
-const renderEventCard = (event, index) => {
-  const colorClass = eventColors[index % eventColors.length];
+  // Render event card with status-based colors
+  const renderEventCard = (event, index) => {
+    // Determine color based on event status/category
+    const eventCategory = categorizeEventByDate(event);
+    let headerBgColor;
+    let textColor;
+    
+    if (eventCategory === "ongoing" || event.status === "ONGOING") {
+      headerBgColor = "#4a7c59"; // Professional forest green
+      textColor = "#ffffff";
+    } else if (eventCategory === "upcoming" && event.status === "UPCOMING") {
+      headerBgColor = "#d4a574"; // Warm caramel
+      textColor = "#ffffff";
+    } else if (eventCategory === "completed" || event.status === "COMPLETED") {
+      headerBgColor = "#6b7280"; // Neutral slate gray
+      textColor = "#ffffff";
+    } else {
+      headerBgColor = "#4a7c59"; // Default to ongoing color
+      textColor = "#ffffff";
+    }
 
-  return (
-    <Link
-      to={`/event/${event.event_id}`}
-      key={event.event_id}
-      className="group block rounded-2xl overflow-hidden backdrop-blur-md bg-white/90 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200"
-    >
-      {/* Header */}
-      <div
-        className={`${colorClass} relative text-lg font-montserrat text-white font-semibold px-4 py-2 text-center`}
+    return (
+      <Link
+        to={`/event/${event.event_id}`}
+        key={event.event_id}
+        className="group block rounded-2xl overflow-hidden backdrop-blur-md bg-white/90 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200"
       >
-        <span className="tracking-wider drop-shadow-md">
-          {event.event_id}
-        </span>
+        {/* Header */}
+        <div
+          style={{ backgroundColor: headerBgColor, color: textColor }}
+          className="relative text-lg font-montserrat font-semibold px-4 py-2 text-center"
+        >
+          <span className="tracking-wider drop-shadow-md">
+            {event.event_id}
+          </span>
 
-        {/* Decorative bottom bar */}
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/40"></div>
-      </div>
-
-      {/* Body */}
-      <div className="p-4 text-center">
-        <h3 className="font-bold font-montserrat text-emerald-900 mb-2 text-xl group-hover:text-emerald-700 transition-colors duration-200">
-          {event.event_title}
-        </h3>
-
-        <div className="space-y-1 text-sm text-gray-800">
-          <p>
-            <span className="font-semibold text-emerald-900">Date:</span>{" "}
-            {formatDate(event.date)}
-          </p>
-          <p>
-            <span className="font-semibold text-emerald-900">Duration:</span>{" "}
-            {formatTime(event.time_start)} – {formatTime(event.time_end)}
-          </p>
-          <p>
-            <span className="font-semibold text-emerald-900">Location:</span>{" "}
-            {event.location}
-          </p>
+          {/* Decorative bottom bar */}
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-black/10"></div>
         </div>
-      </div>
 
-      {/* Hover Accent Bar */}
-      <div className="h-1 bg-emerald-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-    </Link>
-  );
-};
+        {/* Body */}
+        <div className="p-4 text-center">
+          <h3 className="font-bold font-montserrat text-emerald-900 mb-2 text-xl group-hover:text-emerald-700 transition-colors duration-200">
+            {event.event_title}
+          </h3>
 
-  // --- PDF HELPERS (kept/improved) ---
+          <div className="space-y-1 text-sm text-gray-800">
+            <p>
+              <span className="font-semibold text-emerald-900">Date:</span>{" "}
+              {formatDate(event.date)}
+            </p>
+            <p>
+              <span className="font-semibold text-emerald-900">Duration:</span>{" "}
+              {formatTime(event.time_start)} – {formatTime(event.time_end)}
+            </p>
+            <p>
+              <span className="font-semibold text-emerald-900">Location:</span>{" "}
+              {event.location}
+            </p>
+          </div>
+        </div>
 
-  // dash-separated text -> bullets
+        {/* Hover Accent Bar */}
+        <div className="h-1 bg-emerald-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+      </Link>
+    );
+  };
+
+  // --- PDF HELPERS ---
+
   const splitToBullets = (text) => {
     if (!text) return [];
     return String(text).replace(/\r\n/g, "\n").replace(/\n/g, " - ").split("-").map(s=>s.trim()).filter(Boolean);
   };
 
-  // add NGO logo safely (with optional opacity)
   const addLogo = async (doc, x, y, width, height, opacity = 1) => {
     if (!ngoLogo) return;
     try {
@@ -243,7 +256,6 @@ const renderEventCard = (event, index) => {
     } catch (err) { console.error("addLogo err", err); }
   };
 
-  // add event image on right, return {imageHeight, imageAdded}
   const addEventImageRight = async (doc, imageUrl, currentY, pageWidth, pageHeight) => {
     if (!imageUrl) return { imageHeight: 0, imageAdded: false };
     try {
@@ -271,10 +283,8 @@ const renderEventCard = (event, index) => {
     } catch (err) { console.error("addEventImageRight err", err); return { imageHeight: 0, imageAdded: false }; }
   };
 
-  // Create modern decorative month title page (centered month + year)
   const createMonthSeparatorPage = async (doc, monthName, year, pageW, pageH) => {
     doc.addPage();
-    // faint watermark/logo
     await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
 
     doc.setFont("helvetica", "bold");
@@ -291,9 +301,7 @@ const renderEventCard = (event, index) => {
     doc.line(40, pageH/2 + 22, pageW - 40, pageH/2 + 22);
   };
 
-  // ------------------------------
   // PDF generation main function
-  // ------------------------------
   const handleGenerateMonthlyReport = async () => {
     if (!selectedMonth || !selectedYear) {
       alert("Please select a month and year first.");
@@ -309,7 +317,6 @@ const renderEventCard = (event, index) => {
 
     setShowReportModal(false);
 
-    // Fetch events
     const { data: events } = await supabase
       .from("Event_Information")
       .select("*")
@@ -320,7 +327,6 @@ const renderEventCard = (event, index) => {
       return;
     }
 
-    // Fetch event-user and applications
     const { data: eventUsers } = await supabase
       .from("Event_User")
       .select("user_id, event_id, status")
@@ -363,13 +369,12 @@ const renderEventCard = (event, index) => {
       (a, b) => new Date(a.date) - new Date(b.date)
     );
 
-    // --- PDF setup ---
     const doc = new jsPDF("p", "mm", "a4");
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     let y = 25;
 
-    // --- COVER PAGE ---
+    // COVER PAGE
     if (ngoLogo) {
       try {
         const img = new Image();
@@ -401,7 +406,7 @@ const renderEventCard = (event, index) => {
     doc.text(`Period: ${reportTitle}`, pageW / 2, y, { align: "center" });
     y += 20;
 
-    // --- SUMMARY BOX ---
+    // SUMMARY BOX
     const totalEvents = sortedEvents.length;
     const totalVolunteers = eventUsers ? new Set(eventUsers.map((v) => v.user_id)).size : 0;
     const completedCount = sortedEvents.filter((e) => e.status === "COMPLETED").length;
@@ -432,7 +437,7 @@ const renderEventCard = (event, index) => {
     doc.text(`•  Total Unique Volunteers: ${totalVolunteers}`, 30, y); y+=6;
     doc.text(`•  Total New Applications: ${monthlyApplications.length}`, 30, y);
 
-    // --- Helper to render a single event ---
+    // Helper to render a single event
     const renderEvent = async (doc, event) => {
       let y = 25;
 
@@ -442,7 +447,6 @@ const renderEventCard = (event, index) => {
         } catch {}
       }
 
-      // Event title header
       doc.setFillColor(235, 247, 235);
       doc.roundedRect(14, y - 5, pageW - 28, 10, 2, 2, "F");
       doc.setFont("helvetica", "bold");
@@ -450,14 +454,11 @@ const renderEventCard = (event, index) => {
       doc.text(event.event_title || "Untitled Event", 16, y);
       y += 10;
 
-      // Try to add event image on right side
       const imageStartY = y;
       const { imageHeight, imageAdded } = await addEventImageRight(doc, event.event_image, imageStartY, pageW, pageH);
 
-      // Calculate text width based on whether image was added
       const leftColWidth = imageAdded ? pageW - 90 : pageW - 32;
 
-      // Helper to print key-value pairs
       const printKV = (label, value) => {
         if (y > pageH - 30) { doc.addPage(); y = 25; }
         doc.setFont("helvetica", "bold");
@@ -479,12 +480,10 @@ const renderEventCard = (event, index) => {
       printKV("Call Time:", event.call_time ? formatTime(event.call_time) : "TBA");
       printKV("Location:", event.location || "TBA");
 
-      // Ensure we're past the image before starting sections
       if (imageAdded && y < imageStartY + imageHeight + 5) {
         y = imageStartY + imageHeight + 5;
       }
 
-      // Define sections
       const sections = [
         { label: "Event Objectives:", content: splitToBullets(event.event_objectives) },
         { label: "Event Description:", content: event.description ? [event.description] : [] },
@@ -493,7 +492,6 @@ const renderEventCard = (event, index) => {
         { label: "Volunteer Opportunities:", content: splitToBullets(event.volunteer_opportunities) }
       ];
 
-      // Render sections with full width now (image is above)
       const fullWidth = pageW - 32;
       for (const sec of sections) {
         if (sec.content.length > 0) {
@@ -515,7 +513,6 @@ const renderEventCard = (event, index) => {
         }
       }
 
-      // Volunteer engagement stats
       const eventVols = eventUsers?.filter((v) => v.event_id === event.event_id) || [];
       if (eventVols.length > 0) {
         if (y > pageH - 30) { doc.addPage(); y = 25; }
@@ -533,7 +530,7 @@ const renderEventCard = (event, index) => {
       }
     };
 
-    // --- Render events ---
+    // Render events
     if (isAnnualReport) {
       const eventsByMonth = {};
       sortedEvents.forEach((e) => {
@@ -558,7 +555,7 @@ const renderEventCard = (event, index) => {
       }
     }
 
-    // --- FOOTER ---
+    // FOOTER
     const totalPages = doc.internal.getNumberOfPages();
     const generatedDate = new Date().toLocaleString("en-US", {
       year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -577,11 +574,6 @@ const renderEventCard = (event, index) => {
     doc.save(fileName);
   };
 
-  // ---------------------
-  // UI rendering (unchanged)
-  // ---------------------
-
-  
   if (loading) {
     return (
       <div
@@ -612,11 +604,11 @@ const renderEventCard = (event, index) => {
         backgroundSize: "100% 100%",
       }}
     >
-      {/* SIDEBAR */}
-      <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-4 overflow-y-auto">
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >  
         <div id="manage_reports" className="relative z-10 space-y-6">
           {/* Search Bar and Actions */}
           <div className="bg-white rounded-lg shadow border border-gray-300 px-4 py-3 flex justify-between items-center">
@@ -639,9 +631,20 @@ const renderEventCard = (event, index) => {
                 onClick={() => setShowReportModal(true)}
                 className="bg-emerald-900 text-white font-semibold px-6 py-2 rounded-lg hover:bg-emerald-800 transition flex items-center gap-2"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
                 Generate Report
               </button>
             </div>

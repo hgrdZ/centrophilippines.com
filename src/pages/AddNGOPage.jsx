@@ -60,8 +60,10 @@ function AddNGOPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
-
-  // Changed to blank initial values
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   const [formData, setFormData] = useState({
     loginId: "",
     password: "",
@@ -78,7 +80,6 @@ function AddNGOPage() {
     preferredVolunteering: [],
   });
 
-  // Supported image formats
   const supportedImageTypes = [
     'image/jpeg',
     'image/jpg', 
@@ -105,9 +106,8 @@ function AddNGOPage() {
 
   // Handle close/back navigation with confirmation
   const handleClose = () => {
-    // Check if form has any data
     const hasFormData = Object.entries(formData).some(([key, value]) => {
-      if (key === 'adminType') return value !== 'admin'; // Default value
+      if (key === 'adminType') return value !== 'admin';
       if (key === 'logo') return value !== null;
       if (key === 'preferredVolunteering') return value.length > 0;
       return value.trim() !== '';
@@ -115,7 +115,7 @@ function AddNGOPage() {
 
     if (hasFormData) {
       setModalConfig({
-        title: "Confirm Exit",
+        title: "Exit",
         message: "You have unsaved changes. Are you sure you want to leave? All data will be lost.",
         onConfirm: () => {
           setModalConfig(null);
@@ -129,9 +129,7 @@ function AddNGOPage() {
     }
   };
 
-  // Validate file type and size
   const validateFile = (file) => {
-    // Check file type
     if (!supportedImageTypes.includes(file.type)) {
       const extension = file.name.split('.').pop().toLowerCase();
       if (!supportedExtensions.includes(extension)) {
@@ -145,8 +143,7 @@ function AddNGOPage() {
       }
     }
 
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       setModalConfig({
         title: "File Too Large",
@@ -170,13 +167,12 @@ function AddNGOPage() {
       }
 
       if (!validateFile(file)) {
-        e.target.value = ''; // Reset file input
+        e.target.value = '';
         return;
       }
 
       setFormData({ ...formData, logo: file });
 
-      // Create preview for non-SVG files
       if (file.type !== 'image/svg+xml') {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -184,7 +180,6 @@ function AddNGOPage() {
         };
         reader.readAsDataURL(file);
       } else {
-        // For SVG files, just show the file name
         setLogoPreview(null);
       }
     } else {
@@ -215,41 +210,24 @@ function AddNGOPage() {
 
     setLogoUploading(true);
     try {
-      // Get file extension
       const fileExt = file.name.split('.').pop().toLowerCase();
-      
-      // Generate unique filename with NGO code for better organization
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 15);
       const fileName = `${formData.ngoCode}_logo_${timestamp}_${randomStr}.${fileExt}`;
       const filePath = `ngo_logo/${fileName}`;
 
-      console.log('Uploading NGO logo:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        filePath,
-        ngoCode: formData.ngoCode
-      });
-
-      // Upload options
       const uploadOptions = {
         cacheControl: '3600',
         upsert: false,
         contentType: file.type
       };
 
-      // Upload file to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("centro_bucket")
         .upload(filePath, file, uploadOptions);
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
-        
-        // If RLS error, try with upsert = true
         if (uploadError.message.includes('row_level_security')) {
-          console.log('Retrying with upsert=true...');
           const { data: retryData, error: retryError } = await supabase.storage
             .from("centro_bucket")
             .upload(filePath, file, {
@@ -257,18 +235,12 @@ function AddNGOPage() {
               upsert: true
             });
           
-          if (retryError) {
-            throw retryError;
-          }
-          console.log('Retry successful:', retryData);
+          if (retryError) throw retryError;
         } else {
           throw uploadError;
         }
-      } else {
-        console.log('Upload successful:', uploadData);
       }
 
-      // Get the public URL
       const { data: urlData } = supabase.storage
         .from("centro_bucket")
         .getPublicUrl(filePath);
@@ -277,31 +249,22 @@ function AddNGOPage() {
         throw new Error('Failed to get public URL');
       }
 
-      console.log('Public URL:', urlData.publicUrl);
       return urlData.publicUrl;
 
     } catch (error) {
       console.error("Error uploading logo:", error);
       
-      // More specific error messages
       if (error.message.includes('row_level_security')) {
         setModalConfig({
           title: "Storage Permission Error",
-          message: "Storage permission error. Please make sure you're logged in as an admin. If the issue persists, contact the system administrator to configure storage policies.",
-          onCancel: () => setModalConfig(null),
-          type: "alert",
-        });
-      } else if (error.message.includes('413') || error.message.includes('size') || error.message.includes('too large')) {
-        setModalConfig({
-          title: "File Too Large",
-          message: "File too large. Please upload an image smaller than 10MB.",
+          message: "Storage permission error. Please make sure you're logged in as an admin.",
           onCancel: () => setModalConfig(null),
           type: "alert",
         });
       } else {
         setModalConfig({
           title: "Upload Error",
-          message: `Error uploading logo: ${error.message}. Please try again or contact support.`,
+          message: `Error uploading logo: ${error.message}. Please try again.`,
           onCancel: () => setModalConfig(null),
           type: "alert",
         });
@@ -313,7 +276,6 @@ function AddNGOPage() {
     }
   };
 
-  // Get next admin ID
   const getNextAdminId = async () => {
     try {
       const { data, error } = await supabase
@@ -337,7 +299,6 @@ function AddNGOPage() {
     }
   };
 
-  // Get next login ID
   const getNextLoginId = async () => {
     try {
       const { data, error } = await supabase
@@ -361,7 +322,6 @@ function AddNGOPage() {
     }
   };
 
-  // Validate form
   const validateForm = () => {
     const missingFields = [];
     if (!formData.loginId.trim()) missingFields.push("Login ID");
@@ -374,6 +334,7 @@ function AddNGOPage() {
     if (!formData.email.trim()) missingFields.push("Official Email");
     if (!formData.location.trim()) missingFields.push("NGO Location");
     if (formData.preferredVolunteering.length === 0) missingFields.push("Preferred Volunteering Types");
+    if (formData.preferredVolunteering.length === 0) missingFields.push("Preferred Volunteering Types");
 
     if (missingFields.length > 0) {
       setModalConfig({
@@ -385,7 +346,6 @@ function AddNGOPage() {
       return false;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setModalConfig({
@@ -397,7 +357,6 @@ function AddNGOPage() {
       return false;
     }
 
-    // Validate phone format (basic check)
     const phoneRegex = /^[0-9+\s()-]+$/;
     if (!phoneRegex.test(formData.phone)) {
       setModalConfig({
@@ -412,13 +371,11 @@ function AddNGOPage() {
     return true;
   };
 
-  // Show confirmation before submitting
   const handleSubmitClick = (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
-    // Show confirmation modal before proceeding
     setModalConfig({
       title: "Confirm Registration",
       message: "Are you sure you want to register this NGO? Please review all the information before proceeding.",
@@ -434,7 +391,6 @@ function AddNGOPage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Check if NGO code already exists
       const { data: existingNgo, error: checkError } = await supabase
         .from("NGO_Information")
         .select("ngo_code")
@@ -452,24 +408,18 @@ function AddNGOPage() {
         return;
       }
 
-      // Upload logo if provided
       let logoUrl = null;
       if (formData.logo) {
-        console.log('Starting logo upload...');
         logoUrl = await uploadNgoLogo(formData.logo);
         if (!logoUrl) {
-          console.error('Logo upload failed, aborting NGO creation');
           setLoading(false);
           return;
         }
-        console.log('Logo uploaded successfully:', logoUrl);
       }
 
-      // Generate IDs
       const adminId = await getNextAdminId();
       const loginId = await getNextLoginId();
 
-      // Insert into NGO_Information table FIRST
       const ngoData = {
         admin_id: adminId,
         name: formData.name.trim(),
@@ -490,7 +440,6 @@ function AddNGOPage() {
 
       if (ngoError) throw ngoError;
 
-      // Then insert into NGO_Admin table
       const adminData = {
         login_id: loginId,
         password: formData.password,
@@ -503,12 +452,9 @@ function AddNGOPage() {
         .insert([adminData]);
 
       if (adminError) {
-        // If admin insertion fails, clean up NGO record
         await supabase.from("NGO_Information").delete().eq("admin_id", adminId);
         throw adminError;
       }
-
-      console.log('NGO created successfully');
       
       setModalConfig({
         title: "Success",
@@ -535,17 +481,20 @@ function AddNGOPage() {
 
   return (
     <div className="flex min-h-screen bg-no-repeat bg-center" style={{ backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%" }}>
-      <Sidebar handleAlert={(msg) => alert(msg)} />
-      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
-          {/* Close Button - Positioned at right upper side and removed border */}
+        <Sidebar onCollapseChange={setSidebarCollapsed} />
+
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >               
+      <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
+          {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-3 z-10 border-none text-white rounded-full cursor-pointer flex items-center justify-center text-5xl font-bold transition-all duration-300 transform hover:scale-110 shadow-lg"
+            className="absolute top-6 right-6 z-10 text-white text-4xl font-bold leading-none transition-all duration-300 hover:scale-110 hover:rotate-90 cursor-pointer bg-emerald-700 rounded-full w-10 h-10 flex items-center justify-center focus:outline-none"
             disabled={loading || logoUploading}
             title="Close and return to NGO Hub"
           >
-            ×
+            ✕
           </button>
 
           {/* Header */}
@@ -602,215 +551,190 @@ function AddNGOPage() {
               </div>
             </div>
 
-            {/* Admin ID */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Admin ID *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
-                <input
-                  type="text"
-                  name="adminId"
-                  value={formData.adminId}
-                  onChange={handleChange}
-                  placeholder="Enter admin ID"
-                  className="w-full outline-none"
-                  required
-                  disabled={loading || logoUploading}
-                />
-                <img
-                  src={AdminIcon}
-                  alt="Admin Icon"
-                  className="w-5 h-5 ml-2"
-                />
-              </div>
-            </div>
-
-            {/* Admin Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Admin Type</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
-                <select
-                  name="adminType"
-                  value={formData.adminType}
-                  onChange={handleChange}
-                  className="w-full outline-none bg-transparent"
-                  disabled={loading || logoUploading}
-                >
-                  <option value="admin">Admin</option>
-                  <option value="super_admin">Super Admin</option>
-                </select>
-              </div>
-            </div>
-
-            {/* NGO Code */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">NGO Code *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
-                <input
-                  type="text"
-                  name="ngoCode"
-                  value={formData.ngoCode}
-                  onChange={handleChange}
-                  placeholder="Enter unique NGO code"
-                  className="w-full outline-none"
-                  required
-                  disabled={loading || logoUploading}
-                />
-                <img
-                  src={NGOLogoIcon}
-                  alt="NGO Code Icon"
-                  className="w-5 h-5 ml-2"
-                />
-              </div>
-            </div>
-
-            {/* NGO Logo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">NGO Logo</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
-                <input
-                  type="file"
-                  name="logo"
-                  accept={supportedImageTypes.join(',')}
-                  onChange={handleChange}
-                  className="w-full outline-none cursor-pointer"
-                  disabled={loading || logoUploading}
-                />
-                <img
-                  src={FileIcon}
-                  alt="NGO Logo Icon"
-                  className="w-5 h-5 ml-2"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Supported: {supportedExtensions.join(', ')}. Max: 10MB
-              </p>
-              
-              {/* Logo Preview */}
-              {logoPreview && (
-                <div className="mt-2">
-                  <img 
-                    src={logoPreview} 
-                    alt="Logo Preview" 
-                    className="max-w-full h-20 object-cover rounded border"
+            {/* Row 2: Admin ID + Admin Type */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin ID *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="text"
+                    name="adminId"
+                    value={formData.adminId}
+                    onChange={handleChange}
+                    placeholder="Enter admin ID"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
                   />
+                  <img src={AdminIcon} alt="Admin Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
                 </div>
-              )}
-              
-              {formData.logo && !logoPreview && (
-                <div className="mt-2 p-2 bg-emerald-100 rounded text-sm text-emerald-800">
-                  File selected: {formData.logo.name}
-                </div>
-              )}
+              </div>
 
-              {logoUploading && (
-                <div className="mt-2 p-2 bg-blue-100 rounded text-sm text-blue-800">
-                  Uploading logo...
+              <div className="flex-1 min-w-[200px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin Type</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <select
+                    name="adminType"
+                    value={formData.adminType}
+                    onChange={handleChange}
+                    className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+                    disabled={loading || logoUploading}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* NGO Name */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">NGO Name *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
+            {/* Row 3: NGO Code + NGO Logo */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Code *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="text"
+                    name="ngoCode"
+                    value={formData.ngoCode}
+                    onChange={handleChange}
+                    placeholder="Enter unique NGO code"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={NGOLogoIcon} alt="NGO Code Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-[280px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Logo</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="file"
+                    name="logo"
+                    accept={supportedImageTypes.join(',')}
+                    onChange={handleChange}
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent text-sm"
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={FileIcon} alt="NGO Logo Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Supported: jpg, jpeg, png, gif, webp, svg, bmp. Max: 10MB
+                </p>
+                
+                {logoPreview && (
+                  <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                    <img src={logoPreview} alt="Logo Preview" className="max-w-full h-20 object-contain mx-auto rounded border" />
+                    <p className="text-sm text-gray-600 mt-2 font-medium">{formData.logo.name}</p>
+                  </div>
+                )}
+                
+                {formData.logo && !logoPreview && (
+                  <div className="mt-2 p-2 bg-emerald-100 rounded text-sm text-emerald-800">
+                    File selected: {formData.logo.name}
+                  </div>
+                )}
+
+                {logoUploading && (
+                  <div className="mt-2 p-2 bg-blue-100 rounded text-sm text-blue-800">
+                    Uploading logo...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Row 4: NGO Name (full width) */}
+            <div>
+              <label className="block mb-2 font-semibold text-base text-emerald-900">NGO Name *</label>
+              <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Enter NGO name"
-                  className="w-full outline-none"
+                  className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
                   required
                   disabled={loading || logoUploading}
                 />
-                <img src={NGOLogoIcon} alt="NGO Name Icon" className="w-5 h-5 ml-2" />
+                <img src={NGOLogoIcon} alt="NGO Name Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
               </div>
             </div>
 
-            {/* Description */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+            {/* Row 5: Description (full width) */}
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Short description"
-                rows="3"
-                className="mt-1 w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                rows="4"
+                className="w-full border border-emerald-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 cursor-pointer"
                 disabled={loading || logoUploading}
               />
             </div>
 
-            {/* Address */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Address *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
+            {/* Row 6: Address (full width) */}
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Address *</label>
+              <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <input
                   type="text"
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
                   placeholder="Enter NGO address"
-                  className="w-full outline-none"
+                  className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
                   required
                   disabled={loading || logoUploading}
                 />
-                <img
-                  src={LocationIcon}
-                  alt="Address Icon"
-                  className="w-5 h-5 ml-2"
-                />
+                <img src={LocationIcon} alt="Address Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
               </div>
             </div>
 
-            {/* Phone */}
+            {/* Row 7: Phone + Email */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Phone Number *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="Enter phone number"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={PhoneIcon} alt="Phone Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Official Email *</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter email"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={EmailIcon} alt="Email Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 8: NGO Location (full width) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Enter phone number"
-                  className="w-full outline-none"
-                  required
-                  disabled={loading || logoUploading}
-                />
-                <img
-                  src={PhoneIcon}
-                  alt="Phone Icon"
-                  className="w-5 h-5 ml-2"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Official Email *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter email"
-                  className="w-full outline-none"
-                  required
-                  disabled={loading || logoUploading}
-                />
-                <img
-                  src={EmailIcon}
-                  alt="Email Icon"
-                  className="w-5 h-5 ml-2"
-                />
-              </div>
-            </div>
-
-            {/* NGO Location */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">NGO Location *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Location *</label>
+              <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <input
                   type="text"
                   name="location"
@@ -862,12 +786,70 @@ function AddNGOPage() {
               </div>
             </div>
 
-            {/* Submit */}
-            <div className="md:col-span-2">
+            {/* Row 9: Preferred Volunteering Types - Fixed 2 Rows x 4 Columns */}
+<div>
+  <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">
+    Preferred Volunteering Types *
+  </label>
+  <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
+    {/* First Row - 4 items */}
+    <div className="flex flex-wrap gap-4 mb-3">
+      {volunteeringOptions.slice(0, 4).map((option) => (
+        <label
+          key={option}
+          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+          style={{ width: 'calc(25% - 12px)' }}
+        >
+          <input
+            type="checkbox"
+            checked={formData.preferredVolunteering.includes(option)}
+            onChange={() => handleVolunteeringChange(option)}
+            disabled={loading || logoUploading}
+            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+          />
+          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
+        </label>
+      ))}
+    </div>
+
+    {/* Second Row - 4 items */}
+    <div className="flex flex-wrap gap-4">
+      {volunteeringOptions.slice(4, 8).map((option) => (
+        <label
+          key={option}
+          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+          style={{ width: 'calc(25% - 12px)' }}
+        >
+          <input
+            type="checkbox"
+            checked={formData.preferredVolunteering.includes(option)}
+            onChange={() => handleVolunteeringChange(option)}
+            disabled={loading || logoUploading}
+            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+          />
+          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
+        </label>
+      ))}
+    </div>
+
+    {/* Selected Count */}
+    {formData.preferredVolunteering.length > 0 && (
+      <div className="mt-4 pt-3 border-t border-gray-200">
+        <p className="text-sm text-teal-700">
+          <span className="font-medium">Selected ({formData.preferredVolunteering.length}):</span>{" "}
+          {formData.preferredVolunteering.join(", ")}
+        </p>
+      </div>
+    )}
+  </div>
+</div>
+
+            {/* Submit Button */}
+            <div className="pt-2 mt-4">
               <button
                 type="submit"
                 disabled={loading || logoUploading}
-                className="w-full bg-emerald-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-emerald-600 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Registering..." : logoUploading ? "Uploading Logo..." : "Register NGO"}
               </button>

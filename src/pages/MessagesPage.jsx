@@ -25,6 +25,9 @@ export default function MessagesPage() {
   const messagesContainerRef = useRef(null);
   const scrollPositionRef = useRef(0);
   const realtimeChannelRef = useRef(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
 
   const MESSAGES_PER_PAGE = 20;
 
@@ -681,8 +684,11 @@ export default function MessagesPage() {
           backgroundSize: "cover",
         }}
       >
-        <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
-        <main className="flex-1 ml-64 flex items-center justify-center">
+         <Sidebar onCollapseChange={setSidebarCollapsed} />
+
+<main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >  
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-900 mx-auto"></div>
             <p className="mt-4 text-emerald-900 font-semibold text-lg">Loading chats...</p>
@@ -700,13 +706,14 @@ export default function MessagesPage() {
         backgroundSize: "cover",
       }}
     >
-      <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
+         <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 ml-64 flex h-screen">
+      <main className="flex-1 ml-64 flex h-screen" style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}>
         {/* Chat List */}
-        <div className="w-1/3 h-screen flex flex-col bg-gradient-to-b from-emerald-100 to-emerald-200 border-r border-gray-300 shadow-xl">
+            <div className="w-[480px] flex flex-col bg-white border-r border-gray-300 shadow-lg flex-shrink-0">
+
           <div className="px-5 h-16 flex items-center justify-between border-b border-gray-400 bg-emerald-800">
-            <h2 className="text-xl font-bold text-white">Event Chats</h2>
+            <h2 className="text-xl font-bold text-white">Chats</h2>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {conversations.length === 0 ? (

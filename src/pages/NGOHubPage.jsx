@@ -17,9 +17,13 @@ function NGOHubPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAddNGOModal, setShowAddNGOModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
   const [step, setStep] = useState(1);
   const [removedCount, setRemovedCount] = useState(0);
-
+const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +41,7 @@ function NGOHubPage() {
 
   // Prevent body scroll when modals are open
   useEffect(() => {
-    if (showConfirmModal || showSuccessModal || showAddNGOModal) {
+    if (showConfirmModal || showSuccessModal || showAddNGOModal || showWarningModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -46,7 +50,7 @@ function NGOHubPage() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showConfirmModal, showSuccessModal, showAddNGOModal]);
+  }, [showConfirmModal, showSuccessModal, showAddNGOModal, showWarningModal]);
 
   // Fetch NGOs with calculated statistics
   const fetchNGOsWithStats = async () => {
@@ -187,7 +191,7 @@ const calculateNGOStats = async (ngoCode) => {
   // Open confirmation modal
   const handleRemoveNGOs = () => {
     if (selectedNGOs.length === 0) {
-      alert("⚠️ Please select at least one NGO to remove.");
+      setShowWarningModal(true);
       return;
     }
     setShowConfirmModal(true);
@@ -283,6 +287,8 @@ const calculateNGOStats = async (ngoCode) => {
         closeSuccessModal();
       } else if (showAddNGOModal) {
         cancelAddNGO();
+      } else if (showWarningModal) {
+        setShowWarningModal(false);
       }
     }
   };
@@ -319,10 +325,12 @@ const calculateNGOStats = async (ngoCode) => {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar activeButton="NGO Hub" />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="ml-64 flex-1 p-6 bg-gray-50 min-h-screen">
-        {/* TOP HEADER */}
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >             
+      {/* TOP HEADER */}
         <div className="mb-6">
           <div className="bg-emerald-900 text-white rounded-full p-2 text-center mb-2 shadow">
             <h1 className="text-3xl font-extrabold">NGO Hub</h1>
@@ -347,9 +355,9 @@ const calculateNGOStats = async (ngoCode) => {
                 <>
                   <button
                     onClick={handleRemoveNGOs}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow text-sm border-2 border-red-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow text-sm border-2 border-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
                   >
-                    Confirm Remove
+                    Confirm
                   </button>
                   <button
                     onClick={() => {
@@ -364,16 +372,16 @@ const calculateNGOStats = async (ngoCode) => {
               ) : (
                 <button
                   onClick={() => setRemoveMode(true)}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-700 border-2 border-red-800 text-white font-semibold rounded-lg shadow text-sm cursor-pointer transition-all duration-200 transform hover:scale-105 active:scale-95"
+                  className="px-4 py-2 bg-red-500 hover:bg-red-700 border-2 border-red-700 text-white font-semibold rounded-lg shadow text-sm cursor-pointer transition-all duration-200 transform hover:scale-105 active:scale-95"
                 >
-                  Remove NGO
+                  Remove 
                 </button>
               )}
               <button
                 onClick={handleAddNGO}
                 className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow text-sm cursor-pointer border-2 border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95"
               >
-                + Add New NGO
+                Register 
               </button>
             </div>
           </div>
@@ -399,17 +407,20 @@ const calculateNGOStats = async (ngoCode) => {
             filteredNGOs.map((ngo) => (
               <div
                 key={ngo.id}
-                className="bg-white border-2 border-emerald-200 rounded-xl shadow-lg p-6 flex items-center justify-between hover:shadow-xl hover:border-emerald-300 transition-all duration-200"
+                className="bg-white border-2 border-emerald-200 rounded-xl shadow-lg p-6 hover:shadow-xl hover:border-emerald-300 transition-all duration-200"
               >
-                {/* Checkbox (only in remove mode) */}
-                {removeMode && (
-                  <input
-                    type="checkbox"
-                    checked={selectedNGOs.includes(ngo.id)}
-                    onChange={() => toggleSelect(ngo.id)}
-                    className="w-6 h-6 text-emerald-600 accent-emerald-600 mr-4"
-                  />
-                )}
+                <div className="flex items-center justify-between gap-6">
+                  {/* Checkbox (only in remove mode) */}
+                  {removeMode && (
+                    <div className="flex items-center justify-center flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedNGOs.includes(ngo.id)}
+                        onChange={() => toggleSelect(ngo.id)}
+                        className="w-6 h-6 text-emerald-600 accent-emerald-600 cursor-pointer"
+                      />
+                    </div>
+                  )}
 
                 {/* Logo + Info */}
                 <div className="flex items-center gap-4 w-full md:w-1/3">
@@ -449,7 +460,7 @@ const calculateNGOStats = async (ngoCode) => {
                     <p className="text-base text-gray-600">
                       Participation Rate
                     </p>
-                    <p className="text-2xl font-bold text-green-600">{ngo.rate}</p>
+                    <p className="text-2xl font-bold text-emerald-600">{ngo.rate}</p>
                   </div>
                 </div>
 
@@ -459,7 +470,7 @@ const calculateNGOStats = async (ngoCode) => {
                     onClick={() => toggleSelect(ngo.id)}
                     className={`self-start px-6 py-3 border-2 rounded-lg shadow-lg text-lg font-bold transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer ${
                       selectedNGOs.includes(ngo.id)
-                        ? "bg-red-600 text-white border-red-800 hover:bg-red-700"
+                        ? "bg-red-600 text-white border-red-700 hover:bg-red-700"
                         : "bg-gray-200 hover:bg-gray-300 border-gray-400 text-gray-800"
                     }`}
                   >
@@ -470,14 +481,60 @@ const calculateNGOStats = async (ngoCode) => {
                     onClick={() => viewNGODashboard(ngo)}
                     className="self-start px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white border-2 border-emerald-800 rounded-lg shadow-lg text-base font-bold transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
                   >
-                    View Dashboard
+                    Overview
                   </button>
                 )}
+              </div>
               </div>
             ))
           )}
         </div>
       </main>
+
+      {/* Warning Modal */}
+      {showWarningModal && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          onClick={handleBackdropClick}
+          style={{ 
+            zIndex: 99999999,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh'
+          }}
+        >
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: 99999998 }}
+          ></div>
+
+          <div 
+            className="relative bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4 border-2 border-yellow-500 transform animate-scaleIn"
+            style={{ 
+              zIndex: 100000000,
+              position: 'relative'
+            }}
+          >
+            <div className="text-yellow-500 text-6xl mb-4"></div>
+            <h2 className="text-2xl font-bold text-yellow-600 mb-4">
+              Unselected!
+            </h2>
+            <p className="text-lg text-gray-700 mb-6">
+              Please select at least one NGO to remove.
+            </p>
+            <button
+              onClick={() => setShowWarningModal(false)}
+              className="px-8 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-bold shadow-lg text-lg border-2 border-yellow-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Enhanced Confirmation Modal for Remove */}
       {showConfirmModal && (
@@ -526,13 +583,13 @@ const calculateNGOStats = async (ngoCode) => {
                 onClick={confirmRemove}
                 className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-lg border-2 border-red-500 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                {step === 1 ? "Yes, Continue" : "Yes, Remove"}
+                {step === 1 ? "Continue" : "Remove"}
               </button>
               <button
                 onClick={cancelRemove}
                 className="px-8 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold shadow-lg border-2 border-gray-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                No, Cancel
+                Cancel
               </button>
             </div>
           </div>
@@ -570,7 +627,7 @@ const calculateNGOStats = async (ngoCode) => {
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 rounded-full flex items-center justify-center">
                 <h2 className="text-2xl font-bold text-emerald-600 mb-4">
-              Add New NGO
+              Register
             </h2>
               </div>
             </div>
@@ -585,7 +642,7 @@ const calculateNGOStats = async (ngoCode) => {
                 onClick={confirmAddNGO}
                 className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-lg border-2 border-emerald-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
               >
-                Yes, Proceed
+                Proceed
               </button>
               <button
                 onClick={cancelAddNGO}
@@ -620,15 +677,15 @@ const calculateNGOStats = async (ngoCode) => {
           ></div>
 
           <div 
-            className="relative bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-green-400 transform animate-scaleIn"
+            className="relative bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-emerald-400 transform animate-scaleIn"
             style={{ 
               zIndex: 100000000,
               position: 'relative'
             }}
           >
-            <div className="text-green-600 text-6xl mb-4">✅</div>
-            <h2 className="text-2xl font-bold text-green-600 mb-4">
-              Successfully Removed!
+            <div className="text-emerald-600 text-6xl mb-4">✅</div>
+            <h2 className="text-2xl font-bold text-emerald-600 mb-4">
+              Removed
             </h2>
             <p className="text-lg text-gray-700 mb-6">
               {removedCount === 1 
@@ -640,9 +697,9 @@ const calculateNGOStats = async (ngoCode) => {
             </p>
             <button
               onClick={closeSuccessModal}
-              className="px-10 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-lg text-lg border-2 border-green-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-lg text-lg border-2 border-emerald-800 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
             >
-              OK
+              Ok
             </button>
           </div>
         </div>

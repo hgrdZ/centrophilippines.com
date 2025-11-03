@@ -6,6 +6,7 @@ import Sidebar from "../components/Sidebar";
 import supabase from "../config/supabaseClient";
 import { FileText, Image as ImageIcon, File } from "lucide-react";
 
+
 function FolderPage() {
   const { eventId } = useParams();
   const [activeButton, setActiveButton] = useState("Manage Reports");
@@ -13,7 +14,10 @@ function FolderPage() {
   const [loading, setLoading] = useState(true);
   const [eventTitle, setEventTitle] = useState("");
   const [activeTask, setActiveTask] = useState(null);
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
+  
   const handleButtonClick = (button) => {
     setActiveButton(button);
   };
@@ -131,10 +135,11 @@ function FolderPage() {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 ml-64 p-6 flex flex-col">
-        <div className="bg-white rounded-lg shadow-lg flex-1 overflow-auto">
+<main className="flex-1 p-6 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >         <div className="bg-white rounded-lg shadow-lg flex-1 overflow-auto">
           <div className="bg-emerald-800 text-center rounded-t-lg py-3 font-bold text-3xl text-white">
             {eventId}
           </div>
@@ -240,7 +245,7 @@ function FolderPage() {
                 to={`/event/${eventId}`}
                 className="bg-emerald-900 text-white px-6 py-2 rounded hover:bg-emerald-700 shadow transition-colors"
               >
-                Back to Event
+                Back
               </Link>
             </div>
           </div>

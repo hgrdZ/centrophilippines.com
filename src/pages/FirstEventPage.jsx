@@ -278,7 +278,7 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, action, count }) {
         <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 z-[10000] transform animate-scaleIn border-2 border-emerald-900">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Confirm {action === "APPROVE" ? "APPROVAL" : "REJECTION"}
+              {action === "Approve" ? "Approval" : "Rejection"}
             </h2>
             <p className="text-gray-600 mb-8 text-lg mt-4">
               Are you sure you want to {action} {count} volunteer
@@ -289,12 +289,12 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, action, count }) {
               <button
                 onClick={onConfirm}
                 className={`${
-                  action === "APPROVE"
+                  action === "Approve"
                     ? "bg-emerald-600 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700"
                     : "bg-red-600 border-red-600 hover:bg-red-700 hover:border-red-700"
                 } text-white px-6 py-3 rounded-lg text-lg font-medium border-2 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer`}
               >
-                Yes, {action === "APPROVE" ? "APPROVE" : "REJECT"}
+                {action === "Approve" ? "Approve" : "Reject"}
               </button>
               <button
                 onClick={onClose}
@@ -362,14 +362,14 @@ function SuccessModal({ isOpen, onClose, action, count }) {
         <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 z-[10000] transform animate-scaleIn border-2 border-emerald-900">
           <div className="text-center">
             <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
-              action === "APPROVE" 
+              action === "Approve" 
             }`}>
               <h2 className="text-3xl font-bold text-emerald-800 mb-2">
               Success!
             </h2>
             </div>
             <p className="text-gray-600 text-lg">
-              Successfully {action === "APPROVE" ? "APPROVED" : "REJECTED"} {count} volunteer{count > 1 ? "s" : ""}
+              Successfully {action === "Approve" ? "Approved" : "Rejected"} {count} volunteer{count > 1 ? "s" : ""}
             </p>
           </div>
         </div>
@@ -423,6 +423,9 @@ function FirstEventPage() {
   const [individualModalOpen, setIndividualModalOpen] = useState(false);
   const [individualAction, setIndividualAction] = useState("");
   const [individualVolunteerId, setIndividualVolunteerId] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
 
   const fetchEventDetails = async () => {
     try {
@@ -580,7 +583,7 @@ function FirstEventPage() {
       console.log("New status:", status);
 
       // Update Task_Submissions status directly
-      const submissionStatus = status === "APPROVE" ? "APPROVED" : "REJECTED";
+      const submissionStatus = status === "Approve" ? "ApproveD" : "RejectED";
       
       const { error: taskUpdateError, data: updateData } = await supabase
         .from("Task_Submissions")
@@ -636,8 +639,8 @@ function FirstEventPage() {
       setSelectedVolunteers(
         volunteers.filter((v) => 
           !v.certificate_status && 
-          v.submission?.status !== 'APPROVED' && 
-          v.submission?.status !== 'REJECTED'
+          v.submission?.status !== 'ApproveD' && 
+          v.submission?.status !== 'RejectED'
         ).map((v) => v.id)
       );
     } else {
@@ -743,8 +746,8 @@ function FirstEventPage() {
     const aStatus = a.submission?.status || a.certificate_status;
     const bStatus = b.submission?.status || b.certificate_status;
     
-    const aIsProcessed = aStatus === 'APPROVED' || aStatus === 'REJECTED' || aStatus === 'APPROVE' || aStatus === 'REJECT';
-    const bIsProcessed = bStatus === 'APPROVED' || bStatus === 'REJECTED' || bStatus === 'APPROVE' || bStatus === 'REJECT';
+    const aIsProcessed = aStatus === 'ApproveD' || aStatus === 'RejectED' || aStatus === 'Approve' || aStatus === 'Reject';
+    const bIsProcessed = bStatus === 'ApproveD' || bStatus === 'RejectED' || bStatus === 'Approve' || bStatus === 'Reject';
     
     // If one is processed and the other isn't, pending comes first
     if (aIsProcessed && !bIsProcessed) return 1;
@@ -762,9 +765,11 @@ function FirstEventPage() {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 ml-64 p-6">
+      <main className="flex-1 p-6 transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >
         <div className="bg-white rounded-lg shadow-lg max-w-full">
           <div className="bg-emerald-900 text-center rounded-t-lg py-2 font-bold text-3xl text-white">
             {eventId}
@@ -793,13 +798,13 @@ function FirstEventPage() {
                 <span className="inline-block">
                   Approved:{" "}
                   <span className="font-semibold text-emerald-800">
-                    {volunteers.filter(v => v.certificate_status === "APPROVE" || v.submission?.status === 'APPROVED').length}
+                    {volunteers.filter(v => v.certificate_status === "Approve" || v.submission?.status === 'ApproveD').length}
                   </span>
                 </span>
                 <span className="inline-block">
                   Rejected:{" "}
                   <span className="font-semibold text-red-600">
-                    {volunteers.filter(v => v.certificate_status === "REJECT" || v.submission?.status === 'REJECTED').length}
+                    {volunteers.filter(v => v.certificate_status === "Reject" || v.submission?.status === 'RejectED').length}
                   </span>
                 </span>
                 <span className="inline-block">
@@ -814,7 +819,7 @@ function FirstEventPage() {
             {availableVolunteers.length > 0 && (
               <div className="flex justify-start gap-3 mb-4">
                 <button
-                  onClick={() => handleApplyAction("APPROVE")}
+                  onClick={() => handleApplyAction("Approve")}
                   disabled={selectedVolunteers.length === 0 || updating}
                   className={`px-6 py-2 rounded-full font-bold text-white cursor-pointer ${
                     selectedVolunteers.length > 0 && !updating
@@ -822,10 +827,10 @@ function FirstEventPage() {
                       : "bg-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {updating ? "Processing..." : "Approve Selected"}
+                  {updating ? "Processing..." : "Approve "}
                 </button>
                 <button
-                  onClick={() => handleApplyAction("REJECT")}
+                  onClick={() => handleApplyAction("Reject")}
                   disabled={selectedVolunteers.length === 0 || updating}
                   className={`px-6 py-2 rounded-full font-bold text-white cursor-pointer ${
                     selectedVolunteers.length > 0 && !updating
@@ -833,7 +838,7 @@ function FirstEventPage() {
                       : "bg-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {updating ? "Processing..." : "Reject Selected"}
+                  {updating ? "Processing..." : "Reject "}
                 </button>
               </div>
             )}
@@ -876,7 +881,7 @@ function FirstEventPage() {
                       <React.Fragment key={v.id}>
                         <tr className="hover:bg-gray-50">
                           <td className="px-4 py-2 border border-gray-400 font-medium">
-                            {(!v.certificate_status && v.submission?.status !== 'APPROVED' && v.submission?.status !== 'REJECTED') && (
+                            {(!v.certificate_status && v.submission?.status !== 'ApproveD' && v.submission?.status !== 'RejectED') && (
                               <input
                                 type="checkbox"
                                 checked={selectedVolunteers.includes(v.id)}
@@ -901,18 +906,18 @@ function FirstEventPage() {
                             {v.tasks_completed}/{v.total_tasks}
                           </td>
                           <td className="px-4 py-4 border border-gray-400 font-medium">
-                            {v.submission?.status === 'APPROVED' || v.certificate_status === "APPROVE" ? (
+                            {v.submission?.status === 'ApproveD' || v.certificate_status === "Approve" ? (
                               <span className="px-4 py-2 rounded-full font-bold text-white text-sm bg-emerald-600">
-                                APPROVED
+                                Approved
                               </span>
-                            ) : v.submission?.status === 'REJECTED' || v.certificate_status === "REJECT" ? (
+                            ) : v.submission?.status === 'RejectED' || v.certificate_status === "Reject" ? (
                               <span className="px-4 py-2 rounded-full font-bold text-white text-sm bg-red-500">
-                                REJECTED
+                                Rejected
                               </span>
                             ) : (
                               <div className="flex justify-center gap-2">
                                 <button
-                                  onClick={() => handleIndividualAction(v.id, "APPROVE")}
+                                  onClick={() => handleIndividualAction(v.id, "Approve")}
                                   disabled={updating}
                                   className={`${
                                     updating
@@ -920,10 +925,10 @@ function FirstEventPage() {
                                       : "bg-emerald-600 hover:bg-emerald-700"
                                   } text-white px-4 py-1 rounded-full font-medium text-sm transition-colors cursor-pointer`}
                                 >
-                                  {updating ? "..." : "APPROVE"}
+                                  {updating ? "..." : "Approve"}
                                 </button>
                                 <button
-                                  onClick={() => handleIndividualAction(v.id, "REJECT")}
+                                  onClick={() => handleIndividualAction(v.id, "Reject")}
                                   disabled={updating}
                                   className={`${
                                     updating
@@ -931,7 +936,7 @@ function FirstEventPage() {
                                       : "bg-red-500 hover:bg-red-600"
                                   } text-white px-4 py-1 rounded-full font-medium text-sm transition-colors cursor-pointer`}
                                 >
-                                  {updating ? "..." : "REJECT"}
+                                  {updating ? "..." : "Reject"}
                                 </button>
                               </div>
                             )}
@@ -996,9 +1001,9 @@ function FirstEventPage() {
                                     <div className="pt-3 border-t border-gray-300">
                                       <span className="font-semibold">Status: </span>
                                       <span className={`${
-                                        v.submission?.status === 'APPROVED'
+                                        v.submission?.status === 'ApproveD'
                                           ? 'text-emerald-600'
-                                          : v.submission?.status === 'REJECTED'
+                                          : v.submission?.status === 'RejectED'
                                           ? 'text-red-600'
                                           : 'text-orange-600'
                                       } font-medium`}>

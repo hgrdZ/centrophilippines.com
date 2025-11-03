@@ -30,7 +30,9 @@ const SettingsPage = () => {
   const [showUpdateLogoConfirm, setShowUpdateLogoConfirm] = useState(false);
   const [showSaveChangesConfirm, setShowSaveChangesConfirm] = useState(false);
   const [showCancelEditConfirm, setShowCancelEditConfirm] = useState(false);
-  
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );  
   // State for notifications and alerts
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
@@ -341,7 +343,7 @@ const SettingsPage = () => {
     if (!isOpen) return null;
 
     const alertColors = {
-      success: "bg-green-100 border-green-500 text-green-700",
+      success: "bg-emerald-100 border-emerald-500 text-emerald-700",
       error: "bg-red-100 border-red-500 text-red-700"
     };
 
@@ -371,7 +373,7 @@ const SettingsPage = () => {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar activeButton="Settings" />
+<Sidebar onCollapseChange={setSidebarCollapsed} />
 
 <main className="flex-1 ml-64 p-8 md:p-10 overflow-y-auto flex justify-center">
   <div
@@ -702,7 +704,7 @@ const SettingsPage = () => {
       {/* Edit Profile Confirmation Modal */}
       {showEditProfileConfirm && (
         <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          className="fixed inset-0 flex items-center justify-center animate-fadeIn  "
           onClick={handleBackdropClick}
           style={{ zIndex: 99999999 }}
         >
@@ -712,7 +714,7 @@ const SettingsPage = () => {
             <div className="flex justify-center mb-4">
               <div className="rounded-full flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
-                  Edit Profile
+                  Edit 
                 </h2>
               </div>
             </div>
@@ -727,7 +729,7 @@ const SettingsPage = () => {
                   onClick={handleEditProfile}
                   className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Start Editing
+                  Proceed
                 </button>
                 <button
                   onClick={() => setShowEditProfileConfirm(false)}
@@ -754,7 +756,7 @@ const SettingsPage = () => {
             <div className="flex justify-center mb-4">
               <div className=" flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
-                  Update Logo
+                  Update
                 </h2>
               </div>
             </div>
@@ -792,11 +794,11 @@ const SettingsPage = () => {
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-green-700">
+          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-emerald-700">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-green-700 mb-2 font-montserrat">
-                  Save Changes
+              <div className="w-16 h-16rounded-full flex items-center justify-center">
+                <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
+                  Save 
                 </h2>
               </div>
             </div>
@@ -809,13 +811,13 @@ const SettingsPage = () => {
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleSaveChanges}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-green-600 hover:bg-green-700 hover:border-green-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Yes, Save
+                  Save
                 </button>
                 <button
                   onClick={() => setShowSaveChangesConfirm(false)}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-green-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-emerald-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -836,9 +838,9 @@ const SettingsPage = () => {
 
           <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-700">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-red-700 mb-2 font-montserrat">
-                  Cancel Editing
+                  Cancel
                 </h2>
               </div>
             </div>
@@ -853,13 +855,13 @@ const SettingsPage = () => {
                   onClick={handleCancelEdit}
                   className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-red-600 hover:bg-red-700 hover:border-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Yes, Cancel
+                  Confirm
                 </button>
                 <button
                   onClick={() => setShowCancelEditConfirm(false)}
                   className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-red-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Keep Editing
+                  Resume
                 </button>
               </div>
             </div>

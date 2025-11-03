@@ -547,9 +547,13 @@ function EventPage() {
 
   if (loading) return (
     <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
-      <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
-      <main className="flex-1 ml-64 p-4 overflow-hidden flex items-center justify-center">
-        <div className="text-center">
+      
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
+      
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >    
+          <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-900 mx-auto"></div>
           <p className="mt-4 text-emerald-900 font-montserrat font-semibold text-lg">Loading event data...</p>
         </div>
@@ -661,7 +665,7 @@ function EventPage() {
 
               <div>
                 <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors">Event Objectives:</h3>
-                <ul className="list-disc pl-6 space-y-2 text-gray-800 bg-emerald-50 p-2 rounded-lg">
+                <ul className="list-disc pl-6 space-y-2 text-gray-800 p-2 rounded-lg">
                   {parseObjectives(eventData.event_objectives).map((objective, index) => (
                     <li key={index} className="leading-relaxed">{objective.trim()}</li>
                   ))}
@@ -723,7 +727,7 @@ function EventPage() {
               <div className="flex justify-center pt-1">
                 <Link to={`/event/${eventData.event_id}/first`}>
                   <button className="bg-emerald-900 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-emerald-700 shadow-lg transition-colors cursor-pointer">
-                    Review Certifications
+                    Verify 
                   </button>
                 </Link>
               </div>

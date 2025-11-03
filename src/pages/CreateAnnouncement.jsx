@@ -90,7 +90,9 @@ function CreateAnnouncement() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [expiryDate, setExpiryDate] = useState("");
-
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
   // Event options
   const [events, setEvents] = useState([]);
 
@@ -330,10 +332,13 @@ function CreateAnnouncement() {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar />
+<Sidebar onCollapseChange={setSidebarCollapsed} />
 
-    <main className="flex-1 flex justify-center ml-64 p-4 sm:p-6">
-      <div className="w-full max-w-6xl rounded-2xl border-green-800 p-2 sm:p-8">
+      <main 
+        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >        
+            <div className="w-full max-w-6xl rounded-2xl border-green-800 p-2 sm:p-8">
         <div className="border-2 border-emerald-900 rounded-lg mb-2 p-3 bg-emerald-900 text-white text-center text-2xl font-bold shadow-md">
             CREATE ANNOUNCEMENT
           </div>
@@ -355,13 +360,13 @@ function CreateAnnouncement() {
             </div>
 
             {/* Post Date & Priority */}
-<div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<div className="w-full flex flex-wrap gap-6 mb-6">
   {/* Post Date & Time */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[250px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Post Date & Time
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2 opacity-70" />
       <input
         type="datetime-local"
@@ -378,11 +383,11 @@ function CreateAnnouncement() {
   </div>
 
   {/* Priority Type */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[200px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Priority Type
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2 opacity-70" />
       <select
         value={priorityType}
@@ -399,9 +404,9 @@ function CreateAnnouncement() {
 </div>
 
             {/* Announcement Type */}
-            <div className="mb-4">
+  <div className="flex-1 min-w-[250px]">
               <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type</label>
-            <div className="flex items-center border bg-white border-green-300 rounded px-3 py-1">
+    <div className="flex items-center mb-2 border bg-white border-green-300 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2" />
                 <select
                   value={announcementType}
@@ -411,7 +416,7 @@ function CreateAnnouncement() {
                       setSelectedEvent(""); // Reset event selection if not "Event" type
                     }
                   }}
-                className="flex-1 p-2 border-none focus:outline-none cursor-pointer bg-transparent"
+        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
                 >
                   <option value="">Select announcement type</option>
                   <option value="All">All (Organization-wide)</option>
@@ -454,13 +459,13 @@ function CreateAnnouncement() {
             </div>
 
            {/* File & Expiry Date */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<div className="w-full flex flex-wrap gap-6 mb-8">
   {/* Attach File */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[280px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Attach File (Optional)
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={FileIcon} alt="File" className="w-5 h-5 mr-2 opacity-70" />
       <input
         type="file"
@@ -515,11 +520,11 @@ function CreateAnnouncement() {
   </div>
 
   {/* Expiry Date */}
-  <div className="flex flex-col w-full">
+  <div className="flex-1 min-w-[250px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
       Expiry Date (Optional)
     </label>
-    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 w-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={ExpiryIcon} alt="Expiry" className="w-5 h-5 mr-2 opacity-70" />
       <input
         type="date"
@@ -537,7 +542,7 @@ function CreateAnnouncement() {
                 disabled={loading}
                 onClick={() =>
                   setModalConfig({
-                    title: "Publish Announcement",
+                    title: "Publish",
                     message: "Are you sure you want to publish this announcement?",
                     onConfirm: () => {
                       setModalConfig(null);
@@ -548,13 +553,13 @@ function CreateAnnouncement() {
                 }
                 className="bg-green-700 text-white px-6 py-2 rounded-2xl border-green-800 border-2 hover:bg-green-900 disabled:opacity-50 cursor-pointer font-semibold"
               >
-                {loading ? "Publishing..." : "Publish Announcement"}
+                {loading ? "Publishing..." : "Publish"}
               </button>
 
               <button
                 onClick={() =>
                   setModalConfig({
-                    title: "Discard Announcement",
+                    title: "Discard",
                     message: "Are you sure you want to discard this announcement?",
                     onConfirm: () => {
                       setModalConfig(null);

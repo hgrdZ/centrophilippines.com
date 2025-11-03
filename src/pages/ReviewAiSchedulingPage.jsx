@@ -27,6 +27,7 @@ function ReviewAiScheduling() {
   const [processedVolunteer, setProcessedVolunteer] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
 const isLocal = window.location.hostname === "localhost";
 const BACKEND_API_URL = isLocal ? "http://localhost:5000" : "";
@@ -723,9 +724,11 @@ const handleNextApplicant = () => {
           backgroundSize: "100% 100%",
         }}
       >
-        <Sidebar />
-        <main className="flex-1 ml-64 p-4 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow p-8">
+        <Sidebar onCollapseChange={setSidebarCollapsed} />
+
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >                   <div className="bg-white rounded-lg shadow p-8">
             <p className="text-gray-500 text-center text-xl">
               Loading volunteer and event data...
             </p>
@@ -760,6 +763,7 @@ const handleNextApplicant = () => {
           </div>
 
           <div className="bg-white px-6 py-2 border-gray-300">
+            <span className="invisible"></span>
             <span className="invisible"></span>
           </div>
 
@@ -1057,7 +1061,7 @@ const handleNextApplicant = () => {
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
                 <h3 className="text-xl font-bold text-orange-900">
-                  Adjust Volunteer Schedule
+                  Adjust
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">
@@ -1118,7 +1122,7 @@ const handleNextApplicant = () => {
                 onClick={handleConfirmAdjustSchedule}
                 className="flex-1 bg-orange-500 text-white font-bold py-2 px-3 rounded-lg border-2 border-orange-600 transition-all duration-200 hover:bg-orange-600 cursor-pointer"
               >
-                Yes, Adjust Schedule
+                Adjust 
               </button>
             </div>
           </div>
@@ -1267,14 +1271,11 @@ const handleNextApplicant = () => {
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-500 p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
-              <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-              <h3 className="text-3xl font-bold text-emerald-900 mb-2">
-                Successfully Approved!
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <h3 className="text-3xl font-bold text-emerald-900 mb-2">
+                 Approved
               </h3>
+              </div>
               <p className="text-gray-700 mb-4">
                 <span className="font-bold">
                   {processedVolunteer?.firstname} {processedVolunteer?.lastname}
@@ -1356,7 +1357,7 @@ const handleNextApplicant = () => {
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
                 <h3 className="text-xl font-bold text-emerald-900">
-                  Approve Deployment
+                  Approve 
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">
@@ -1409,7 +1410,7 @@ const handleNextApplicant = () => {
                 onClick={handleConfirmApprove}
                 className="flex-1 bg-emerald-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-emerald-700 transition-all duration-200 hover:bg-emerald-700 cursor-pointer"
               >
-                Yes, Approve
+                Approve
               </button>
             </div>
           </div>
@@ -1425,7 +1426,7 @@ const handleNextApplicant = () => {
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
                 <h3 className="text-xl font-bold text-red-600">
-                  Reject Application
+                  Reject 
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">

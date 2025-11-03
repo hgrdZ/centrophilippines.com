@@ -11,14 +11,18 @@ import MessagesIcon from "../images/messages.png";
 import SettingsIcon from "../images/settings.png";
 import NGOHubIcon from "../images/ngohub.png";
 import LogoutIcon from "../images/logout.png";
+import HamburgerIcon from "../images/hamburger.svg"; 
 
 // Supabase client
 import supabase from "../config/supabaseClient";
 
-function Sidebar({ handleAlert }) {
+function Sidebar({ handleAlert, onCollapseChange }) {
   const [ngoLogo, setNgoLogo] = useState(localStorage.getItem("ngoLogo") || "");
   const [adminId, setAdminId] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -41,7 +45,7 @@ function Sidebar({ handleAlert }) {
             if (ngoError) throw ngoError;
             if (ngoData?.ngo_logo) {
               setNgoLogo(ngoData.ngo_logo);
-              localStorage.setItem("ngoLogo", ngoData.ngo_logo); // ✅ Cache it
+              localStorage.setItem("ngoLogo", ngoData.ngo_logo);
             }
           } catch (error) {
             console.error("Error fetching logo:", error);
@@ -53,7 +57,6 @@ function Sidebar({ handleAlert }) {
     }
   }, [ngoLogo]);
 
-  // ✅ Clear logo cache on logout
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -62,9 +65,21 @@ function Sidebar({ handleAlert }) {
     } finally {
       localStorage.removeItem("admin");
       localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("ngoLogo"); // ✅ clear cached logo
+      localStorage.removeItem("ngoLogo");
       navigate("/login");
     }
+  };
+
+  // Toggle collapse with localStorage persistence
+  const toggleCollapse = () => {
+    setCollapsed((prev) => {
+      const newValue = !prev;
+      localStorage.setItem("sidebarCollapsed", newValue);
+      if (onCollapseChange) {
+        onCollapseChange(newValue);
+      }
+      return newValue;
+    });
   };
 
   // Prevent body scroll when modal is open and handle ESC key
@@ -100,142 +115,197 @@ function Sidebar({ handleAlert }) {
 
   return (
     <>
-      <aside className="fixed top-0 left-0 h-screen w-64 shadow-lg border-r border-gray-200 flex flex-col justify-between p-4 z-30" style={{ backgroundColor: "#d8eeeb" }}>
-  <div>
-    {/* ✅ Logo Section - Full Cover */}
-    <div className="w-full h-50 bg-gray-100 rounded-lg shadow-sm overflow-hidden mb-8">
-      {ngoLogo ? (
-        <img
-          src={ngoLogo}
-          alt="Organization Logo"
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <span className="flex items-center justify-center w-full h-full text-gray-400">
-          Logo
-        </span>
-      )}
-    </div>
-
-    {/* ✅ Sidebar Navigation */}
-    <nav className="space-y-3 text-base font-montserrat text-gray-700" id="sidebarButtons">
-      <Link to="/dashboard">
-        <button
-          className={`w-full text-left font-montserrat px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 cursor-pointer ${
-            isActive("/dashboard")
-              ? "bg-emerald-600 text-white font-montserrat font-semibold shadow-md border-emerald-600"
-              : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
-          }`}
-        >
-          <img src={DashboardIcon} alt="Dashboard" className="w-5 h-5" />
-          <span>Dashboard</span>
-        </button>
-      </Link>
-
-      <Link to="/volunteer">
-        <button
-          className={`w-full text-left px-4 py-3 font-montserrat  rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
-            isActive("/volunteer")
-              ? "bg-emerald-600 text-white font-montserrat font-semibold shadow-md border-emerald-600"
-              : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
-          }`}
-        >
-          <img src={VolunteersIcon} alt="Volunteers" className="w-5 h-5" />
-          <span>Volunteers</span>
-        </button>
-      </Link>
-
-      <Link to="/manage-reports">
-        <button
-          className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
-            isActive("/manage-reports")
-              ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-              : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
-          }`}
-        >
-          <img src={ManageReportsIcon} alt="Manage Reports" className="w-5 h-5" />
-          <span>Manage Reports</span>
-        </button>
-      </Link>
-
-      <Link to="/review-application">
-        <button
-          className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
-            isActive("/review-application")
-              ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-              : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
-          }`}
-        >
-          <img src={ReviewAppIcon} alt="Review Application" className="w-5 h-5" />
-          <span>Review Application</span>
-        </button>
-      </Link>
-
-      <Link to="/calendar">
-        <button
-          className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3  transition-all cursor-pointer ${
-            isActive("/calendar")
-              ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-              : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
-          }`}
-        >
-          <img src={CalendarIcon} alt="Calendar" className="w-5 h-5" />
-          <span>Calendar</span>
-        </button>
-      </Link>
-
-      <Link to="/messages">
-        <button
-          className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
-            isActive("/messages")
-              ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-              : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-100"
-          }`}
-        >
-          <img src={MessagesIcon} alt="Messages" className="w-5 h-5" />
-          <span>Messages</span>
-        </button>
-      </Link>
-
-      <Link to="/settings">
-        <button
-          className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all cursor-pointer ${
-            isActive("/settings")
-              ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-              : "border-emerald-200 hover:bg-emerald-100"
-          }`}
-        >
-          <img src={SettingsIcon} alt="Settings" className="w-5 h-5" />
-          <span>Settings</span>
-        </button>
-      </Link>
-
-      {adminId === "001_CHARITYPHILIPPINESORG" && (
-        <Link to="/ngohub">
+      <aside 
+        className={`fixed top-0 left-0 h-screen shadow-xl border-r-2 border-emerald-300 flex flex-col justify-between transition-all duration-300 ease-in-out ${
+          collapsed ? "w-20" : "w-64"
+        }`}
+        style={{ backgroundColor: "#d8eeeb" }}
+      >
+        <div className={`${collapsed ? "p-2" : "p-4"} relative`}>
+          {/* Hamburger Menu Button - Centered when collapsed */}
           <button
-            className={`w-full text-left font-montserrat px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 cursor-pointer ${
-              isActive("/ngohub")
-                ? "bg-emerald-600 text-white font-semibold shadow-md border-emerald-600"
-                : "border-gray-200 hover:border-emerald-500 hover:bg-emerald-100"
+            onClick={toggleCollapse}
+            className={`text-gray-700 p-2 flex items-center justify-center transition-all duration-200 group rounded-lg bg-white hover:bg-emerald-100 hover:scale-110 z-50 cursor-e-resize ${
+              collapsed ? "w-full mb-2" : "absolute"
             }`}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <img src={NGOHubIcon} alt="NGO Hub" className="w-5 h-5" />
-            <span>NGO Hub</span>
+            <img 
+              src={HamburgerIcon} 
+              alt="Menu" 
+              className="w-6 h-6 transition-all duration-200"
+            />
           </button>
-        </Link>
-      )}
-    </nav>
-  </div>
 
-  {/* ✅ Logout */}
-  <button
-    onClick={() => setShowLogoutConfirm(true)}
-    className="flex items-center gap-2 px-4 py-3 text-base font-montserrat text-red-600 rounded hover:bg-red-100 cursor-pointer transition-colors duration-200"
-  >
-    <img src={LogoutIcon} alt="Logout" className="w-5 h-5" />
-    <span>Log Out</span>
-  </button>
-</aside>
+          {/* Logo Section */}
+          <div className={`relative mb-4 ${collapsed ? "mt-0" : "mt-12"}`}>
+            <div 
+              className={`w-full bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 ${
+                collapsed ? "h-14" : "h-40"
+              }`}
+            >
+              {ngoLogo ? (
+                <img
+                  src={ngoLogo}
+                  alt="Organization Logo"
+                  className="w-full h-full object-contain p-2"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full text-gray-400 font-montserrat font-semibold">
+                  {collapsed ? "L" : "LOGO"}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar Navigation */}
+          <nav className="space-y-2 text-base font-montserrat text-gray-700" id="sidebarButtons">
+            <Link to="/dashboard">
+              <button
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                } ${
+                  isActive("/dashboard")
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
+                }`}
+                title={collapsed ? "Dashboard" : ""}
+              >
+                <img src={DashboardIcon} alt="Dashboard" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Dashboard</span>}
+              </button>
+            </Link>
+
+            <Link to="/volunteer">
+              <button
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                } ${
+                  isActive("/volunteer")
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
+                }`}
+                title={collapsed ? "Volunteers" : ""}
+              >
+                <img src={VolunteersIcon} alt="Volunteers" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Volunteers</span>}
+              </button>
+            </Link>
+
+            <Link to="/manage-reports">
+              <button
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                } ${
+                  isActive("/manage-reports")
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
+                }`}
+                title={collapsed ? "Manage Reports" : ""}
+              >
+                <img src={ManageReportsIcon} alt="Manage Reports" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Manage Reports</span>}
+              </button>
+            </Link>
+
+            <Link to="/review-application">
+              <button
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                } ${
+                  isActive("/review-application")
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
+                }`}
+                title={collapsed ? "Review Application" : ""}
+              >
+                <img src={ReviewAppIcon} alt="Review Application" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Review Application</span>}
+              </button>
+            </Link>
+
+            <Link to="/calendar">
+              <button
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                } ${
+                  isActive("/calendar")
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
+                }`}
+                title={collapsed ? "Calendar" : ""}
+              >
+                <img src={CalendarIcon} alt="Calendar" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Calendar</span>}
+              </button>
+            </Link>
+
+            <Link to="/messages">
+              <button
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                } ${
+                  isActive("/messages")
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
+                }`}
+                title={collapsed ? "Messages" : ""}
+              >
+                <img src={MessagesIcon} alt="Messages" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Messages</span>}
+              </button>
+            </Link>
+
+            <Link to="/settings">
+              <button
+                className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                  collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                } ${
+                  isActive("/settings")
+                    ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                    : "hover:bg-emerald-100 hover:scale-105"
+                }`}
+                title={collapsed ? "Settings" : ""}
+              >
+                <img src={SettingsIcon} alt="Settings" className="w-6 h-6 flex-shrink-0" />
+                {!collapsed && <span className="truncate">Settings</span>}
+              </button>
+            </Link>
+
+            {adminId === "001_CHARITYPHILIPPINESORG" && (
+              <Link to="/ngohub">
+                <button
+                  className={`w-full text-left font-montserrat rounded-xl flex items-center transition-all duration-200 cursor-pointer ${
+                    collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+                  } ${
+                    isActive("/ngohub")
+                      ? "bg-emerald-600 text-white font-semibold shadow-lg scale-105"
+                      : "hover:bg-emerald-100 hover:scale-105"
+                  }`}
+                  title={collapsed ? "NGO Hub" : ""}
+                >
+                  <img src={NGOHubIcon} alt="NGO Hub" className="w-6 h-6 flex-shrink-0" />
+                  {!collapsed && <span className="truncate">NGO Hub</span>}
+                </button>
+              </Link>
+            )}
+          </nav>
+        </div>
+
+        {/* Logout Button */}
+        <div className={`${collapsed ? "p-2" : "p-4"}`}>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className={`w-full flex items-center text-base font-montserrat text-red-600 rounded-xl hover:bg-red-100 transition-all duration-200 hover:scale-105 cursor-pointer ${
+              collapsed ? "justify-center px-0 py-3" : "gap-3 px-3 py-3"
+            }`}
+            title={collapsed ? "Log Out" : ""}
+          >
+            <img src={LogoutIcon} alt="Logout" className="w-6 h-6 flex-shrink-0" />
+            {!collapsed && <span className="truncate">Log Out</span>}
+          </button>
+        </div>
+      </aside>
 
       
       {/* Logout Confirmation Modal */}
@@ -250,13 +320,13 @@ function Sidebar({ handleAlert }) {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
           <div
-            className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-700"
+            className="relative bg-white rounded-2xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-600"
           >
             <div className="flex justify-center mb-4">
-              <div className=" flex items-center justify-center">
-                <h2 className="text-3xl font-bold text-red-700 mb-2 font-montserrat">
-                Confirm Logout
-              </h2>
+              <div className="flex items-center justify-center">
+                <h2 className="text-3xl font-bold text-red-600 mb-2 font-montserrat">
+                   Logout
+                </h2>
               </div>
             </div>
 
@@ -269,13 +339,13 @@ function Sidebar({ handleAlert }) {
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={handleLogout}
-                  className="bg-red-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-red-600 hover:bg-red-700 hover:border-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-montserrat font-semibold hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Yes, Log Out
+                  Log Out
                 </button>
                 <button
                   onClick={handleCloseModal}
-                  className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-gray-300 hover:bg-emerald-100 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                  className="bg-white text-gray-800 px-6 py-3 rounded-xl text-lg font-montserrat font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
                   Cancel
                 </button>
