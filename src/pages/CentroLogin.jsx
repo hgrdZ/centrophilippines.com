@@ -221,29 +221,38 @@ function CentroLogin({ setIsAuthenticated }) {
         </div>
       </div>
 
-      {/* ✅ LOADING OVERLAY */}
-      {loading && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-          <img src={CentroLogo} alt="Centro Logo" className="w-32 mb-4 animate-pulse" />
-          <div className="w-60 h-3 bg-white/20 rounded-full overflow-hidden mb-1">
-            <div
-              className="h-full bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400 rounded-full animate-progress"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <p className="text-white font-semibold text-sm">{progress}% Loading...</p>
-          <style>{`
-            @keyframes shimmer {
-              0% { background-position: -200% 0; }
-              100% { background-position: 200% 0; }
-            }
-            .animate-progress {
-              background-size: 200% 100%;
-              animation: shimmer 1.5s linear infinite;
-            }
-          `}</style>
-        </div>
-      )}
+{/* ✅ LOADING OVERLAY */}
+{loading && (
+  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md">
+    <img src={CentroLogo} alt="Centro Logo" className="w-32 mb-4 animate-pulse" />
+
+    {/* Modernized Text: Moved above the bar and slightly larger */}
+    <p className="text-white font-medium text-base mb-2">Loading... {progress}%</p>
+
+    {/* Progress Bar */}
+    <div className="w-60 h-3 bg-white/20 rounded-full overflow-hidden">
+      <div
+        className="h-full bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400 rounded-full animate-progress"
+        style={{ width: `${progress}%` }}
+      ></div>
+    </div>
+
+    {/* NOTE: This <style> tag works, but for a cleaner project,
+      it's better to move this to your global CSS file.
+      See the "Best Practice" section below.
+    */}
+    <style>{`
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      .animate-progress {
+        background-size: 200% 100%;
+        animation: shimmer 1.5s linear infinite;
+      }
+    `}</style>
+  </div>
+)}
     </div>
   );
 }
