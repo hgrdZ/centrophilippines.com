@@ -246,10 +246,12 @@ function CentroLogin({ setIsAuthenticated }) {
         0% { background-position: -200% 0; }
         100% { background-position: 200% 0; }
       }
-      .animate-progress {
-        background-size: 200% 100%;
-        animation: shimmer 1.5s linear infinite;
-      }
+@layer utilities {
+  .animate-progress {
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+}
     `}</style>
   </div>
 )}
