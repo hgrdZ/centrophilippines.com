@@ -27,6 +27,9 @@ function EventPage() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+
   const eventColors = ["bg-emerald-800/90"];
 
   const handleButtonClick = (button) => setActiveButton(button);
