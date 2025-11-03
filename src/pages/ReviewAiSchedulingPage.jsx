@@ -764,7 +764,6 @@ const handleNextApplicant = () => {
 
           <div className="bg-white px-6 py-2 border-gray-300">
             <span className="invisible"></span>
-            <span className="invisible"></span>
           </div>
 
           <div className="flex flex-1 overflow-hidden">
@@ -994,18 +993,30 @@ const handleNextApplicant = () => {
                       </div>
                     </div>
 
-<div className="mt-auto flex gap-4 justify-evenly">
+<div className="mt-auto flex gap-4 justify-center">
   <button
     onClick={handleShowApproveModal}
-    className="bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 text-md font-semibold cursor-pointer"
+    disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
+    className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
+      parseInt(aiSuggestions.compatibilityScore) <= 50
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : "bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
+    }`}
+    title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to approve" : ""}
   >
-    Approve Deployment
+    Approve
   </button>
   <button
     onClick={handleAdjustSchedule}
-    className="bg-orange-400 text-white px-6 py-3 rounded-lg hover:bg-orange-500 text-md font-semibold cursor-pointer"
+    disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
+    className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
+      parseInt(aiSuggestions.compatibilityScore) <= 50
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : "bg-orange-400 text-white hover:bg-orange-500 cursor-pointer"
+    }`}
+    title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to adjust" : ""}
   >
-    Adjust Schedule
+    Adjust
   </button>
   <button
     onClick={handleShowRejectModal}
@@ -1036,7 +1047,7 @@ const handleNextApplicant = () => {
         : "border-emerald-600 text-emerald-600 hover:bg-emerald-100"
     }`}
   >
-    Previous Applicant ({currentVolunteerIndex + 1} of{" "}
+    Previous ({currentVolunteerIndex + 1} of{" "}
     {allVolunteers.length})
   </button>
   <button
@@ -1048,7 +1059,7 @@ const handleNextApplicant = () => {
         : "bg-emerald-600 text-white hover:bg-emerald-700"
     }`}
   >
-    Next Applicant
+    Next 
   </button>
 </div>
         </div>
@@ -1494,7 +1505,7 @@ const handleNextApplicant = () => {
                 disabled={isSendingEmail}
                 className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                {isSendingEmail ? "Rejecting..." : "Yes, Reject"}
+                {isSendingEmail ? "Rejecting..." : "Reject"}
               </button>
             </div>
           </div>
