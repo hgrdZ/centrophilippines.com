@@ -5,8 +5,8 @@ import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import supabase from "../config/supabaseClient";
 import CreateAnnouncementIcon from "../images/create-announcement.svg";
 import CreateEventIcon from "../images/create-event.svg";
-import MaleIcon from "../images/male.png";
-import FemaleIcon from "../images/female.png";
+import MaleIcon from "../images/male.svg";
+import FemaleIcon from "../images/female.svg";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import {
@@ -779,17 +779,11 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
 
 // Enhanced Report Modal Component
 function ReportModal({ isOpen, onClose, onGenerate }) {
-  const [selectedCategory, setSelectedCategory] = useState("reportType");
   const [reportType, setReportType] = useState("single");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState([]);
-
-  const categories = [
-    { id: "reportType", label: "Report Type"},
-    { id: "period", label: "Period Selection"}
-  ];
 
   const handleGenerate = () => {
     if (reportType === "single" && (!selectedMonth || !selectedYear)) {
@@ -830,27 +824,19 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
             <div className="p-4 bg-emerald-900 text-white">
               <h3 className="text-lg font-bold">Report Generator</h3>
             </div>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`w-full px-6 py-4 text-left hover:bg-emerald-100 transition-all cursor-pointer ${
-                  selectedCategory === category.id
-                    ? "bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
-                    : "border-l-4 border-transparent text-gray-700"
-                }`}
-              >
-                <span className="text-xl mr-3">{category.icon}</span>
-                {category.label}
-              </button>
-            ))}
+            <button
+              onClick={() => {}}
+              className="w-full px-6 py-4 text-left hover:bg-emerald-100 transition-all cursor-pointer bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
+            >
+              Report Type
+            </button>
           </div>
 
           {/* Right Content */}
           <div className="flex-1 flex flex-col">
             {/* Header */}
             <div className="px-6 py-4 bg-emerald-900 text-white relative">
-              <h3 className="text-xl font-bold">{categories.find(c => c.id === selectedCategory)?.label}</h3>
+              <h3 className="text-xl font-bold">Report Type</h3>
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors cursor-pointer"
@@ -861,70 +847,153 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-              {selectedCategory === "reportType" && (
-                <div className="space-y-3">
-                  {[
-                    { value: "single", label: "Single Month", desc: "Generate report for a specific month"},
-                    { value: "multiple", label: "Multiple Months", desc: "Generate report for selected months"},
-                    { value: "annual", label: "Annual Report", desc: "Generate yearly report"}
-                  ].map((option) => (
-                    <label
-                      key={option.value}
-                      className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                        reportType === option.value 
-                          ? "bg-emerald-50 border-emerald-500 shadow-lg" 
-                          : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="reportType"
-                        value={option.value}
-                        checked={reportType === option.value}
-                        onChange={(e) => setReportType(e.target.value)}
-                        className="mt-1 w-4 h-4 text-emerald-600"
-                      />
-                      <div className="ml-3 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{option.icon}</span>
-                          <div className="font-bold text-gray-800">{option.label}</div>
+              <div className="space-y-3">
+                <label className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                  reportType === "single" 
+                    ? "bg-emerald-50 border-emerald-500 shadow-lg" 
+                    : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                }`}>
+                  <input
+                    type="radio"
+                    name="reportType"
+                    value="single"
+                    checked={reportType === "single"}
+                    onChange={(e) => setReportType(e.target.value)}
+                    className="mt-1 w-4 h-4 text-emerald-600"
+                  />
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="font-bold text-gray-800">Single Month</div>
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">Generate report for a specific month</div>
+                    
+                    {reportType === "single" && (
+                      <div className="mt-4 space-y-3">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Select Month
+                          </label>
+                          <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
+                          >
+                            <option value="">-- Select Month --</option>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <option key={i + 1} value={i + 1}>
+                                {new Date(0, i).toLocaleString("default", { month: "long" })}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                        <div className="text-sm text-gray-600 mt-1">{option.desc}</div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Select Year
+                          </label>
+                          <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
+                          >
+                            <option value="">-- Select Year --</option>
+                            {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    </label>
-                  ))}
-                </div>
-              )}
+                    )}
+                  </div>
+                </label>
 
-              {selectedCategory === "period" && (
-                <div className="space-y-5">
-                  {reportType === "single" && (
-                    <>
-                      <div>
-                        <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                          Select Month
-                        </label>
-                        <select
-                          value={selectedMonth}
-                          onChange={(e) => setSelectedMonth(e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none bg-white font-medium"
+                <label className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                  reportType === "multiple" 
+                    ? "bg-emerald-50 border-emerald-500 shadow-lg" 
+                    : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                }`}>
+                  <input
+                    type="radio"
+                    name="reportType"
+                    value="multiple"
+                    checked={reportType === "multiple"}
+                    onChange={(e) => setReportType(e.target.value)}
+                    className="mt-1 w-4 h-4 text-emerald-600"
+                  />
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="font-bold text-gray-800">Multiple Months</div>
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">Generate report for selected months</div>
+                    
+                    {reportType === "multiple" && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => setShowMonthCalendar(true)}
+                          className="w-full px-5 py-4 border-2 border-emerald-600 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold transition-all shadow-sm"
                         >
-                          <option value="">-- Select Month --</option>
-                          {Array.from({ length: 12 }, (_, i) => (
-                            <option key={i + 1} value={i + 1}>
-                              {new Date(0, i).toLocaleString("default", { month: "long" })}
-                            </option>
-                          ))}
-                        </select>
+                          Choose Months ({selectedMonths.length} selected)
+                        </button>
+                        {selectedMonths.length > 0 && (
+                          <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                            <p className="text-sm font-bold text-emerald-900 mb-2">Selected Months:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedMonths.map((month) => (
+                                <span
+                                  key={month}
+                                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
+                                >
+                                  {new Date(month + "-01").toLocaleDateString("en-US", {
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                                  <button
+                                    onClick={() =>
+                                      setSelectedMonths(selectedMonths.filter((m) => m !== month))
+                                    }
+                                    className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <label className=" text-sm font-bold text-gray-700 mt-2 mb-2 flex items-center gap-2">
-                           Select Year
+                    )}
+                  </div>
+                </label>
+
+                <label className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                  reportType === "annual" 
+                    ? "bg-emerald-50 border-emerald-500 shadow-lg" 
+                    : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                }`}>
+                  <input
+                    type="radio"
+                    name="reportType"
+                    value="annual"
+                    checked={reportType === "annual"}
+                    onChange={(e) => setReportType(e.target.value)}
+                    className="mt-1 w-4 h-4 text-emerald-600"
+                  />
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="font-bold text-gray-800">Annual Report</div>
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">Generate yearly report</div>
+                    
+                    {reportType === "annual" && (
+                      <div className="mt-4">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Select Year
                         </label>
                         <select
                           value={selectedYear}
                           onChange={(e) => setSelectedYear(e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none bg-white font-medium"
+                          className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
                         >
                           <option value="">-- Select Year --</option>
                           {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
@@ -934,70 +1003,10 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                           ))}
                         </select>
                       </div>
-                    </>
-                  )}
-
-                  {reportType === "multiple" && (
-                    <div>
-                      <label className=" text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                        Select Multiple Months
-                      </label>
-                      <button
-                        onClick={() => setShowMonthCalendar(true)}
-                        className="w-full px-5 py-4 border-2 border-emerald-600 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold transition-all shadow-sm"
-                      >
-                        Choose Months ({selectedMonths.length} selected)
-                      </button>
-                      {selectedMonths.length > 0 && (
-                        <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
-                          <p className="text-sm font-bold text-emerald-900 mb-2">Selected Months:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedMonths.map((month) => (
-                              <span
-                                key={month}
-                                className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
-                              >
-                                {new Date(month + "-01").toLocaleDateString("en-US", {
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                                <button
-                                  onClick={() =>
-                                    setSelectedMonths(selectedMonths.filter((m) => m !== month))
-                                  }
-                                  className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
-                                >
-                                  ×
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {reportType === "annual" && (
-                    <div>
-                      <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                        Select Year
-                      </label>
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none bg-white font-medium"
-                      >
-                        <option value="">-- Select Year --</option>
-                        {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                </label>
+              </div>
             </div>
 
             {/* Footer */}

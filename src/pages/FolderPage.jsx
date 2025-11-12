@@ -226,7 +226,7 @@ function FolderPage() {
                                 volunteer.status
                               )}`}
                             >
-                              {volunteer.status}
+                              {volunteer.status.toUpperCase()}
                             </span>
                           </td>
                           <td className="px-4 py-3 border border-gray-300 text-sm text-gray-600">
