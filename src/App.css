@@ -839,9 +839,9 @@
   .rounded-\[28px\] {
     border-radius: 28px;
   }
-  .rounded-full {
-    border-radius: calc(infinity * 1px);
-  }
+.rounded-full {
+  border-radius: 9999px;
+}
   .rounded-lg {
     border-radius: var(--radius-lg);
   }
