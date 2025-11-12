@@ -5,6 +5,8 @@ import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import supabase from "../config/supabaseClient";
 import CreateAnnouncementIcon from "../images/create-announcement.svg";
 import CreateEventIcon from "../images/create-event.svg";
+import MaleIcon from "../images/male.svg";
+import FemaleIcon from "../images/female.svg";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import {
@@ -28,6 +30,51 @@ const COLORS = {
   growth: "#8e44ad",
   applications: "#f39c12",
   events: ["#27ae60", "#2980b9", "#f39c12", "#e74c3c"],
+  gender: {
+    male: "#3498db",
+    female: "#e91e63",
+  },
+};
+
+// Helper function for real-time gender counting
+const fetchGenderDataRealtime = async (volunteerIds) => {
+  if (!volunteerIds || volunteerIds.length === 0) {
+    return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
+  }
+
+  try {
+    const { data: usersData, error } = await supabase
+      .from("User_Information")
+      .select("user_id, gender")
+      .in("user_id", volunteerIds);
+
+    if (error) {
+      console.error("Error fetching gender data:", error);
+      return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
+    }
+
+    let maleCount = 0;
+    let femaleCount = 0;
+
+    usersData?.forEach((user) => {
+      if (user.gender === "Male") maleCount++;
+      else if (user.gender === "Female") femaleCount++;
+    });
+
+    const total = maleCount + femaleCount;
+    const malePercentage = total > 0 ? Math.round((maleCount / total) * 100) : 0;
+    const femalePercentage = total > 0 ? Math.round((femaleCount / total) * 100) : 0;
+
+    return {
+      male: maleCount,
+      female: femaleCount,
+      malePercentage,
+      femalePercentage,
+    };
+  } catch (error) {
+    console.error("Error in fetchGenderDataRealtime:", error);
+    return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
+  }
 };
 
 // Three Dots Menu Component
@@ -54,11 +101,7 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
         }}
         className="p-1 hover:bg-gray-100 rounded-full transition-colors"
       >
-        <svg
-          className="w-5 h-5 text-gray-600 cursor-pointer"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-5 h-5 text-gray-600 cursor-pointer" fill="currentColor" viewBox="0 0 24 24">
           <circle cx="12" cy="5" r="2" />
           <circle cx="12" cy="12" r="2" />
           <circle cx="12" cy="19" r="2" />
@@ -99,8 +142,307 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
   );
 }
 
+// Custom Calendar Component
+function CustomCalendar({ onClose, onApply, startDate, endDate }) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedStart, setSelectedStart] = useState(startDate ? new Date(startDate) : null);
+  const [selectedEnd, setSelectedEnd] = useState(endDate ? new Date(endDate) : null);
+  const [isSelectingStart, setIsSelectingStart] = useState(true);
+
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    return { firstDay, daysInMonth };
+  };
+
+  const formatDateForInput = (date) => {
+    if (!date) return "";
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
+  const handleDateClick = (day) => {
+    const clickedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    
+    if (isSelectingStart) {
+      setSelectedStart(clickedDate);
+      setSelectedEnd(null);
+      setIsSelectingStart(false);
+    } else {
+      if (clickedDate < selectedStart) {
+        setSelectedEnd(selectedStart);
+        setSelectedStart(clickedDate);
+      } else {
+        setSelectedEnd(clickedDate);
+      }
+    }
+  };
+
+  const isDateInRange = (day) => {
+    if (!selectedStart || !selectedEnd) return false;
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return date >= selectedStart && date <= selectedEnd;
+  };
+
+  const isDateSelected = (day) => {
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return (
+      (selectedStart && date.toDateString() === selectedStart.toDateString()) ||
+      (selectedEnd && date.toDateString() === selectedEnd.toDateString())
+    );
+  };
+
+  const handleApply = () => {
+    if (selectedStart && selectedEnd) {
+      const startStr = selectedStart.toISOString().split('T')[0];
+      const endStr = selectedEnd.toISOString().split('T')[0];
+      onApply(startStr, endStr);
+      onClose();
+    }
+  };
+
+  const { firstDay, daysInMonth } = getDaysInMonth(currentMonth);
+  const calendarDays = [];
+  
+  for (let i = 0; i < firstDay; i++) {
+    calendarDays.push(null);
+  }
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarDays.push(day);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+        {/* Header with emerald gradient */}
+        <div className="bg-emerald-900 text-white px-6 py-4 relative">
+          <h3 className="text-xl font-bold">Date Range</h3>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6">
+          {/* Date inputs */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Start Date</label>
+              <input
+                type="text"
+                value={formatDateForInput(selectedStart)}
+                placeholder="MM/DD/YYYY"
+                readOnly
+                className="w-full px-3 py-2 border-2 border-emerald-200 rounded-lg text-sm focus:border-emerald-500 focus:outline-none bg-emerald-50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">End Date</label>
+              <input
+                type="text"
+                value={formatDateForInput(selectedEnd)}
+                placeholder="MM/DD/YYYY"
+                readOnly
+                className="w-full px-3 py-2 border-2 border-emerald-200 rounded-lg text-sm focus:border-emerald-500 focus:outline-none bg-emerald-50"
+              />
+            </div>
+          </div>
+
+          {/* Month navigation */}
+          <div className="flex items-center justify-between mb-4 bg-gray-50 p-2 rounded-lg">
+            <button
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+              className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div className="text-base font-bold text-gray-800">
+              {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+            </div>
+            <button
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+              className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Days of week */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {daysOfWeek.map((day, i) => (
+              <div key={i} className="text-center text-xs font-bold text-emerald-700 py-2">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar days */}
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map((day, index) => {
+              if (!day) return <div key={index} className="p-2"></div>;
+
+              const isSelected = isDateSelected(day);
+              const isInRange = isDateInRange(day);
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleDateClick(day)}
+                  className={`p-2 text-sm rounded-lg font-medium transition-all ${
+                    isSelected
+                      ? "bg-emerald-600 text-white font-bold shadow-lg scale-110"
+                      : isInRange
+                      ? "bg-emerald-100 text-emerald-900"
+                      : "hover:bg-emerald-50 text-gray-700"
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer buttons */}
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-3 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleApply}
+              disabled={!selectedStart || !selectedEnd}
+              className="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-gray-300 cursor-pointer transition-colors shadow-md"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Month Calendar Component
+function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [localSelectedMonths, setLocalSelectedMonths] = useState(selectedMonths);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleMonthClick = (monthIndex) => {
+    const monthKey = `${currentYear}-${String(monthIndex + 1).padStart(2, "0")}`;
+    if (localSelectedMonths.includes(monthKey)) {
+      setLocalSelectedMonths(localSelectedMonths.filter((m) => m !== monthKey));
+    } else {
+      setLocalSelectedMonths([...localSelectedMonths, monthKey]);
+    }
+  };
+
+  const handleApply = () => {
+    onApply(localSelectedMonths);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+        {/* Header with emerald gradient */}
+        <div className="bg-emerald-900 text-white px-6 py-4 relative">
+          <h3 className="text-xl text-center font-bold">Months</h3>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6">
+          {/* Year selector */}
+          <div className="flex justify-between items-center mb-6 bg-gray-50 p-3 rounded-lg">
+            <button
+              onClick={() => setCurrentYear(currentYear - 1)}
+              className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <span className="text-2xl font-bold text-gray-800">{currentYear}</span>
+            <button
+              onClick={() => setCurrentYear(currentYear + 1)}
+              className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Months grid */}
+          <div className="grid grid-cols-3 gap-3">
+            {months.map((month, index) => {
+              const monthKey = `${currentYear}-${String(index + 1).padStart(2, "0")}`;
+              const isSelected = localSelectedMonths.includes(monthKey);
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleMonthClick(index)}
+                  className={`p-4 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                    isSelected
+                      ? "bg-emerald-600 text-white shadow-lg scale-105"
+                      : "bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700"
+                  }`}
+                >
+                  {month.substring(0, 3)}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer buttons */}
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => setLocalSelectedMonths([])}
+              className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+            >
+              Clear 
+            </button>
+            <button
+              onClick={handleApply}
+              className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold transition-colors shadow-md"
+            >
+              Apply ({localSelectedMonths.length})
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Enhanced Filter Modal Component
 function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
+  const [selectedCategory, setSelectedCategory] = useState("timePeriod");
   const [dateRange, setDateRange] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState("all");
   const [gender, setGender] = useState("all");
@@ -108,16 +450,28 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   const [volunteerRange, setVolunteerRange] = useState("all");
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
+  const [showCustomCalendar, setShowCustomCalendar] = useState(false);
+  const [showMonthCalendar, setShowMonthCalendar] = useState(false);
+  const [selectedMonths, setSelectedMonths] = useState([]);
+
+  const categories = [
+    { id: "timePeriod", label: "Time Period" },
+    { id: "event", label: "Event"},
+    { id: "eventStatus", label: "Event Status"},
+    { id: "gender", label: "Gender"},
+    { id: "volunteers", label: "Volunteers"}
+  ];
 
   const handleApply = () => {
-    onApplyFilters({ 
-      dateRange, 
-      selectedEvent, 
-      gender, 
-      status, 
+    onApplyFilters({
+      dateRange,
+      selectedEvent,
+      gender,
+      status,
       volunteerRange,
       customDateFrom,
-      customDateTo 
+      customDateTo,
+      selectedMonths,
     });
     onClose();
   };
@@ -130,263 +484,560 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
     setVolunteerRange("all");
     setCustomDateFrom("");
     setCustomDateTo("");
-    onApplyFilters({ 
-      dateRange: "all", 
-      selectedEvent: "all", 
-      gender: "all", 
-      status: "all",
-      volunteerRange: "all",
-      customDateFrom: "",
-      customDateTo: ""
-    });
+    setSelectedMonths([]);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-      style={{ backdropFilter: "blur(4px)" }}
-    >
-      <div
-        className="bg-white rounded-xl shadow-2xl border-2 border-emerald-500 max-w-xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-emerald-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center sticky top-0 z-10">
-          <h3 className="text-xl font-bold font-montserrat flex items-center gap-2">
-            Filters
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-white hover:bg-emerald-700 text-3xl font-bold w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer"
-          >
-            ×
-          </button>
-        </div>
+    <>
+      <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full flex overflow-hidden" style={{ height: "650px" }} onClick={(e) => e.stopPropagation()}>
+          
+          {/* Left Sidebar */}
+          <div className="w-1/3 border-r bg-white overflow-y-auto">
+            <div className="p-4 bg-emerald-900 text-white">
+              <h3 className="text-lg font-bold">Filter</h3>
+            </div>
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`w-full px-6 py-4 text-left hover:bg-emerald-50 transition-all cursor-pointer ${
+                  selectedCategory === category.id
+                    ? "bg-emerald-100 border-l-4 border-emerald-600 font-bold text-emerald-900 shadow-sm"
+                    : "border-l-4 border-transparent text-gray-700"
+                }`}
+              >
+                <span className="text-xl mr-3">{category.icon}</span>
+                {category.label}
+              </button>
+            ))}
+          </div>
 
-        <div className="p-6 space-y-6">
-          {/* Date Range Filter */}
-          <div className="border-b pb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Time
-            </label>
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            >
-              <option value="all">All Time</option>
-              <option value="1week">Last Week</option>
-              <option value="1month">Last Month</option>
-              <option value="3months">Last 3 Months</option>
-              <option value="6months">Last 6 Months</option>
-              <option value="1year">Last Year</option>
-              <option value="custom">Custom Range</option>
-            </select>
+          {/* Right Content */}
+          <div className="flex-1 flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 bg-emerald-900 text-white relative">
+              <h3 className="text-xl font-bold">{categories.find(c => c.id === selectedCategory)?.label}</h3>
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
 
-            {dateRange === "custom" && (
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">From</label>
-                  <input
-                    type="date"
-                    value={customDateFrom}
-                    onChange={(e) => setCustomDateFrom(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                  />
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+              {selectedCategory === "timePeriod" && (
+                <div className="space-y-2">
+                  {[
+                    { value: "all", label: "All Time", desc: "No date restrictions" },
+                    { value: "today", label: "Today so far", desc: "Current day only" },
+                    { value: "yesterday", label: "Yesterday", desc: "Previous day" },
+                    { value: "1week", label: "Last 7 days", desc: "Past week" },
+                    { value: "1month", label: "Last 30 days", desc: "Past month" },
+                    { value: "thisMonth", label: "This month so far", desc: "Current month" },
+                    { value: "lastMonth", label: "Last month", desc: "Previous month" },
+                    { value: "specific-months", label: "Select Specific Months", desc: "Choose multiple months" },
+                    { value: "custom", label: "Custom Range", desc: "Pick start and end dates" }
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                        dateRange === option.value 
+                          ? "bg-emerald-50 border-emerald-500 shadow-md" 
+                          : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="dateRange"
+                        value={option.value}
+                        checked={dateRange === option.value}
+                        onChange={(e) => {
+                          setDateRange(e.target.value);
+                          if (e.target.value === "custom") {
+                            setShowCustomCalendar(true);
+                          } else if (e.target.value === "specific-months") {
+                            setShowMonthCalendar(true);
+                          }
+                        }}
+                        className="mt-1 w-4 h-4 text-emerald-600"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="font-semibold text-gray-800">{option.label}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{option.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+
+                  {dateRange === "custom" && customDateFrom && customDateTo && (
+                    <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                      <p className="text-sm font-bold text-emerald-900 mb-1">📅 Selected Range:</p>
+                      <p className="text-sm text-emerald-700 font-medium">{customDateFrom} → {customDateTo}</p>
+                    </div>
+                  )}
+
+                  {dateRange === "specific-months" && selectedMonths.length > 0 && (
+                    <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                      <p className="text-sm font-bold text-emerald-900 mb-2">📅 Selected Months:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMonths.map((month) => (
+                          <span
+                            key={month}
+                            className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
+                          >
+                            {new Date(month + "-01").toLocaleDateString("en-US", {
+                              month: "short",
+                              year: "numeric",
+                            })}
+                            <button
+                              onClick={() => setSelectedMonths(selectedMonths.filter((m) => m !== month))}
+                              className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">To</label>
-                  <input
-                    type="date"
-                    value={customDateTo}
-                    onChange={(e) => setCustomDateTo(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
-                  />
+              )}
+
+              {selectedCategory === "event" && (
+                <div className="space-y-2">
+                  <label className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                    selectedEvent === "all" ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                  }`}>
+                    <input
+                      type="radio"
+                      name="event"
+                      value="all"
+                      checked={selectedEvent === "all"}
+                      onChange={(e) => setSelectedEvent(e.target.value)}
+                      className="w-4 h-4 text-emerald-600"
+                    />
+                    <span className="ml-3 font-semibold text-gray-800">All Events</span>
+                  </label>
+                  {events.map((event) => (
+                    <label
+                      key={event.event_id}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                        selectedEvent === event.event_id ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="event"
+                        value={event.event_id}
+                        checked={selectedEvent === event.event_id}
+                        onChange={(e) => setSelectedEvent(e.target.value)}
+                        className="w-4 h-4 text-emerald-600"
+                      />
+                      <span className="ml-3 font-medium text-gray-800 truncate">{event.event_title}</span>
+                    </label>
+                  ))}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* Event Filter */}
-          <div className="border-b pb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Event
-            </label>
-            <select
-              value={selectedEvent}
-              onChange={(e) => setSelectedEvent(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            >
-              <option value="all">All Events</option>
-              {events.map((event) => (
-                <option key={event.event_id} value={event.event_id}>
-                  {event.event_title}
-                </option>
-              ))}
-            </select>
-          </div>
+              {selectedCategory === "eventStatus" && (
+                <div className="space-y-2">
+                  {[
+                    { value: "all", label: "All Statuses"},
+                    { value: "UPCOMING", label: "Upcoming"},
+                    { value: "ONGOING", label: "Ongoing"},
+                    { value: "COMPLETED", label: "Completed"}
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                        status === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="status"
+                        value={option.value}
+                        checked={status === option.value}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className="w-4 h-4 text-emerald-600"
+                      />
+                      <span className="ml-3 text-xl">{option.icon}</span>
+                      <span className="ml-2 font-semibold text-gray-800">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
 
-          {/* Event Status Filter */}
-          <div className="border-b pb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            >
-              <option value="all">All Statuses</option>
-              <option value="UPCOMING">Upcoming</option>
-              <option value="ONGOING">Ongoing</option>
-              <option value="COMPLETED">Completed</option>
-            </select>
-          </div>
+              {selectedCategory === "gender" && (
+                <div className="space-y-2">
+                  {[
+                    { value: "all", label: "All Genders"},
+                    { value: "Male", label: "Male"},
+                    { value: "Female", label: "Female"}
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                        gender === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={option.value}
+                        checked={gender === option.value}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="w-4 h-4 text-emerald-600"
+                      />
+                      <span className="ml-3 text-xl">{option.icon}</span>
+                      <span className="ml-2 font-semibold text-gray-800">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
 
-          {/* Gender Filter */}
-          <div className="border-b pb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Gender
-            </label>
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            >
-              <option value="all">All Genders</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-          </div>
+              {selectedCategory === "volunteers" && (
+                <div className="space-y-2">
+                  {[
+                    { value: "all", label: "All Ranges"},
+                    { value: "1-50", label: "1 - 50 volunteers"},
+                    { value: "51-100", label: "51 - 100 volunteers"},
+                    { value: "101-200", label: "101 - 200 volunteers"},
+                    { value: "201+", label: "201+ volunteers"}
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                        volunteerRange === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="volunteerRange"
+                        value={option.value}
+                        checked={volunteerRange === option.value}
+                        onChange={(e) => setVolunteerRange(e.target.value)}
+                        className="w-4 h-4 text-emerald-600"
+                      />
+                      <span className="ml-3 text-xl">{option.icon}</span>
+                      <span className="ml-2 font-semibold text-gray-800">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          {/* Volunteer Count Range */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Volunteers
-            </label>
-            <select
-              value={volunteerRange}
-              onChange={(e) => setVolunteerRange(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            >
-              <option value="all">All Ranges</option>
-              <option value="1-50">1 - 50 volunteers</option>
-              <option value="51-100">51 - 100 volunteers</option>
-              <option value="101-200">101 - 200 volunteers</option>
-              <option value="201+">201+ volunteers</option>
-            </select>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              onClick={handleReset}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg bg-gray-200 hover:bg-gray-300 font-semibold transition-colors cursor-pointer"
-            >
-              Reset
-            </button>
-            <button
-              onClick={handleApply}
-              className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold transition-colors cursor-pointer"
-            >
-              Apply
-            </button>
+            {/* Footer */}
+            <div className="px-6 py-4 bg-white border-t-2 border-gray-200 flex gap-3">
+              <button
+                onClick={handleReset}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 font-bold transition-all cursor-pointer"
+              >
+                Reset 
+              </button>
+              <button
+                onClick={handleApply}
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition-all shadow-lg cursor-pointer"
+              >
+                Apply 
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {showCustomCalendar && (
+        <CustomCalendar
+          onClose={() => setShowCustomCalendar(false)}
+          onApply={(start, end) => {
+            setCustomDateFrom(start);
+            setCustomDateTo(end);
+            setShowCustomCalendar(false);
+          }}
+          startDate={customDateFrom}
+          endDate={customDateTo}
+        />
+      )}
+
+      {showMonthCalendar && (
+        <MonthCalendar
+          onClose={() => setShowMonthCalendar(false)}
+          onApply={(months) => {
+            setSelectedMonths(months);
+            setShowMonthCalendar(false);
+          }}
+          selectedMonths={selectedMonths}
+        />
+      )}
+    </>
   );
 }
 
-// Report Generation Modal
-function ReportModal({ isOpen, onClose, onGenerate, events }) {
+// Enhanced Report Modal Component
+function ReportModal({ isOpen, onClose, onGenerate }) {
+  const [selectedCategory, setSelectedCategory] = useState("reportType");
+  const [reportType, setReportType] = useState("single");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [showMonthCalendar, setShowMonthCalendar] = useState(false);
+  const [selectedMonths, setSelectedMonths] = useState([]);
+
+  const categories = [
+    { id: "reportType", label: "Report Type"},
+    { id: "period", label: "Period Selection"}
+  ];
 
   const handleGenerate = () => {
-    if (!selectedMonth || !selectedYear) {
+    if (reportType === "single" && (!selectedMonth || !selectedYear)) {
       alert("Please select a month and year first.");
       return;
     }
-    onGenerate(selectedMonth, selectedYear);
+    if (reportType === "multiple" && selectedMonths.length === 0) {
+      alert("Please select at least one month.");
+      return;
+    }
+    if (reportType === "annual" && !selectedYear) {
+      alert("Please select a year first.");
+      return;
+    }
+    onGenerate(
+      reportType === "single" ? selectedMonth : selectedMonths,
+      selectedYear,
+      reportType
+    );
+  };
+
+  const handleReset = () => {
+    setSelectedMonth("");
+    setSelectedYear("");
+    setSelectedMonths([]);
+    setReportType("single");
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-emerald-900">Generate Report</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl cursor-pointer"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Select Month
-            </label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="">-- Select Month --</option>
-              <option value="all">All Months</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {new Date(0, i).toLocaleString("default", { month: "long" })}
-                </option>
-              ))}
-            </select>
+    <>
+      <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full flex overflow-hidden" style={{ height: "650px" }} onClick={(e) => e.stopPropagation()}>
+          
+          {/* Left Sidebar */}
+          <div className="w-1/3 border-r bg-white overflow-y-auto">
+            <div className="p-4 bg-emerald-900 text-white">
+              <h3 className="text-lg font-bold">Report Generator</h3>
+            </div>
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`w-full px-6 py-4 text-left hover:bg-emerald-100 transition-all cursor-pointer ${
+                  selectedCategory === category.id
+                    ? "bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
+                    : "border-l-4 border-transparent text-gray-700"
+                }`}
+              >
+                <span className="text-xl mr-3">{category.icon}</span>
+                {category.label}
+              </button>
+            ))}
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Select Year
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="">-- Select Year --</option>
-              {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+          {/* Right Content */}
+          <div className="flex-1 flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 bg-emerald-900 text-white relative">
+              <h3 className="text-xl font-bold">{categories.find(c => c.id === selectedCategory)?.label}</h3>
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
 
-        <div className="flex gap-3 mt-8">
-          <button
-            onClick={onClose}
-            className="flex-1 bg-gray-300 text-gray-700 font-semibold px-4 py-3 rounded-lg hover:bg-gray-400 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleGenerate}
-            className="flex-1 bg-emerald-900 text-white font-semibold px-4 py-3 rounded-lg hover:bg-emerald-800 transition"
-          >
-            Generate PDF
-          </button>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+              {selectedCategory === "reportType" && (
+                <div className="space-y-3">
+                  {[
+                    { value: "single", label: "Single Month", desc: "Generate report for a specific month"},
+                    { value: "multiple", label: "Multiple Months", desc: "Generate report for selected months"},
+                    { value: "annual", label: "Annual Report", desc: "Generate yearly report"}
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                        reportType === option.value 
+                          ? "bg-emerald-50 border-emerald-500 shadow-lg" 
+                          : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="reportType"
+                        value={option.value}
+                        checked={reportType === option.value}
+                        onChange={(e) => setReportType(e.target.value)}
+                        className="mt-1 w-4 h-4 text-emerald-600"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{option.icon}</span>
+                          <div className="font-bold text-gray-800">{option.label}</div>
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">{option.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {selectedCategory === "period" && (
+                <div className="space-y-5">
+                  {reportType === "single" && (
+                    <>
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                          Select Month
+                        </label>
+                        <select
+                          value={selectedMonth}
+                          onChange={(e) => setSelectedMonth(e.target.value)}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none bg-white font-medium"
+                        >
+                          <option value="">-- Select Month --</option>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {new Date(0, i).toLocaleString("default", { month: "long" })}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className=" text-sm font-bold text-gray-700 mt-2 mb-2 flex items-center gap-2">
+                           Select Year
+                        </label>
+                        <select
+                          value={selectedYear}
+                          onChange={(e) => setSelectedYear(e.target.value)}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none bg-white font-medium"
+                        >
+                          <option value="">-- Select Year --</option>
+                          {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {reportType === "multiple" && (
+                    <div>
+                      <label className=" text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        Select Multiple Months
+                      </label>
+                      <button
+                        onClick={() => setShowMonthCalendar(true)}
+                        className="w-full px-5 py-4 border-2 border-emerald-600 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold transition-all shadow-sm"
+                      >
+                        Choose Months ({selectedMonths.length} selected)
+                      </button>
+                      {selectedMonths.length > 0 && (
+                        <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                          <p className="text-sm font-bold text-emerald-900 mb-2">Selected Months:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedMonths.map((month) => (
+                              <span
+                                key={month}
+                                className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
+                              >
+                                {new Date(month + "-01").toLocaleDateString("en-US", {
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                                <button
+                                  onClick={() =>
+                                    setSelectedMonths(selectedMonths.filter((m) => m !== month))
+                                  }
+                                  className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {reportType === "annual" && (
+                    <div>
+                      <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                        Select Year
+                      </label>
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none bg-white font-medium"
+                      >
+                        <option value="">-- Select Year --</option>
+                        {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-white border-t-2 border-gray-200 flex gap-3">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-bold transition-all cursor-pointer"
+              >
+                Reset
+              </button>
+              <button
+                onClick={handleGenerate}
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Generate PDF Report
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {showMonthCalendar && (
+        <MonthCalendar
+          onClose={() => setShowMonthCalendar(false)}
+          onApply={(months) => {
+            setSelectedMonths(months);
+            setShowMonthCalendar(false);
+          }}
+          selectedMonths={selectedMonths}
+        />
+      )}
+    </>
   );
 }
 
-function ChartModal({ isOpen, onClose, title, children }) {
+// Chart Modal with Real-time Gender Breakdown
+function ChartModal({ isOpen, onClose, title, children, showGenderBreakdown, genderData }) {
   if (!isOpen) return null;
 
   return (
@@ -396,7 +1047,7 @@ function ChartModal({ isOpen, onClose, title, children }) {
       style={{ backdropFilter: "blur(4px)" }}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-200 max-w-5xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-white border-b-2 border-emerald-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
@@ -410,13 +1061,81 @@ function ChartModal({ isOpen, onClose, title, children }) {
             ×
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6">
+          {children}
+
+          {showGenderBreakdown && genderData && (
+            <div className="mt-8 pt-6 border-t-2 border-gray-200">
+              <h4 className="text-xl font-bold text-gray-800 mb-4">
+                Real-time Gender Breakdown
+              </h4>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 transform transition-all hover:scale-105">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-lg font-semibold text-blue-800 flex items-center gap-2">
+                      <img src={MaleIcon} alt="Male Icon" className="w-5 h-5" />{" "}
+                      Male
+                    </span>
+                  </div>
+                  <p className="text-4xl font-extrabold text-blue-600">
+                    {genderData.male}
+                  </p>
+                  <p className="text-sm text-blue-600 mt-1">
+                    {genderData.malePercentage}% of total
+                  </p>
+                </div>
+                <div className="bg-pink-50 p-6 rounded-xl border-2 border-pink-200 transform transition-all hover:scale-105">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-lg font-semibold text-pink-800 flex items-center gap-2">
+                      <img
+                        src={FemaleIcon}
+                        alt="Female Icon"
+                        className="w-5 h-5"
+                      />{" "}
+                      Female
+                    </span>
+                  </div>
+                  <p className="text-4xl font-extrabold text-pink-600">
+                    {genderData.female}
+                  </p>
+                  <p className="text-sm text-pink-600 mt-1">
+                    {genderData.femalePercentage}% of total
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <ResponsiveContainer width="100%" height={150}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Male", value: genderData.male },
+                        { name: "Female", value: genderData.female },
+                      ]}
+                      dataKey="value"
+                      innerRadius={40}
+                      outerRadius={60}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
+                    >
+                      <Cell fill={COLORS.gender.male} />
+                      <Cell fill={COLORS.gender.female} />
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function DashboardPage() {
+// MAIN DASHBOARD COMPONENT
+export default function DashboardPage() {
   const { ngoCode } = useParams();
   const [dashboardData, setDashboardData] = useState({
     ngoName: "",
@@ -430,12 +1149,19 @@ function DashboardPage() {
     beneficiaryReach: 0,
     feedbackScore: 5,
     events: [],
+    volunteerGenderData: {
+      male: 0,
+      female: 0,
+      malePercentage: 0,
+      femalePercentage: 0,
+    },
   });
 
   const [chartData, setChartData] = useState({
     growth: [],
     applications: { data: [], forecast: 0 },
     eventsPerformance: [],
+    monthlyVolunteerData: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -444,21 +1170,23 @@ function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
-  
+
   const [draggableItems, setDraggableItems] = useState(() => {
     const saved = localStorage.getItem("dashboardLayout");
-    return saved ? JSON.parse(saved) : [
-      { id: "completion", order: 0 },
-      { id: "volunteers", order: 1 },
-      { id: "participation", order: 2 },
-      { id: "applications", order: 3 },
-      { id: "growth", order: 4 },
-      { id: "feedback", order: 5 },
-      { id: "beneficiary", order: 6 },
-      { id: "activeEvents", order: 7 },
-    ];
+    return saved
+      ? JSON.parse(saved)
+      : [
+          { id: "completion", order: 0 },
+          { id: "volunteers", order: 1 },
+          { id: "participation", order: 2 },
+          { id: "applications", order: 3 },
+          { id: "growth", order: 4 },
+          { id: "feedback", order: 5 },
+          { id: "beneficiary", order: 6 },
+          { id: "activeEvents", order: 7 },
+        ];
   });
-  
+
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOverItem, setDragOverItem] = useState(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
@@ -470,7 +1198,8 @@ function DashboardPage() {
     status: "all",
     volunteerRange: "all",
     customDateFrom: "",
-    customDateTo: ""
+    customDateTo: "",
+    selectedMonths: [],
   });
 
   useEffect(() => {
@@ -480,6 +1209,12 @@ function DashboardPage() {
   useEffect(() => {
     localStorage.setItem("dashboardLayout", JSON.stringify(draggableItems));
   }, [draggableItems]);
+
+  useEffect(() => {
+    if (viewingContext?.ngo_code) {
+      applyFiltersToData();
+    }
+  }, [activeFilters]);
 
   const initializeDashboard = async () => {
     try {
@@ -530,12 +1265,17 @@ function DashboardPage() {
         .select("user_id, joined_ngo")
         .like("joined_ngo", `%${ngoCode}%`);
 
-      const totalVolunteers =
-        registeredVols?.filter((vol) => {
-          if (!vol.joined_ngo) return false;
-          const ngoCodes = vol.joined_ngo.split("-");
-          return ngoCodes.includes(ngoCode);
-        }).length || 0;
+      const volunteerIds =
+        registeredVols
+          ?.filter((vol) => {
+            if (!vol.joined_ngo) return false;
+            const ngoCodes = vol.joined_ngo.split("-");
+            return ngoCodes.includes(ngoCode);
+          })
+          .map((v) => v.user_id) || [];
+
+      const totalVolunteers = volunteerIds.length;
+      const genderData = await fetchGenderDataRealtime(volunteerIds);
 
       const { data: allApplications } = await supabase
         .from("Volunteer_Application")
@@ -572,15 +1312,6 @@ function DashboardPage() {
       const totalEvents = events?.length || 0;
       const completionRate =
         totalEvents > 0 ? Math.round((completedEvents / totalEvents) * 100) : 0;
-
-      const volunteerIds =
-        registeredVols
-          ?.filter((vol) => {
-            if (!vol.joined_ngo) return false;
-            const ngoCodes = vol.joined_ngo.split("-");
-            return ngoCodes.includes(ngoCode);
-          })
-          .map((v) => v.user_id) || [];
 
       let participationRate = 0;
       if (volunteerIds.length > 0) {
@@ -624,13 +1355,264 @@ function DashboardPage() {
         beneficiaryReach,
         feedbackScore: 5,
         events: events || [],
+        volunteerGenderData: genderData,
       });
 
       await generateGrowthData(ngoCode);
       await generateApplicationsData(ngoCode);
+      await generateMonthlyVolunteerData(ngoCode);
       generateEventsPerformanceData(events || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+    }
+  };
+
+  const applyFiltersToData = async () => {
+    if (!viewingContext?.ngo_code) return;
+
+    try {
+      let query = supabase
+        .from("Event_Information")
+        .select("*")
+        .eq("ngo_id", viewingContext.ngo_code);
+
+      if (activeFilters.dateRange !== "all") {
+        const now = new Date();
+        let startDate;
+
+        switch (activeFilters.dateRange) {
+          case "today":
+            startDate = new Date(now.setHours(0, 0, 0, 0));
+            break;
+          case "yesterday":
+            startDate = new Date(now.setDate(now.getDate() - 1));
+            break;
+          case "1week":
+            startDate = new Date(now.setDate(now.getDate() - 7));
+            break;
+          case "1month":
+            startDate = new Date(now.setMonth(now.getMonth() - 1));
+            break;
+          case "thisMonth":
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case "lastMonth":
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            break;
+          case "custom":
+            if (activeFilters.customDateFrom) {
+              query = query.gte("date", activeFilters.customDateFrom);
+            }
+            if (activeFilters.customDateTo) {
+              query = query.lte("date", activeFilters.customDateTo);
+            }
+            break;
+        }
+
+        if (
+          startDate &&
+          activeFilters.dateRange !== "custom" &&
+          activeFilters.dateRange !== "specific-months"
+        ) {
+          query = query.gte("date", startDate.toISOString().split("T")[0]);
+        }
+      }
+
+      if (activeFilters.selectedEvent !== "all") {
+        query = query.eq("event_id", activeFilters.selectedEvent);
+      }
+
+      if (activeFilters.status !== "all") {
+        query = query.eq("status", activeFilters.status);
+      }
+
+      const { data: filteredEvents } = await query.order("date", {
+        ascending: false,
+      });
+
+      let finalEvents = filteredEvents || [];
+      if (activeFilters.volunteerRange !== "all") {
+        finalEvents = finalEvents.filter((event) => {
+          const volCount = parseInt(event.volunteer_joined) || 0;
+          switch (activeFilters.volunteerRange) {
+            case "1-50":
+              return volCount >= 1 && volCount <= 50;
+            case "51-100":
+              return volCount >= 51 && volCount <= 100;
+            case "101-200":
+              return volCount >= 101 && volCount <= 200;
+            case "201+":
+              return volCount >= 201;
+            default:
+              return true;
+          }
+        });
+      }
+
+      if (
+        activeFilters.dateRange === "specific-months" &&
+        activeFilters.selectedMonths.length > 0
+      ) {
+        finalEvents = finalEvents.filter((event) => {
+          if (!event.date) return false;
+          const eventMonth = event.date.substring(0, 7);
+          return activeFilters.selectedMonths.includes(eventMonth);
+        });
+      }
+
+      let filteredVolunteerIds = [];
+
+      if (finalEvents.length > 0) {
+        const eventIds = finalEvents.map((e) => e.event_id);
+
+        const { data: eventUsers } = await supabase
+          .from("Event_User")
+          .select("user_id, event_id")
+          .eq("ngo_id", viewingContext.ngo_code)
+          .in("event_id", eventIds);
+
+        if (eventUsers && eventUsers.length > 0) {
+          filteredVolunteerIds = [
+            ...new Set(eventUsers.map((eu) => eu.user_id)),
+          ];
+        }
+      } else {
+        const { data: registeredVols } = await supabase
+          .from("Registered_Volunteers")
+          .select("user_id, joined_ngo")
+          .like("joined_ngo", `%${viewingContext.ngo_code}%`);
+
+        filteredVolunteerIds =
+          registeredVols
+            ?.filter((vol) => {
+              if (!vol.joined_ngo) return false;
+              const ngoCodes = vol.joined_ngo.split("-");
+              return ngoCodes.includes(viewingContext.ngo_code);
+            })
+            .map((v) => v.user_id) || [];
+      }
+
+      if (activeFilters.gender !== "all") {
+        const { data: usersData } = await supabase
+          .from("User_Information")
+          .select("user_id, gender")
+          .in("user_id", filteredVolunteerIds)
+          .eq("gender", activeFilters.gender);
+
+        filteredVolunteerIds = usersData?.map((u) => u.user_id) || [];
+      }
+
+      const genderData = await fetchGenderDataRealtime(filteredVolunteerIds);
+      const totalFiltered = filteredVolunteerIds.length;
+
+      const completedEvents = finalEvents.filter(
+        (e) => e.status === "COMPLETED"
+      ).length;
+      const totalEvents = finalEvents.length;
+      const completionRate =
+        totalEvents > 0 ? Math.round((completedEvents / totalEvents) * 100) : 0;
+
+      let participationRate = 0;
+      if (filteredVolunteerIds.length > 0 && finalEvents.length > 0) {
+        const eventIds = finalEvents.map((e) => e.event_id);
+        const { data: eventUsers } = await supabase
+          .from("Event_User")
+          .select("user_id")
+          .eq("ngo_id", viewingContext.ngo_code)
+          .in("event_id", eventIds)
+          .in("user_id", filteredVolunteerIds);
+
+        const uniqueParticipants = new Set(
+          eventUsers?.map((eu) => eu.user_id) || []
+        ).size;
+        participationRate = Math.round(
+          (uniqueParticipants / filteredVolunteerIds.length) * 100
+        );
+      }
+
+      setDashboardData((prev) => ({
+        ...prev,
+        events: finalEvents,
+        completionRate,
+        totalVolunteers: totalFiltered,
+        participationRate,
+        volunteerGenderData: genderData,
+      }));
+
+      generateEventsPerformanceData(finalEvents);
+      await generateMonthlyVolunteerDataFiltered(
+        viewingContext.ngo_code,
+        finalEvents,
+        filteredVolunteerIds
+      );
+    } catch (error) {
+      console.error("Error applying filters:", error);
+    }
+  };
+
+  const generateMonthlyVolunteerDataFiltered = async (
+    ngoCode,
+    events,
+    filteredVolunteerIds
+  ) => {
+    try {
+      if (events.length === 0) return;
+
+      const eventIds = events.map((e) => e.event_id);
+
+      const { data: eventUsers } = await supabase
+        .from("Event_User")
+        .select("user_id, date_joined, event_id")
+        .eq("ngo_id", ngoCode)
+        .in("event_id", eventIds);
+
+      if (!eventUsers || eventUsers.length === 0) return;
+
+      let filteredEventUsers = eventUsers;
+      if (filteredVolunteerIds && filteredVolunteerIds.length > 0) {
+        filteredEventUsers = eventUsers.filter((eu) =>
+          filteredVolunteerIds.includes(eu.user_id)
+        );
+      }
+
+      const userIds = [...new Set(filteredEventUsers.map((eu) => eu.user_id))];
+      const { data: usersData } = await supabase
+        .from("User_Information")
+        .select("user_id, gender")
+        .in("user_id", userIds);
+
+      const userGenderMap = {};
+      usersData?.forEach((user) => {
+        userGenderMap[user.user_id] = user.gender;
+      });
+
+      const monthlyData = {};
+      filteredEventUsers.forEach((eu) => {
+        if (!eu.date_joined) return;
+        const month = eu.date_joined.substring(0, 7);
+        if (!monthlyData[month]) {
+          monthlyData[month] = { male: 0, female: 0, total: 0 };
+        }
+        monthlyData[month].total++;
+        const gender = userGenderMap[eu.user_id];
+        if (gender === "Male") monthlyData[month].male++;
+        else if (gender === "Female") monthlyData[month].female++;
+      });
+
+      const sortedMonths = Object.keys(monthlyData).sort();
+      const monthlyVolunteerData = sortedMonths.map((month) => ({
+        month: new Date(month + "-01").toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }),
+        male: monthlyData[month].male,
+        female: monthlyData[month].female,
+        total: monthlyData[month].total,
+      }));
+
+      setChartData((prev) => ({ ...prev, monthlyVolunteerData }));
+    } catch (error) {
+      console.error("Error generating filtered monthly volunteer data:", error);
     }
   };
 
@@ -685,12 +1667,6 @@ function DashboardPage() {
       setChartData((prev) => ({ ...prev, growth: growthData }));
     } catch (error) {
       console.error("Error generating growth data:", error);
-      const months = ["Jan", "Feb", "Mar", "Apr", "May"];
-      const mockData = months.map((month, index) => ({
-        month,
-        volunteers: Math.round(78 + index * 50),
-      }));
-      setChartData((prev) => ({ ...prev, growth: mockData }));
     }
   };
 
@@ -740,15 +1716,56 @@ function DashboardPage() {
       }));
     } catch (error) {
       console.error("Error generating applications data:", error);
-      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      const mockData = days.map((day) => ({
-        day,
-        applications: Math.floor(Math.random() * 15) + 5,
+    }
+  };
+
+  const generateMonthlyVolunteerData = async (ngoCode) => {
+    try {
+      const { data: eventUsers } = await supabase
+        .from("Event_User")
+        .select("user_id, date_joined, event_id")
+        .eq("ngo_id", ngoCode);
+
+      if (!eventUsers || eventUsers.length === 0) return;
+
+      const userIds = [...new Set(eventUsers.map((eu) => eu.user_id))];
+      const { data: usersData } = await supabase
+        .from("User_Information")
+        .select("user_id, gender")
+        .in("user_id", userIds);
+
+      const userGenderMap = {};
+      usersData?.forEach((user) => {
+        userGenderMap[user.user_id] = user.gender;
+      });
+
+      const monthlyData = {};
+      eventUsers.forEach((eu) => {
+        if (!eu.date_joined) return;
+        const month = eu.date_joined.substring(0, 7);
+        if (!monthlyData[month]) {
+          monthlyData[month] = { male: 0, female: 0, total: 0 };
+        }
+        monthlyData[month].total++;
+        const gender = userGenderMap[eu.user_id];
+        if (gender === "Male") monthlyData[month].male++;
+        else if (gender === "Female") monthlyData[month].female++;
+      });
+
+      const sortedMonths = Object.keys(monthlyData).sort();
+      const monthlyVolunteerData = sortedMonths.map((month) => ({
+        month: new Date(month + "-01").toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }),
+        male: monthlyData[month].male,
+        female: monthlyData[month].female,
+        total: monthlyData[month].total,
       }));
-      setChartData((prev) => ({
-        ...prev,
-        applications: { data: mockData, forecast: 25 },
-      }));
+
+      setChartData((prev) => ({ ...prev, monthlyVolunteerData }));
+    } catch (error) {
+      console.error("Error generating monthly volunteer data:", error);
     }
   };
 
@@ -780,376 +1797,19 @@ function DashboardPage() {
     }));
   };
 
-  // PDF HELPERS
-  const splitToBullets = (text) => {
-    if (!text) return [];
-    return String(text).replace(/\r\n/g, "\n").replace(/\n/g, " - ").split("-").map(s=>s.trim()).filter(Boolean);
-  };
-
-  const addLogo = async (doc, x, y, width, height, opacity = 1) => {
-    if (!dashboardData.ngoLogo) return;
+  const handleGenerateReport = async (
+    selectedData,
+    selectedYear,
+    reportType
+  ) => {
     try {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.src = dashboardData.ngoLogo;
-      await new Promise((resolve) => {
-        img.onload = () => {
-          try { if (doc.setGState) doc.setGState(new doc.GState({ opacity })); } catch {}
-          const aspect = img.width / img.height;
-          let finalW = width, finalH = height;
-          if (aspect > 1) {
-            finalH = width / aspect;
-            if (finalH > height) { finalH = height; finalW = height * aspect; }
-          } else {
-            finalW = height * aspect;
-            if (finalW > width) { finalW = width; finalH = width / aspect; }
-          }
-          const offsetX = (width - finalW)/2, offsetY = (height - finalH)/2;
-          try { doc.addImage(img, "PNG", x + offsetX, y + offsetY, finalW, finalH); } catch (e) { console.warn(e); }
-          try { if (doc.setGState) doc.setGState(new doc.GState({ opacity: 1 })); } catch {}
-          resolve();
-        };
-        img.onerror = () => resolve();
-      });
-    } catch (err) { console.error("addLogo err", err); }
-  };
-
-  const addEventImageRight = async (doc, imageUrl, currentY, pageWidth, pageHeight) => {
-    if (!imageUrl) return { imageHeight: 0, imageAdded: false };
-    try {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.src = imageUrl;
-      return await new Promise((resolve) => {
-        img.onload = () => {
-          const maxImgWidth = 60;
-          const aspectRatio = img.width / img.height || 1;
-          const imgWidth = maxImgWidth;
-          const imgHeight = maxImgWidth / aspectRatio;
-          if (currentY + imgHeight + 10 > pageHeight - 20) {
-            resolve({ imageHeight: 0, imageAdded: false });
-            return;
-          }
-          const imgX = pageWidth - imgWidth - 16;
-          doc.setDrawColor(0); doc.setLineWidth(0.3);
-          doc.rect(imgX - 1, currentY - 1, imgWidth + 2, imgHeight + 2);
-          try { doc.addImage(img, "JPEG", imgX, currentY, imgWidth, imgHeight); } catch (e) { console.warn(e); }
-          resolve({ imageHeight: imgHeight, imageAdded: true });
-        };
-        img.onerror = () => resolve({ imageHeight: 0, imageAdded: false });
-      });
-    } catch (err) { console.error("addEventImageRight err", err); return { imageHeight: 0, imageAdded: false }; }
-  };
-
-  const createMonthSeparatorPage = async (doc, monthName, year, pageW, pageH) => {
-    doc.addPage();
-    await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(36);
-    doc.setTextColor(0, 100, 0);
-    doc.text(monthName, pageW/2, pageH/2 - 10, { align: "center" });
-
-    doc.setFontSize(24);
-    doc.setTextColor(80,80,80);
-    doc.text(String(year), pageW/2, pageH/2 + 12, { align: "center" });
-
-    doc.setDrawColor(0, 100, 0);
-    doc.setLineWidth(0.5);
-    doc.line(40, pageH/2 + 22, pageW - 40, pageH/2 + 22);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "TBA";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return "TBA";
-    const [hours, minutes] = timeString.split(":");
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    const mm = minutes ? minutes.padStart(2, "0") : "00";
-    return `${hour12}:${mm} ${ampm}`;
-  };
-
-  const calculateDuration = (start, end) => {
-    if (!start || !end) return "";
-    try {
-      const [sh, sm] = start.split(":").map((n) => parseInt(n||"0"));
-      const [eh, em] = end.split(":").map((n) => parseInt(n||"0"));
-      let diff = (eh*60+em) - (sh*60+sm);
-      if (diff < 0) diff += 24*60;
-      const hours = Math.floor(diff/60);
-      const minutes = diff % 60;
-      if (hours>0 && minutes>0) return `${hours} hour${hours>1?'s':''} ${minutes} mins`;
-      if (hours>0) return `${hours} hour${hours>1?'s':''}`;
-      return `${minutes} mins`;
-    } catch { return ""; }
-  };
-
-  const handleGenerateReport = async (selectedMonth, selectedYear) => {
-    try {
-      const ngoCode = dashboardData.ngoCode;
-      
-      const { data: events } = await supabase
-        .from("Event_Information")
-        .select("*")
-        .eq("ngo_id", ngoCode);
-
-      if (!events || events.length === 0) {
-        alert("No events found.");
-        return;
-      }
-
-      const { data: eventUsers } = await supabase
-        .from("Event_User")
-        .select("user_id, event_id, status")
-        .in("event_id", events.map((e) => e.event_id));
-
-      const { data: applications } = await supabase
-        .from("Application_Status")
-        .select("*")
-        .eq("ngo_id", ngoCode);
-
-      const isAnnualReport = selectedMonth === "all";
-      let filteredEvents;
-      let reportTitle;
-
-      if (isAnnualReport) {
-        filteredEvents = events.filter(
-          (ev) => new Date(ev.date).getFullYear() === parseInt(selectedYear)
-        );
-        reportTitle = `Year ${selectedYear}`;
-      } else {
-        filteredEvents = events.filter((ev) => {
-          const d = new Date(ev.date);
-          return (
-            d.getMonth() + 1 === parseInt(selectedMonth) &&
-            d.getFullYear() === parseInt(selectedYear)
-          );
-        });
-        reportTitle = new Date(selectedYear, selectedMonth - 1).toLocaleString(
-          "default",
-          { month: "long", year: "numeric" }
-        );
-      }
-
-      if (!filteredEvents || filteredEvents.length === 0) {
-        alert("No events found for the selected period.");
-        return;
-      }
-
-      const sortedEvents = filteredEvents.sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
+      alert(
+        `Generating ${reportType} report for ${
+          reportType === "single"
+            ? "month " + selectedData
+            : selectedData.length + " months"
+        } in ${selectedYear || "selected period"}...`
       );
-
-      const doc = new jsPDF("p", "mm", "a4");
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      let y = 25;
-
-      // COVER PAGE
-      if (dashboardData.ngoLogo) {
-        try {
-          const img = new Image();
-          img.crossOrigin = "Anonymous";
-          img.src = dashboardData.ngoLogo;
-          await new Promise((resolve) => {
-            img.onload = () => {
-              const w = 70, h = 70;
-              const cx = pageW / 2 - w / 2;
-              doc.addImage(img, "PNG", cx, 20, w, h);
-              resolve();
-            };
-            img.onerror = () => resolve();
-          });
-        } catch {}
-      }
-
-      y = 100;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.setTextColor(0, 100, 0);
-      doc.text(dashboardData.ngoName || "CENTRO Organization", pageW / 2, y, { align: "center" });
-      y += 12;
-      doc.setFontSize(18);
-      doc.setTextColor(0, 0, 0);
-      doc.text("Organization Accomplishment Report", pageW / 2, y, { align: "center" });
-      y += 12;
-      doc.setFontSize(14);
-      doc.text(`Period: ${reportTitle}`, pageW / 2, y, { align: "center" });
-      y += 20;
-
-      // SUMMARY BOX
-      const totalEvents = sortedEvents.length;
-      const totalVolunteers = eventUsers ? new Set(eventUsers.map((v) => v.user_id)).size : 0;
-      const completedCount = sortedEvents.filter((e) => e.status === "COMPLETED").length;
-      const ongoingCount = sortedEvents.filter((e) => e.status === "ONGOING").length;
-      const upcomingCount = sortedEvents.filter((e) => e.status === "UPCOMING").length;
-      const monthlyApplications = (applications || []).filter((app) => {
-        const appDate = new Date(app.date_application);
-        return isAnnualReport
-          ? appDate.getFullYear() === parseInt(selectedYear)
-          : appDate.getFullYear() === parseInt(selectedYear) &&
-            appDate.getMonth() + 1 === parseInt(selectedMonth);
-      });
-
-      doc.setDrawColor(0, 100, 0);
-      doc.setFillColor(245, 250, 245);
-      doc.roundedRect(20, y, pageW - 40, 50, 3, 3, "FD");
-      y += 10;
-      doc.setFontSize(14);
-      doc.setTextColor(0, 100, 0);
-      doc.text("Summary Overview", 25, y);
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(11);
-      y += 8;
-      doc.text(`•  Total Events: ${totalEvents}`, 30, y); y+=6;
-      doc.text(`•  Completed: ${completedCount}`, 30, y); y+=6;
-      doc.text(`•  Ongoing: ${ongoingCount}`, 30, y); y+=6;
-      doc.text(`•  Upcoming: ${upcomingCount}`, 30, y); y+=6;
-      doc.text(`•  Total Unique Volunteers: ${totalVolunteers}`, 30, y); y+=6;
-      doc.text(`•  Total New Applications: ${monthlyApplications.length}`, 30, y);
-
-      // Helper to render a single event
-      const renderEvent = async (doc, event) => {
-        let y = 25;
-
-        if (dashboardData.ngoLogo) {
-          try {
-            await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-          } catch {}
-        }
-
-        doc.setFillColor(235, 247, 235);
-        doc.roundedRect(14, y - 5, pageW - 28, 10, 2, 2, "F");
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text(event.event_title || "Untitled Event", 16, y);
-        y += 10;
-
-        const imageStartY = y;
-        const { imageHeight, imageAdded } = await addEventImageRight(doc, event.event_image, imageStartY, pageW, pageH);
-
-        const leftColWidth = imageAdded ? pageW - 90 : pageW - 32;
-
-        const printKV = (label, value) => {
-          if (y > pageH - 30) { doc.addPage(); y = 25; }
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(10);
-          doc.text(label, 16, y);
-          doc.setFont("helvetica", "normal");
-          const wrapped = doc.splitTextToSize(String(value || "-"), leftColWidth - 24);
-          wrapped.forEach((line, i) => {
-            if (y + i * 5 > pageH - 30) { doc.addPage(); y = 25; }
-            doc.text(line, 40, y + i * 5);
-          });
-          y += Math.max(6, wrapped.length * 5);
-        };
-
-        printKV("Event ID:", event.event_id || "-");
-        printKV("Status:", event.status || "TBA");
-        printKV("Date:", formatDate(event.date));
-        printKV("Time:", `${formatTime(event.time_start)} – ${formatTime(event.time_end)}${calculateDuration(event.time_start, event.time_end) ? ` (${calculateDuration(event.time_start, event.time_end)})` : ""}`);
-        printKV("Call Time:", event.call_time ? formatTime(event.call_time) : "TBA");
-        printKV("Location:", event.location || "TBA");
-
-        if (imageAdded && y < imageStartY + imageHeight + 5) {
-          y = imageStartY + imageHeight + 5;
-        }
-
-        const sections = [
-          { label: "Event Objectives:", content: splitToBullets(event.event_objectives) },
-          { label: "Event Description:", content: event.description ? [event.description] : [] },
-          { label: "What to Expect:", content: splitToBullets(event.what_expect) },
-          { label: "Volunteer Guidelines:", content: splitToBullets(event.volunteer_guidelines) },
-          { label: "Volunteer Opportunities:", content: splitToBullets(event.volunteer_opportunities) }
-        ];
-
-        const fullWidth = pageW - 32;
-        for (const sec of sections) {
-          if (sec.content.length > 0) {
-            if (y > pageH - 30) { doc.addPage(); y = 25; }
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(10);
-            doc.text(sec.label, 16, y);
-            y += 6;
-            doc.setFont("helvetica", "normal");
-            sec.content.forEach((line) => {
-              const wrapped = doc.splitTextToSize(line, fullWidth - 12);
-              wrapped.forEach((ln) => {
-                if (y > pageH - 30) { doc.addPage(); y = 25; }
-                doc.text(`•  ${ln}`, 20, y);
-                y += 5;
-              });
-            });
-            y += 3;
-          }
-        }
-
-        const eventVols = eventUsers?.filter((v) => v.event_id === event.event_id) || [];
-        if (eventVols.length > 0) {
-          if (y > pageH - 30) { doc.addPage(); y = 25; }
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(10);
-          doc.text("Volunteer Engagement:", 16, y); y += 6;
-          doc.setFont("helvetica", "normal");
-          const approved = eventVols.filter((v) => v.status === "APPROVED").length;
-          const pending = eventVols.filter((v) => v.status === "PENDING").length;
-          const rejected = eventVols.filter((v) => v.status === "REJECTED").length;
-          doc.text(`•  Total Volunteers Joined: ${eventVols.length}`, 20, y); y+=5;
-          doc.text(`•  Approved: ${approved}`, 20, y); y+=5;
-          doc.text(`•  Pending: ${pending}`, 20, y); y+=5;
-          doc.text(`•  Rejected: ${rejected}`, 20, y); y+=8;
-        }
-      };
-
-      // Render events
-      if (isAnnualReport) {
-        const eventsByMonth = {};
-        sortedEvents.forEach((e) => {
-          const m = new Date(e.date).getMonth();
-          if (!eventsByMonth[m]) eventsByMonth[m] = [];
-          eventsByMonth[m].push(e);
-        });
-
-        for (const monthNum of Object.keys(eventsByMonth).sort((a,b)=>a-b)) {
-          const monthName = new Date(selectedYear, monthNum).toLocaleString("default", { month: "long" });
-          await createMonthSeparatorPage(doc, monthName, selectedYear, pageW, pageH);
-
-          for (const event of eventsByMonth[monthNum]) {
-            doc.addPage();
-            await renderEvent(doc, event);
-          }
-        }
-      } else {
-        for (const event of sortedEvents) {
-          doc.addPage();
-          await renderEvent(doc, event);
-        }
-      }
-
-      // FOOTER
-      const totalPages = doc.internal.getNumberOfPages();
-      const generatedDate = new Date().toLocaleString("en-US", {
-        year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
-      });
-      for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 10, { align: "center" });
-        doc.text(`Generated: ${generatedDate}`, 14, pageH - 10);
-      }
-
-      const fileName = isAnnualReport
-        ? `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`
-        : `${dashboardData.ngoName || "NGO"}_Monthly_Report_${selectedYear}-${selectedMonth}.pdf`;
-      doc.save(fileName);
-      
       setReportModalOpen(false);
     } catch (error) {
       console.error("Error generating report:", error);
@@ -1157,7 +1817,6 @@ function DashboardPage() {
     }
   };
 
-  // Enhanced Drag and Drop Functions
   const handleDragStart = (e, itemId) => {
     setDraggedItem(itemId);
     e.dataTransfer.effectAllowed = "move";
@@ -1184,14 +1843,18 @@ function DashboardPage() {
   const handleDrop = (e, targetId) => {
     e.preventDefault();
     setDragOverItem(null);
-    
+
     if (!draggedItem || draggedItem === targetId) {
       setDraggedItem(null);
       return;
     }
 
-    const draggedIndex = draggableItems.findIndex(item => item.id === draggedItem);
-    const targetIndex = draggableItems.findIndex(item => item.id === targetId);
+    const draggedIndex = draggableItems.findIndex(
+      (item) => item.id === draggedItem
+    );
+    const targetIndex = draggableItems.findIndex(
+      (item) => item.id === targetId
+    );
 
     const newItems = [...draggableItems];
     const [draggedElement] = newItems.splice(draggedIndex, 1);
@@ -1199,7 +1862,7 @@ function DashboardPage() {
 
     const reorderedItems = newItems.map((item, index) => ({
       ...item,
-      order: index
+      order: index,
     }));
 
     setDraggableItems(reorderedItems);
@@ -1213,16 +1876,15 @@ function DashboardPage() {
   };
 
   const downloadAsPDF = (cardType) => {
-    alert(`Downloading ${cardType} report as PDF... (Feature to be implemented)`);
+    alert(`Downloading ${cardType} report as PDF...`);
   };
 
   const downloadAsWord = (cardType) => {
-    alert(`Downloading ${cardType} report as Word document... (Feature to be implemented)`);
+    alert(`Downloading ${cardType} report as Word document...`);
   };
 
   const handleApplyFilters = (filters) => {
     setActiveFilters(filters);
-    console.log("Filters applied:", filters);
   };
 
   const openModal = (type) => setModalState({ isOpen: true, type });
@@ -1234,7 +1896,7 @@ function DashboardPage() {
 
   const renderDraggableCard = (itemId, content) => {
     const isDragOver = dragOverItem === itemId;
-    
+
     return (
       <div
         draggable
@@ -1245,14 +1907,14 @@ function DashboardPage() {
         onDrop={(e) => handleDrop(e, itemId)}
         onDragEnd={handleDragEnd}
         className={`transition-all duration-200 h-full ${
-          isDragOver ? 'ring-4 ring-emerald-400 scale-105' : ''
+          isDragOver ? "ring-4 ring-emerald-400 scale-105" : ""
         }`}
-        style={{ cursor: 'grab' }}
+        style={{ cursor: "grab" }}
       >
         <div className="relative h-full">
           <div className="absolute top-2 left-2 text-gray-400 z-10 cursor-move">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M9 5h2v14H9V5zm4 0h2v14h-2V5z"/>
+              <path d="M9 5h2v14H9V5zm4 0h2v14h-2V5z" />
             </svg>
           </div>
           {content}
@@ -1278,7 +1940,10 @@ function DashboardPage() {
         onClick={() => openModal("completion")}
         className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Completion Rate")}
             onDownloadWord={() => downloadAsWord("Completion Rate")}
@@ -1292,7 +1957,10 @@ function DashboardPage() {
             <Pie
               data={[
                 { name: "Completed", value: dashboardData.completionRate },
-                { name: "Remaining", value: 100 - dashboardData.completionRate },
+                {
+                  name: "Remaining",
+                  value: 100 - dashboardData.completionRate,
+                },
               ]}
               dataKey="value"
               innerRadius={30}
@@ -1309,7 +1977,9 @@ function DashboardPage() {
         <p className="text-2xl font-extrabold font-montserrat text-emerald-600">
           {dashboardData.completionRate}%
         </p>
-        <p className="text-xs text-gray-500 font-montserrat mt-1">Success Rate</p>
+        <p className="text-xs text-gray-500 font-montserrat mt-1">
+          Success Rate
+        </p>
         <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
@@ -1318,7 +1988,10 @@ function DashboardPage() {
         onClick={() => openModal("volunteers")}
         className="bg-white p-4 text-center flex flex-col justify-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px]"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Total Volunteers")}
             onDownloadWord={() => downloadAsWord("Total Volunteers")}
@@ -1330,6 +2003,26 @@ function DashboardPage() {
         <p className="text-4xl font-extrabold font-montserrat text-emerald-700">
           {dashboardData.totalVolunteers}
         </p>
+        <div className="mt-3 flex justify-center gap-4">
+          <div className="text-center transform transition-all hover:scale-110">
+            <p className="text-sm text-blue-600 font-semibold flex items-center justify-center gap-1">
+              <img src={MaleIcon} alt="Male Icon" className="w-4 h-4" />{" "}
+              {dashboardData.volunteerGenderData.male}
+            </p>
+            <p className="text-xs text-gray-500">
+              Male ({dashboardData.volunteerGenderData.malePercentage}%)
+            </p>
+          </div>
+          <div className="text-center transform transition-all hover:scale-110">
+            <p className="text-sm text-pink-600 font-semibold flex items-center justify-center gap-1">
+              <img src={FemaleIcon} alt="Female Icon" className="w-4 h-4" />{" "}
+              {dashboardData.volunteerGenderData.female}
+            </p>
+            <p className="text-xs text-gray-500">
+              Female ({dashboardData.volunteerGenderData.femalePercentage}%)
+            </p>
+          </div>
+        </div>
         <p className="text-xs mt-2 font-montserrat">
           As of {new Date().toLocaleDateString()}
         </p>
@@ -1341,7 +2034,10 @@ function DashboardPage() {
         onClick={() => openModal("participation")}
         className="bg-white p-4 text-center font-montserrat rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Participation Rate")}
             onDownloadWord={() => downloadAsWord("Participation Rate")}
@@ -1355,7 +2051,10 @@ function DashboardPage() {
             <Pie
               data={[
                 { name: "Active", value: dashboardData.participationRate },
-                { name: "Inactive", value: 100 - dashboardData.participationRate },
+                {
+                  name: "Inactive",
+                  value: 100 - dashboardData.participationRate,
+                },
               ]}
               dataKey="value"
               innerRadius={30}
@@ -1364,7 +2063,10 @@ function DashboardPage() {
               endAngle={-270}
             >
               {[0, 1].map((index) => (
-                <Cell key={`cell-${index}`} fill={COLORS.participation[index]} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS.participation[index]}
+                />
               ))}
             </Pie>
           </PieChart>
@@ -1372,7 +2074,9 @@ function DashboardPage() {
         <p className="text-2xl font-extrabold font-montserrat mt-2 text-emerald-600">
           {dashboardData.participationRate}%
         </p>
-        <p className="text-xs text-gray-500 font-montserrat mt-2">Active Volunteers</p>
+        <p className="text-xs text-gray-500 font-montserrat mt-2">
+          Active Volunteers
+        </p>
         <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
@@ -1381,7 +2085,10 @@ function DashboardPage() {
         onClick={() => openModal("applications")}
         className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Applications")}
             onDownloadWord={() => downloadAsWord("Applications")}
@@ -1420,7 +2127,10 @@ function DashboardPage() {
         onClick={() => openModal("growth")}
         className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Growth Rate")}
             onDownloadWord={() => downloadAsWord("Growth Rate")}
@@ -1444,7 +2154,10 @@ function DashboardPage() {
         onClick={() => openModal("feedback")}
         className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Feedback Score")}
             onDownloadWord={() => downloadAsWord("Feedback Score")}
@@ -1465,7 +2178,10 @@ function DashboardPage() {
         onClick={() => openModal("beneficiary")}
         className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Beneficiary Reach")}
             onDownloadWord={() => downloadAsWord("Beneficiary Reach")}
@@ -1486,7 +2202,10 @@ function DashboardPage() {
         onClick={() => openModal("activeEvents")}
         className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
       >
-        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <ThreeDotsMenu
             onDownloadPDF={() => downloadAsPDF("Active Events")}
             onDownloadWord={() => downloadAsWord("Active Events")}
@@ -1521,12 +2240,18 @@ function DashboardPage() {
 
       <main
         className="flex-1 p-6 overflow-y-auto transition-all duration-300"
-        style={{ 
-          filter: modalState.isOpen || filterModalOpen || reportModalOpen ? "blur(3px)" : "none",
-          marginLeft: sidebarCollapsed ? "5rem" : "16rem"
+        style={{
+          filter:
+            modalState.isOpen || filterModalOpen || reportModalOpen
+              ? "blur(3px)"
+              : "none",
+          marginLeft: sidebarCollapsed ? "5rem" : "16rem",
         }}
       >
-        <div className="relative z-10 space-y-6 w-full mx-auto" style={{ maxWidth: "1400px" }}>
+        <div
+          className="relative z-10 space-y-6 w-full mx-auto"
+          style={{ maxWidth: "1400px" }}
+        >
           <div className="flex items-center justify-between gap-4">
             <h2 className="flex-1 text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
               {viewingContext?.is_super_admin_view
@@ -1543,20 +2268,20 @@ function DashboardPage() {
               onClick={() => setReportModalOpen(true)}
               className="px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-700 cursor-pointer"
             >
-             <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
               Generate Report
             </button>
           </div>
@@ -1576,20 +2301,29 @@ function DashboardPage() {
             </div>
           )}
 
-          {/* Active Filters Display */}
-          {(activeFilters.dateRange !== "all" || activeFilters.selectedEvent !== "all" || activeFilters.gender !== "all" || activeFilters.status !== "all" || activeFilters.volunteerRange !== "all") && (
+          {(activeFilters.dateRange !== "all" ||
+            activeFilters.selectedEvent !== "all" ||
+            activeFilters.gender !== "all" ||
+            activeFilters.status !== "all" ||
+            activeFilters.volunteerRange !== "all") && (
             <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-emerald-800">Filters:</span>
+                  <span className="font-semibold text-emerald-800">
+                    Filters:
+                  </span>
                   {activeFilters.dateRange !== "all" && (
                     <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {activeFilters.dateRange === "custom" ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}` : activeFilters.dateRange}
+                      {activeFilters.dateRange === "custom"
+                        ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}`
+                        : activeFilters.dateRange}
                     </span>
                   )}
                   {activeFilters.selectedEvent !== "all" && (
                     <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {dashboardData.events.find(e => e.event_id === activeFilters.selectedEvent)?.event_title || activeFilters.selectedEvent}
+                      {dashboardData.events.find(
+                        (e) => e.event_id === activeFilters.selectedEvent
+                      )?.event_title || activeFilters.selectedEvent}
                     </span>
                   )}
                   {activeFilters.status !== "all" && (
@@ -1598,8 +2332,26 @@ function DashboardPage() {
                     </span>
                   )}
                   {activeFilters.gender !== "all" && (
-                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {activeFilters.gender}
+                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm flex items-center gap-2">
+                      {activeFilters.gender === "Male" ? (
+                        <>
+                          <img
+                            src={MaleIcon}
+                            alt="Male Icon"
+                            className="w-4 h-4"
+                          />
+                          Male
+                        </>
+                      ) : (
+                        <>
+                          <img
+                            src={FemaleIcon}
+                            alt="Female Icon"
+                            className="w-4 h-4"
+                          />
+                          Female
+                        </>
+                      )}
                     </span>
                   )}
                   {activeFilters.volunteerRange !== "all" && (
@@ -1609,24 +2361,26 @@ function DashboardPage() {
                   )}
                 </div>
                 <button
-                  onClick={() => handleApplyFilters({ 
-                    dateRange: "all", 
-                    selectedEvent: "all", 
-                    gender: "all", 
-                    status: "all",
-                    volunteerRange: "all",
-                    customDateFrom: "",
-                    customDateTo: ""
-                  })}
+                  onClick={() =>
+                    handleApplyFilters({
+                      dateRange: "all",
+                      selectedEvent: "all",
+                      gender: "all",
+                      status: "all",
+                      volunteerRange: "all",
+                      customDateFrom: "",
+                      customDateTo: "",
+                      selectedMonths: [],
+                    })
+                  }
                   className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
                 >
-                  Clear 
+                  Clear All
                 </button>
               </div>
             </div>
           )}
 
-          {/* ROW 1: Fixed - Greetings, Create Announcement, Create Event */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             <div
               className="p-5 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
@@ -1649,7 +2403,11 @@ function DashboardPage() {
               className="inline-flex items-center justify-center text-2xl font-montserrat text-emerald-900 font-bold p-5 gap-3 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
               style={{ backgroundColor: "#fff4d9" }}
             >
-              <img src={CreateAnnouncementIcon} alt="Create Announcement" className="w-16 h-16" />
+              <img
+                src={CreateAnnouncementIcon}
+                alt="Create Announcement"
+                className="w-16 h-16"
+              />
               <span>CREATE ANNOUNCEMENT</span>
             </Link>
 
@@ -1659,46 +2417,60 @@ function DashboardPage() {
               style={{ backgroundColor: "#fbdb90" }}
             >
               <span>CREATE EVENT</span>
-              <img src={CreateEventIcon} alt="Create Event" className="w-16 h-16" />
+              <img
+                src={CreateEventIcon}
+                alt="Create Event"
+                className="w-16 h-16"
+              />
             </Link>
           </div>
 
-          {/* ROW 2: Draggable Cards - 3 columns with equal height */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            {getSortedItems().slice(0, 3).map(item => (
-              <div key={item.id} className="h-full">
-                {renderDraggableCard(item.id, cardComponents[item.id])}
-              </div>
-            ))}
-          </div>
-
-          {/* ROW 3: Draggable Cards - Mixed layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
-            {/* First two large cards */}
-            <div className="h-full">
-              {getSortedItems()[3] && renderDraggableCard(getSortedItems()[3].id, cardComponents[getSortedItems()[3].id])}
-            </div>
-            <div className="h-full">
-              {getSortedItems()[4] && renderDraggableCard(getSortedItems()[4].id, cardComponents[getSortedItems()[4].id])}
-            </div>
-
-            {/* Three stacked small cards with equal heights */}
-            <div className="flex flex-col gap-4 h-full">
-              {getSortedItems().slice(5, 8).map(item => (
-                <div key={item.id} className="flex-1">
+            {getSortedItems()
+              .slice(0, 3)
+              .map((item) => (
+                <div key={item.id} className="h-full">
                   {renderDraggableCard(item.id, cardComponents[item.id])}
                 </div>
               ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
+            <div className="h-full">
+              {getSortedItems()[3] &&
+                renderDraggableCard(
+                  getSortedItems()[3].id,
+                  cardComponents[getSortedItems()[3].id]
+                )}
+            </div>
+            <div className="h-full">
+              {getSortedItems()[4] &&
+                renderDraggableCard(
+                  getSortedItems()[4].id,
+                  cardComponents[getSortedItems()[4].id]
+                )}
+            </div>
+
+            <div className="flex flex-col gap-4 h-full">
+              {getSortedItems()
+                .slice(5, 8)
+                .map((item) => (
+                  <div key={item.id} className="flex-1">
+                    {renderDraggableCard(item.id, cardComponents[item.id])}
+                  </div>
+                ))}
             </div>
           </div>
 
-          {/* ROW 4: Events Performance - Full Width */}
           {chartData.eventsPerformance.length > 0 && (
             <div
               onClick={() => openModal("eventsPerformance")}
               className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
             >
-              <div className="absolute top-2 right-2 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="absolute top-2 right-2 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <ThreeDotsMenu
                   onDownloadPDF={() => downloadAsPDF("Events Performance")}
                   onDownloadWord={() => downloadAsWord("Events Performance")}
@@ -1729,7 +2501,6 @@ function DashboardPage() {
         </div>
       </main>
 
-      {/* Filter Modal */}
       <FilterModal
         isOpen={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
@@ -1737,69 +2508,18 @@ function DashboardPage() {
         events={dashboardData.events}
       />
 
-      {/* Report Modal */}
       <ReportModal
         isOpen={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
         onGenerate={handleGenerateReport}
-        events={dashboardData.events}
       />
-
-      {/* ALL MODALS */}
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "completion"}
-        onClose={closeModal}
-        title="Project & Event Completion Rate"
-      >
-        <div className="text-center">
-          <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={[
-                  { name: "Completed", value: dashboardData.completionRate },
-                  { name: "Remaining", value: 100 - dashboardData.completionRate },
-                ]}
-                dataKey="value"
-                innerRadius={100}
-                outerRadius={150}
-                startAngle={90}
-                endAngle={-270}
-                label
-              >
-                {[0, 1].map((index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS.completion[index]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-6">
-            <p className="text-5xl font-extrabold text-emerald-600 mb-4">
-              {dashboardData.completionRate}%
-            </p>
-            <p className="text-xl text-gray-600">Success Rate</p>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div className="bg-emerald-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Completed Events</p>
-                <p className="text-2xl font-bold text-emerald-700">
-                  {dashboardData.events.filter((e) => e.status === "COMPLETED").length}
-                </p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Total Events</p>
-                <p className="text-2xl font-bold text-gray-700">
-                  {dashboardData.events.length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ChartModal>
 
       <ChartModal
         isOpen={modalState.isOpen && modalState.type === "volunteers"}
         onClose={closeModal}
         title="Total Registered Volunteers"
+        showGenderBreakdown={true}
+        genderData={dashboardData.volunteerGenderData}
       >
         <div className="text-center">
           <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-12 rounded-xl mb-6">
@@ -1839,17 +2559,20 @@ function DashboardPage() {
       </ChartModal>
 
       <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "participation"}
+        isOpen={modalState.isOpen && modalState.type === "completion"}
         onClose={closeModal}
-        title="Volunteer Participation Rate"
+        title="Project & Event Completion Rate"
       >
         <div className="text-center">
           <ResponsiveContainer width="100%" height={400}>
             <PieChart>
               <Pie
                 data={[
-                  { name: "Active", value: dashboardData.participationRate },
-                  { name: "Inactive", value: 100 - dashboardData.participationRate },
+                  { name: "Completed", value: dashboardData.completionRate },
+                  {
+                    name: "Remaining",
+                    value: 100 - dashboardData.completionRate,
+                  },
                 ]}
                 dataKey="value"
                 innerRadius={100}
@@ -1859,7 +2582,68 @@ function DashboardPage() {
                 label
               >
                 {[0, 1].map((index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS.participation[index]} />
+                  <Cell key={`cell-${index}`} fill={COLORS.completion[index]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="mt-6">
+            <p className="text-5xl font-extrabold text-emerald-600 mb-4">
+              {dashboardData.completionRate}%
+            </p>
+            <p className="text-xl text-gray-600">Success Rate</p>
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="bg-emerald-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">Completed Events</p>
+                <p className="text-2xl font-bold text-emerald-700">
+                  {
+                    dashboardData.events.filter((e) => e.status === "COMPLETED")
+                      .length
+                  }
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">Total Events</p>
+                <p className="text-2xl font-bold text-gray-700">
+                  {dashboardData.events.length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ChartModal>
+
+      <ChartModal
+        isOpen={modalState.isOpen && modalState.type === "participation"}
+        onClose={closeModal}
+        title="Volunteer Participation Rate"
+        showGenderBreakdown={true}
+        genderData={dashboardData.volunteerGenderData}
+      >
+        <div className="text-center">
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+              <Pie
+                data={[
+                  { name: "Active", value: dashboardData.participationRate },
+                  {
+                    name: "Inactive",
+                    value: 100 - dashboardData.participationRate,
+                  },
+                ]}
+                dataKey="value"
+                innerRadius={100}
+                outerRadius={150}
+                startAngle={90}
+                endAngle={-270}
+                label
+              >
+                {[0, 1].map((index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS.participation[index]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
@@ -1899,6 +2683,8 @@ function DashboardPage() {
         isOpen={modalState.isOpen && modalState.type === "growth"}
         onClose={closeModal}
         title="Volunteer Growth Rate"
+        showGenderBreakdown={true}
+        genderData={dashboardData.volunteerGenderData}
       >
         <div>
           <ResponsiveContainer width="100%" height={400}>
@@ -1916,8 +2702,12 @@ function DashboardPage() {
                 key={index}
                 className="bg-purple-50 p-4 rounded-lg text-center min-w-[150px] flex-shrink-0"
               >
-                <p className="text-sm text-gray-600 font-semibold">{data.month}</p>
-                <p className="text-2xl font-bold text-purple-700">{data.volunteers}</p>
+                <p className="text-sm text-gray-600 font-semibold">
+                  {data.month}
+                </p>
+                <p className="text-2xl font-bold text-purple-700">
+                  {data.volunteers}
+                </p>
                 <p className="text-xs text-gray-500">volunteers</p>
               </div>
             ))}
@@ -1951,11 +2741,16 @@ function DashboardPage() {
               <p className="text-4xl font-bold text-orange-600">
                 {chartData.applications?.forecast || 0}
               </p>
-              <p className="text-sm text-gray-500 mt-2">applications expected</p>
+              <p className="text-sm text-gray-500 mt-2">
+                applications expected
+              </p>
             </div>
             <div className="grid grid-cols-4 gap-3">
               {chartData.applications?.data?.slice(0, 4).map((data, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-lg text-center">
+                <div
+                  key={index}
+                  className="bg-gray-50 p-3 rounded-lg text-center"
+                >
                   <p className="text-xs text-gray-600">{data.day}</p>
                   <p className="text-xl font-bold text-gray-700">
                     {data.applications}
@@ -2072,22 +2867,28 @@ function DashboardPage() {
             <div className="bg-green-50 p-6 rounded-lg">
               <p className="text-sm text-gray-600">Ongoing</p>
               <p className="text-3xl font-bold text-green-700">
-                {dashboardData.events.filter((e) => e.status === "ONGOING")
-                  .length}
+                {
+                  dashboardData.events.filter((e) => e.status === "ONGOING")
+                    .length
+                }
               </p>
             </div>
             <div className="bg-blue-50 p-6 rounded-lg">
               <p className="text-sm text-gray-600">Upcoming</p>
               <p className="text-3xl font-bold text-blue-700">
-                {dashboardData.events.filter((e) => e.status === "UPCOMING")
-                  .length}
+                {
+                  dashboardData.events.filter((e) => e.status === "UPCOMING")
+                    .length
+                }
               </p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg">
               <p className="text-sm text-gray-600">Completed</p>
               <p className="text-3xl font-bold text-gray-700">
-                {dashboardData.events.filter((e) => e.status === "COMPLETED")
-                  .length}
+                {
+                  dashboardData.events.filter((e) => e.status === "COMPLETED")
+                    .length
+                }
               </p>
             </div>
           </div>
@@ -2153,5 +2954,3 @@ function DashboardPage() {
     </div>
   );
 }
-
-export default DashboardPage;

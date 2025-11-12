@@ -375,8 +375,10 @@ const SettingsPage = () => {
       >
 <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-<main className="flex-1 ml-64 p-8 md:p-10 overflow-y-auto flex justify-center">
-  <div
+      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >  
+    <div
     className="relative bg-white/95 shadow-xl rounded-[28px] ring-1 ring-gray-200/60 w-full max-w-6xl mx-auto p-6 md:p-10 
     flex flex-col gap-10"
   >
@@ -387,9 +389,9 @@ const SettingsPage = () => {
           <button
             onClick={() => setShowSaveChangesConfirm(true)}
             disabled={loading || logoUploading}
-            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
+            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? "Saving..." : "Save"}
           </button>
           <button
             onClick={() => setShowCancelEditConfirm(true)}
@@ -404,7 +406,7 @@ const SettingsPage = () => {
           onClick={() => setShowEditProfileConfirm(true)}
           className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2 rounded-full transition-colors cursor-pointer"
         >
-          Edit Profile
+          Edit 
         </button>
       )}
     </div>
@@ -438,7 +440,7 @@ const SettingsPage = () => {
           disabled={logoUploading || loading}
           className="mt-3 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-semibold px-4 py-2 rounded-full transition-colors cursor-pointer"
         >
-          {logoUploading ? "Uploading..." : "Update Logo"}
+          {logoUploading ? "Uploading..." : "Update"}
         </button>
 
         {selectedFile && (

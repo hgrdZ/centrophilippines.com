@@ -27,49 +27,55 @@ function ReviewAiScheduling() {
   const [processedVolunteer, setProcessedVolunteer] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    localStorage.getItem("sidebarCollapsed") === "true" || false
+  );
 
-const isLocal = window.location.hostname === "localhost";
-const BACKEND_API_URL = isLocal ? "http://localhost:5000" : "";
+  const isLocal = window.location.hostname === "localhost";
+  const BACKEND_API_URL = isLocal ? "http://localhost:5000" : "";
 
-useEffect(() => {
-const initializePage = async () => {
-  if (location.state?.volunteer && location.state?.eventDetails) {
-    const { volunteer: selectedVolunteer, eventDetails: selectedEvent } = location.state;
+  useEffect(() => {
+    const initializePage = async () => {
+      if (location.state?.volunteer && location.state?.eventDetails) {
+        const { volunteer: selectedVolunteer, eventDetails: selectedEvent } =
+          location.state;
 
-    if (!selectedEvent?.event_id) {
-      console.warn("⚠️ Missing event_id in selectedEvent:", selectedEvent);
-      navigate("/review-application-event");
-      return;
-    }
+        if (!selectedEvent?.event_id) {
+          console.warn("⚠️ Missing event_id in selectedEvent:", selectedEvent);
+          navigate("/review-application-event");
+          return;
+        }
 
-    setVolunteer(selectedVolunteer);
-    setEventDetails(selectedEvent);
-    fetchEventVolunteers(selectedEvent.event_id, selectedVolunteer);
-    fetchAcceptedVolunteersCount(selectedEvent.event_id);
+        setVolunteer(selectedVolunteer);
+        setEventDetails(selectedEvent);
+        fetchEventVolunteers(selectedEvent.event_id, selectedVolunteer);
+        fetchAcceptedVolunteersCount(selectedEvent.event_id);
 
-    const { data: fullEventData, error: eventError } = await supabase
-      .from("Event_Information")
-      .select("*")
-      .eq("event_id", selectedEvent.event_id)
-      .maybeSingle();
+        const { data: fullEventData, error: eventError } = await supabase
+          .from("Event_Information")
+          .select("*")
+          .eq("event_id", selectedEvent.event_id)
+          .maybeSingle();
 
-    if (eventError) {
-      console.error("Error fetching full event data:", eventError);
-      generateAiSuggestions(selectedVolunteer, selectedEvent);
-    } else if (fullEventData) {
-      setEventDetails(fullEventData);
-      generateAiSuggestions(selectedVolunteer, fullEventData);
-    } else {
-      console.warn("⚠️ Event not found in Event_Information:", selectedEvent.event_id);
-    }
-  } else {
-    navigate("/review-application-event");
-  }
-};
+        if (eventError) {
+          console.error("Error fetching full event data:", eventError);
+          generateAiSuggestions(selectedVolunteer, selectedEvent);
+        } else if (fullEventData) {
+          setEventDetails(fullEventData);
+          generateAiSuggestions(selectedVolunteer, fullEventData);
+        } else {
+          console.warn(
+            "⚠️ Event not found in Event_Information:",
+            selectedEvent.event_id
+          );
+        }
+      } else {
+        navigate("/review-application-event");
+      }
+    };
 
-  initializePage();
-}, [location.state, navigate]);
+    initializePage();
+  }, [location.state, navigate]);
 
   useEffect(() => {
     if (showSuccessApprove || showSuccessReject || showSuccessAdjust) {
@@ -102,58 +108,57 @@ const initializePage = async () => {
     }
   };
 
-const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
-  try {
-    const { data: eventUsers, error } = await supabase
-      .from("Event_User")
-      .select(
-        "user_id, event_id, status, days_available, time_availability, busy_hours"
-      )
-      .eq("event_id", eventId)
-      .eq("status", "PENDING");
+  const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
+    try {
+      const { data: eventUsers, error } = await supabase
+        .from("Event_User")
+        .select(
+          "user_id, event_id, status, days_available, time_availability, busy_hours"
+        )
+        .eq("event_id", eventId)
+        .eq("status", "PENDING");
 
-    if (error) {
-      console.error("Error fetching event volunteers:", error);
-      return;
+      if (error) {
+        console.error("Error fetching event volunteers:", error);
+        return;
+      }
+
+      const volunteersWithDetails = await Promise.all(
+        eventUsers.map(async (eventUser) => {
+          const { data: volunteerData, error: userError } = await supabase
+            .from("LoginInformation")
+            .select(
+              "user_id, firstname, lastname, email, profile_picture, preferred_volunteering, contact_number, location"
+            )
+            .eq("user_id", eventUser.user_id)
+            .maybeSingle();
+
+          if (userError) {
+            console.error("Error fetching volunteer details:", userError);
+            return null;
+          }
+
+          return {
+            ...volunteerData,
+            days_available: eventUser.days_available,
+            time_availability: eventUser.time_availability,
+            busy_hours: eventUser.busy_hours,
+            event_id: eventUser.event_id,
+          };
+        })
+      );
+
+      const filteredVolunteers = volunteersWithDetails.filter((v) => v !== null);
+      setAllVolunteers(filteredVolunteers);
+
+      const currentIndex = filteredVolunteers.findIndex(
+        (v) => v.user_id === selectedVolunteer?.user_id
+      );
+      setCurrentVolunteerIndex(currentIndex >= 0 ? currentIndex : 0);
+    } catch (error) {
+      console.error("Error in fetchEventVolunteers:", error);
     }
-
-    const volunteersWithDetails = await Promise.all(
-      eventUsers.map(async (eventUser) => {
-        const { data: volunteerData, error: userError } = await supabase
-          .from("LoginInformation")
-          .select(
-            "user_id, firstname, lastname, email, profile_picture, preferred_volunteering, contact_number, location"
-          )
-          .eq("user_id", eventUser.user_id)
-          .maybeSingle();
-
-        if (userError) {
-          console.error("Error fetching volunteer details:", userError);
-          return null;
-        }
-
-        return {
-          ...volunteerData,
-          days_available: eventUser.days_available,
-          time_availability: eventUser.time_availability,
-          busy_hours: eventUser.busy_hours,
-          event_id: eventUser.event_id,
-        };
-      })
-    );
-
-    const filteredVolunteers = volunteersWithDetails.filter((v) => v !== null);
-    setAllVolunteers(filteredVolunteers);
-
-    // CHANGED: Use parameter instead of state
-    const currentIndex = filteredVolunteers.findIndex(
-      (v) => v.user_id === selectedVolunteer?.user_id
-    );
-    setCurrentVolunteerIndex(currentIndex >= 0 ? currentIndex : 0);
-  } catch (error) {
-    console.error("Error in fetchEventVolunteers:", error);
-  }
-};
+  };
 
   const calculateEventDuration = (timeStart, timeEnd, callTime) => {
     const parseTime = (timeStr) => {
@@ -168,7 +173,6 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
     const end = parseTime(timeEnd);
     let duration = (end - start) / (1000 * 60 * 60);
 
-    // Add call time if provided
     if (callTime) {
       const callTimeMatch = callTime.match(/(\d+)/);
       if (callTimeMatch) {
@@ -182,39 +186,42 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
   const generateAiSuggestions = async (volunteerData, eventData) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BACKEND_API_URL}/api/generate-suggestions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          volunteerData: {
-            firstname: volunteerData.firstname,
-            lastname: volunteerData.lastname,
-            days_available: volunteerData.days_available,
-            time_availability: volunteerData.time_availability,
-            busy_hours: volunteerData.busy_hours,
-            preferred_volunteering: volunteerData.preferred_volunteering,
-            location: volunteerData.location
+      const response = await fetch(
+        `${BACKEND_API_URL}/api/generate-suggestions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          eventData: {
-            event_id: eventData.event_id,
-            event_title: eventData.event_title,
-            date: eventData.date,
-            time_start: formatTime(eventData.time_start),
-            time_end: formatTime(eventData.time_end),
-            call_time: eventData.call_time,
-            volunteers_limit: eventData.volunteers_limit,
-            event_objectives: eventData.event_objectives,
-            description: eventData.description,
-            location: eventData.location,
-            volunteer_opportunities: eventData.volunteer_opportunities
-          }
-        })
-      });
+          body: JSON.stringify({
+            volunteerData: {
+              firstname: volunteerData.firstname,
+              lastname: volunteerData.lastname,
+              days_available: volunteerData.days_available,
+              time_availability: volunteerData.time_availability,
+              busy_hours: volunteerData.busy_hours,
+              preferred_volunteering: volunteerData.preferred_volunteering,
+              location: volunteerData.location,
+            },
+            eventData: {
+              event_id: eventData.event_id,
+              event_title: eventData.event_title,
+              date: eventData.date,
+              time_start: formatTime(eventData.time_start),
+              time_end: formatTime(eventData.time_end),
+              call_time: eventData.call_time,
+              volunteers_limit: eventData.volunteers_limit,
+              event_objectives: eventData.event_objectives,
+              description: eventData.description,
+              location: eventData.location,
+              volunteer_opportunities: eventData.volunteer_opportunities,
+            },
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to generate AI suggestions');
+        throw new Error("Failed to generate AI suggestions");
       }
 
       const data = await response.json();
@@ -304,7 +311,9 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
     const overlapStart = new Date(
       Math.max(eventStart.getTime(), volStart.getTime())
     );
-    const overlapEnd = new Date(Math.min(eventEnd.getTime(), volEnd.getTime()));
+    const overlapEnd = new Date(
+      Math.min(eventEnd.getTime(), volEnd.getTime())
+    );
 
     if (overlapStart.getTime() >= overlapEnd.getTime()) {
       return {
@@ -318,8 +327,7 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
         proximityScore: "0",
         timeOverlapScore: "0",
         skillMatchScore: "0",
-        reasoning:
-          "Volunteer's availability does not overlap with event time.",
+        reasoning: "Volunteer's availability does not overlap with event time.",
       };
     }
 
@@ -329,7 +337,7 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
       (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
 
     const timeCompatibility = (overlapDuration / totalEventDuration) * 50;
-    const proximityScore = 20; // Default proximity score
+    const proximityScore = 20;
     const skillMatch =
       getMatchingTypes(
         volunteerData.preferred_volunteering,
@@ -337,7 +345,9 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
       ).length > 1
         ? 20
         : 10;
-    const finalScore = Math.round(timeCompatibility + proximityScore + skillMatch);
+    const finalScore = Math.round(
+      timeCompatibility + proximityScore + skillMatch
+    );
 
     return {
       recommendedTimeSlot: `${formatTimeFromDate(
@@ -352,7 +362,9 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
       timeOverlapScore: Math.round(timeCompatibility).toString(),
       proximityScore: proximityScore.toString(),
       skillMatchScore: skillMatch.toString(),
-      reasoning: `Time overlap: ${Math.round(timeCompatibility)}%, Proximity: ${proximityScore}%, Skills: ${skillMatch}%`,
+      reasoning: `Time overlap: ${Math.round(
+        timeCompatibility
+      )}%, Proximity: ${proximityScore}%, Skills: ${skillMatch}%`,
     };
   };
 
@@ -432,78 +444,95 @@ const fetchEventVolunteers = async (eventId, selectedVolunteer) => {
     });
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+  const formatCallTime = (callTimeString) => {
+    if (!callTimeString) return "N/A";
+    
+    // Check if it's already in a readable format (e.g., "1 hour before")
+    if (!callTimeString.includes(":")) {
+      return callTimeString;
+    }
+    
+    // If it's in HH:MM:SS or HH:MM format, convert to AM/PM
+    const timeParts = callTimeString.split(":");
+    const hours = parseInt(timeParts[0]);
+    const minutes = parseInt(timeParts[1] || 0);
+    
+    const date = new Date(0, 0, 0, hours, minutes);
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
-  const sendRejectionEmail = async (volunteerEmail, volunteerName, eventTitle, ngoName, reason) => {
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const sendRejectionEmail = async (
+    volunteerEmail,
+    volunteerName,
+    eventTitle,
+    ngoName,
+    reason
+  ) => {
     try {
-      console.log('📧 Sending rejection email to:', volunteerEmail);
+      console.log("📧 Sending rejection email to:", volunteerEmail);
       const response = await fetch(`/api/send-reject-event`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           recipientEmail: volunteerEmail,
           volunteerName: volunteerName,
           eventTitle: eventTitle,
           ngoName: ngoName,
-          reason: reason
-        })
+          reason: reason,
+        }),
       });
 
       if (!response.ok) {
-        console.error('Server responded with error:', response.status);
+        console.error("Server responded with error:", response.status);
         return false;
       }
 
       const result = await response.json();
-      console.log('✓ Email sent successfully:', result);
+      console.log("✓ Email sent successfully:", result);
       return result.success;
     } catch (error) {
-      console.error('✗ Error sending email:', error);
+      console.error("✗ Error sending email:", error);
       return false;
     }
   };
 
-const handlePreviousApplicant = () => {
-  console.log('Current Index:', currentVolunteerIndex);
-  console.log('All Volunteers:', allVolunteers);
-  console.log('Can go previous?', currentVolunteerIndex > 0);
+  const handlePreviousApplicant = () => {
+    if (currentVolunteerIndex > 0 && allVolunteers.length > 0) {
+      const prevVolunteer = allVolunteers[currentVolunteerIndex - 1];
+      setVolunteer(prevVolunteer);
+      setCurrentVolunteerIndex(currentVolunteerIndex - 1);
+      generateAiSuggestions(prevVolunteer, eventDetails);
+    }
+  };
 
-  if (currentVolunteerIndex > 0 && allVolunteers.length > 0) {
-    const prevVolunteer = allVolunteers[currentVolunteerIndex - 1];
-    console.log('Previous volunteer:', prevVolunteer);
-    setVolunteer(prevVolunteer);
-    setCurrentVolunteerIndex(currentVolunteerIndex - 1);
-    generateAiSuggestions(prevVolunteer, eventDetails);
-  }
-};
-
-const handleNextApplicant = () => {
-  console.log('Current Index:', currentVolunteerIndex);
-  console.log('All Volunteers Length:', allVolunteers.length);
-  console.log('Can go next?', currentVolunteerIndex < allVolunteers.length - 1);
-
-  if (
-    currentVolunteerIndex < allVolunteers.length - 1 &&
-    allVolunteers.length > 0
-  ) {
-    const nextVolunteer = allVolunteers[currentVolunteerIndex + 1];
-    console.log('Next volunteer:', nextVolunteer);
-    setVolunteer(nextVolunteer);
-    setCurrentVolunteerIndex(currentVolunteerIndex + 1);
-    generateAiSuggestions(nextVolunteer, eventDetails);
-  }
-};
+  const handleNextApplicant = () => {
+    if (
+      currentVolunteerIndex < allVolunteers.length - 1 &&
+      allVolunteers.length > 0
+    ) {
+      const nextVolunteer = allVolunteers[currentVolunteerIndex + 1];
+      setVolunteer(nextVolunteer);
+      setCurrentVolunteerIndex(currentVolunteerIndex + 1);
+      generateAiSuggestions(nextVolunteer, eventDetails);
+    }
+  };
 
   const handleShowApproveModal = () => {
     setShowApproveModal(true);
@@ -586,7 +615,10 @@ const handleNextApplicant = () => {
         .eq("admin_id", adminData.NGO_Information.admin_id)
         .maybeSingle();
 
-      const ngoName = ngoData?.name || adminData.NGO_Information.name || "Centro Organization";
+      const ngoName =
+        ngoData?.name ||
+        adminData.NGO_Information.name ||
+        "Centro Organization";
 
       const { error: updateError } = await supabase
         .from("Event_User")
@@ -646,7 +678,9 @@ const handleNextApplicant = () => {
     if (aiSuggestions) {
       setAdjustedTimeSlot(aiSuggestions.recommendedTimeSlot || "");
       setAdjustedDuration(aiSuggestions.duration || "");
-      setAdjustedVolunteerType(aiSuggestions.matchingVolunteerTypes?.[0] || "");
+      setAdjustedVolunteerType(
+        aiSuggestions.matchingVolunteerTypes?.[0] || ""
+      );
     }
     setShowAdjustConfirmModal(false);
     setShowAdjustModal(true);
@@ -726,9 +760,11 @@ const handleNextApplicant = () => {
       >
         <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >                   <div className="bg-white rounded-lg shadow p-8">
+        <main
+          className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+          style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+        >
+          <div className="bg-white rounded-lg shadow p-8">
             <p className="text-gray-500 text-center text-xl">
               Loading volunteer and event data...
             </p>
@@ -746,107 +782,122 @@ const handleNextApplicant = () => {
         backgroundSize: "100% 100%",
       }}
     >
-      <Sidebar activeButton="Review Ai Scheduling" />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 ml-64 p-4 overflow-hidden">
-        <div className="bg-white rounded-lg shadow border-2 border-emerald-800 overflow-hidden h-full flex flex-col">
-          <div className="bg-orange-400 h-14 flex items-center justify-between px-4">
+      <main
+        className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+      >
+          <div className="bg-white rounded-lg shadow-xl border-2 border-emerald-800 overflow-hidden flex flex-col">
+          {/* Header */}
+          <div
+            className="h-14 flex items-center justify-between px-4"
+            style={{ backgroundColor: "#0A6E50" }}
+          >
             <span />
-            <h2 className="font-extrabold text-white font-montserrat text-3xl tracking-wide uppercase">
+            <h2 className="font-extrabold text-white text-2xl tracking-wide uppercase">
               {eventDetails.event_title}
             </h2>
             <Link to="/review-application-event">
-              <button className="text-white text-2xl font-bold hover:text-gray-200 cursor-pointer">
+              <button className="text-white text-3xl font-bold hover:text-gray-200 transition-colors">
                 ×
               </button>
             </Link>
           </div>
 
-          <div className="bg-white px-6 py-2 border-gray-300">
-            <span className="invisible"></span>
-          </div>
-
-          <div className="flex flex-1 overflow-hidden">
-            <div className="w-2/5 px-6 py-6 overflow-y-auto flex flex-col justify-center">
-              <div className="flex items-center gap-4 mb-6">
-                <img
-                  src={
-                    volunteer.profile_picture ||
-                    "https://via.placeholder.com/150"
-                  }
-                  alt={volunteer.firstname}
-                  className="w-20 h-20 rounded-full object-cover border"
-                />
-                <div>
-                  <p className="font-semibold text-xl text-emerald-800">
-                    {volunteer.firstname} {volunteer.lastname}
-                  </p>
-                  <p className="text-md text-gray-600">{volunteer.email}</p>
-                  {volunteer.contact_number && (
-                    <p className="text-md text-gray-600">
-                      {volunteer.contact_number}
+          {/* Main Content */}
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50">
+            <div className="flex">
+              {/* Left Panel - Volunteer Details */}
+              <div className="w-2/5 px-6 py-6 border-r-2 border-emerald-200 bg-white">
+                <div className="flex items-start gap-4 mb-4">
+                  <img
+                    src={
+                      volunteer.profile_picture ||
+                      "https://via.placeholder.com/150"
+                    }
+                    alt={volunteer.firstname}
+                    className="w-24 h-24 rounded-full object-cover border-4 border-emerald-600 shadow-lg flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-xl text-emerald-900 truncate">
+                      {volunteer.firstname} {volunteer.lastname}
                     </p>
-                  )}
+                    <p className="text-sm text-gray-600 truncate">
+                      {volunteer.email}
+                    </p>
+                    {volunteer.contact_number && (
+                      <p className="text-sm text-gray-600">
+                        {volunteer.contact_number}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1 w-full">
+                  <div className="p-2 ">
+                    <p className="font-bold text-base text-emerald-900">
+                      Days Available
+                    </p>
+                    <p className="text-gray-700 text-sm">
+                      {volunteer.days_available || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div className="p-2">
+                    <p className="font-bold text-base text-emerald-900">
+                      Time of Availability
+                    </p>
+                    <p className="text-gray-700 text-sm">
+                      {volunteer.time_availability || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div className="p-2">
+                    <p className="font-bold text-base text-red-700">Busy Hours</p>
+                    <p className="text-gray-700 text-sm">
+                      {volunteer.busy_hours || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div className="p-2">
+                    <p className="font-bold text-base text-emerald-900">
+                      Location
+                    </p>
+                    <p className="text-gray-700 text-sm">
+                      {volunteer.location || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div className="p-2">
+                    <p className="font-bold text-base text-emerald-900">
+                      Preferred Type of Volunteering
+                    </p>
+                    <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                      {volunteer.preferred_volunteering ? (
+                        volunteer.preferred_volunteering
+                          .split(",")
+                          .map((type, idx) => <li key={idx}>{type.trim()}</li>)
+                      ) : (
+                        <li>Not specified</li>
+                      )}
+                    </ul>
+                  </div>
                 </div>
               </div>
 
-              <div className="mb-4">
-                <p className="font-semibold text-lg text-emerald-900">
-                  Days Available
-                </p>
-                <p className="text-gray-800 text-md">
-                  {volunteer.days_available || "Not specified"}
-                </p>
-              </div>
-
-              <div className="mb-4">
-                <p className="font-semibold text-lg text-emerald-900">
-                  Time of Availability
-                </p>
-                <p className="text-gray-800 text-md">
-                  {volunteer.time_availability || "Not specified"}
-                </p>
-              </div>
-
-              <div className="mb-4">
-                <p className="font-semibold text-lg text-red-600">Busy Hours</p>
-                <p className="text-gray-800 text-md">
-                  {volunteer.busy_hours || "Not specified"}
-                </p>
-              </div>
-
-              <div className="mb-4">
-                <p className="font-semibold text-lg text-emerald-900">
-                  Location
-                </p>
-                <p className="text-gray-800 text-md">
-                  {volunteer.location || "Not specified"}
-                </p>
-              </div>
-
-              <div>
-                <p className="font-semibold text-lg text-emerald-900">
-                  Preferred Type of Volunteering
-                </p>
-                <ul className="list-disc list-inside text-gray-800 text-md space-y-1">
-                  {volunteer.preferred_volunteering ? (
-                    volunteer.preferred_volunteering
-                      .split(",")
-                      .map((type, idx) => <li key={idx}>{type.trim()}</li>)
-                  ) : (
-                    <li>Not specified</li>
-                  )}
-                </ul>
-              </div>
-            </div>
-
-            <div className="w-2/5 flex justify-center items-center px-4 py-4 overflow-y-auto">
-              <div
-                className="rounded-xl p-6 w-full flex flex-col"
-                style={{ backgroundColor: "#b8d9c8" }}
-              >
-                <h3 className="text-4xl font-bold text-emerald-900 mb-1 text-center font-serif">
-                  CENTRO<span className="text-yellow-500">suggests</span>
+              {/* Right Panel - AI Suggestions */}
+              <div className="w-3/5 px-6 py-6"></div>
+             <div
+  className="rounded-xl p-6 w-full flex flex-col"
+  style={{
+  backgroundColor: "#e8f4ee",
+  border: "1px solid #c8dcd2",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+}}
+>
+                <h3 className="text-3xl font-bold text-emerald-900 mb-1 text-center">
+                  CENTRO<span className="text-orange-500 font-normal italic">suggests</span>
                 </h3>
                 <p className="text-center text-emerald-800 font-semibold mb-4 text-base">
                   Event ID: {eventDetails.event_id}
@@ -874,7 +925,7 @@ const handleNextApplicant = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-emerald-800">Call Time:</p>
-                      <p className="text-gray-700">{eventDetails.call_time}</p>
+                      <p className="text-gray-700">{formatCallTime(eventDetails.call_time)}</p>
                     </div>
                     <div>
                       <p className="font-semibold text-emerald-800">Duration:</p>
@@ -890,21 +941,20 @@ const handleNextApplicant = () => {
                       <p className="font-semibold text-emerald-800">Location:</p>
                       <p className="text-gray-700">{eventDetails.location || "N/A"}</p>
                     </div>
-<div className="col-span-2">
-  <p className="font-semibold text-emerald-800">Volunteering Opportunities:</p>
-
-  {eventDetails.volunteer_opportunities ? (
-    <ul className="list-disc list-inside text-gray-700">
-      {eventDetails.volunteer_opportunities
-        .split("-")
-        .map((item, index) => (
-          <li key={index}>{item.trim()}</li>
-        ))}
-    </ul>
-  ) : (
-    <p className="text-gray-700">N/A</p>
-  )}
-</div>
+                    <div className="col-span-2">
+                      <p className="font-semibold text-emerald-800">Volunteering Opportunities:</p>
+                      {eventDetails.volunteer_opportunities ? (
+                        <ul className="list-disc list-inside text-gray-700">
+                          {eventDetails.volunteer_opportunities
+                            .split("-")
+                            .map((item, index) => (
+                              <li key={index}>{item.trim()}</li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-700">N/A</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -917,25 +967,25 @@ const handleNextApplicant = () => {
                   </div>
                 ) : aiSuggestions ? (
                   <>
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="flex-1 pr-4">
+                    <div className="flex justify-between items-start mb-6 gap-4">
+                      <div className="flex-1">
                         <div className="mb-4">
-                          <p className="font-bold text-1xl text-emerald-900">
+                          <p className="font-bold text-xl text-emerald-900">
                             Recommended Time &amp; Duration
                           </p>
-                          <p className="text-gray-800 text-l">
+                          <p className="text-gray-800 text-base">
                             {aiSuggestions.recommendedTimeSlot}{" "}
-                            <span className="text-xs font-bold text-emerald-800">
+                            <span className="text-sm font-bold text-emerald-800">
                               [{aiSuggestions.duration}]
                             </span>
                           </p>
                         </div>
 
                         <div className="mb-4">
-                          <p className="font-bold text-1xl text-emerald-900">
+                          <p className="font-bold text-xl text-emerald-900">
                             Matching Volunteer Types
                           </p>
-                          <ul className="list-disc list-inside text-gray-800 text-l space-y-1 mt-1">
+                          <ul className="list-disc list-inside text-gray-800 text-base space-y-1 mt-1">
                             {aiSuggestions.matchingVolunteerTypes?.map(
                               (type, idx) => (
                                 <li key={idx}>{type}</li>
@@ -944,90 +994,105 @@ const handleNextApplicant = () => {
                           </ul>
                         </div>
 
-{aiSuggestions.reasoning && (
-  <div className="mb-4">
-    <p className="font-bold text-xl text-emerald-900">
-      AI Analysis
-    </p>
-    <ul className="list-disc list-inside text-gray-800 mt-2 space-y-1">
-      {aiSuggestions.reasoning
-        .split(",")
-        .map((item, idx) => {
-          // i-highlight ang numbers at percentages
-          const formatted = item.replace(
-            /(\d+\.?\d*\s*%?)/g,
-            '<span class="font-bold text-emerald-800">$1</span>'
-          );
+                        {aiSuggestions.reasoning && (
+                          <div className="mb-4">
+                            <p className="font-bold text-xl text-emerald-900">
+                              AI Analysis
+                            </p>
+                            <ul className="list-disc list-inside text-gray-800 mt-2 space-y-1">
+                              {aiSuggestions.reasoning
+                                .split(",")
+                                .map((item, idx) => {
+                                  const formatted = item.replace(
+                                    /(\d+\.?\d*\s*%?)/g,
+                                    '<span class="font-bold text-emerald-800">$1</span>'
+                                  );
 
-          return (
-            <li
-              key={idx}
-              className="italic"
-              dangerouslySetInnerHTML={{ __html: formatted.trim() }}
-            />
-          );
-        })}
-    </ul>
-  </div>
-)}
+                                  return (
+                                    <li
+                                      key={idx}
+                                      className="italic text-sm"
+                                      dangerouslySetInnerHTML={{ __html: formatted.trim() }}
+                                    />
+                                  );
+                                })}
+                            </ul>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex flex-col gap-4 flex-shrink-0">
-                        <div className="border-yellow-400 border-2 bg-white rounded-2xl shadow-lg w-80 h-30 flex flex-col items-center justify-center text-center p-4">
-                          <p className="text-base font-semibold text-emerald-800 mb-2">
-                            Compatibility<br/>Score
+                      <div className="flex flex-col gap-3 flex-shrink-0">
+                        <div className="border-yellow-400 border-2 bg-white rounded-xl shadow-lg w-48 h-36 flex flex-col items-center justify-center text-center p-3">
+                          <p className="text-sm font-semibold text-emerald-800 mb-2">
+                            Compatibility Score
                           </p>
-                          <p className="text-5xl font-extrabold text-yellow-500">
+                          <p className="text-4xl font-extrabold text-yellow-500">
                             {aiSuggestions.compatibilityScore}%
                           </p>
-                        </div>
+                        </div>  
 
-                        <div className="border-blue-400 border-2 bg-white rounded-2xl shadow-lg w-80 h-30 flex flex-col items-center justify-center text-center p-4">
-                          <p className="text-base font-semibold text-emerald-800 mb-2">
-                            Accepted<br/>Volunteers
+                        <div className="border-blue-400 border-2 bg-white rounded-xl shadow-lg w-48 h-36 flex flex-col items-center justify-center text-center p-3">
+                          <p className="text-sm font-semibold text-emerald-800 mb-2">
+                            Accepted Volunteers
                           </p>
-                          <p className="text-5xl font-extrabold text-blue-500">
+                          <p className="text-4xl font-extrabold text-blue-500">
                             {acceptedVolunteersCount}/{eventDetails.volunteers_limit}
                           </p>
                         </div>
                       </div>
                     </div>
 
-<div className="mt-auto flex gap-4 justify-center">
-  <button
-    onClick={handleShowApproveModal}
-    disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
-    className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
-      parseInt(aiSuggestions.compatibilityScore) <= 50
-        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-        : "bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
-    }`}
-    title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to approve" : ""}
-  >
-    Approve
-  </button>
-  <button
-    onClick={handleAdjustSchedule}
-    disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
-    className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
-      parseInt(aiSuggestions.compatibilityScore) <= 50
-        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-        : "bg-orange-400 text-white hover:bg-orange-500 cursor-pointer"
-    }`}
-    title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to adjust" : ""}
-  >
-    Adjust
-  </button>
-  <button
-    onClick={handleShowRejectModal}
-    className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 text-md font-semibold cursor-pointer"
-  >
-    Reject
-  </button>
+                    <div className="mt-auto flex gap-4 justify-center">
+                      <button
+                        onClick={handleShowApproveModal}
+                        disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
+                        className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
+                          parseInt(aiSuggestions.compatibilityScore) <= 50
+                            ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                            : "bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
+                        }`}
+                        title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to approve" : ""}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={handleAdjustSchedule}
+                        disabled={parseInt(aiSuggestions.compatibilityScore) <= 50}
+                        className={`px-6 py-3 rounded-lg text-md font-semibold transition-all duration-200 ${
+                          parseInt(aiSuggestions.compatibilityScore) <= 50
+                            ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                            : "bg-orange-400 text-white hover:bg-orange-500 cursor-pointer"
+                        }`}
+                        title={parseInt(aiSuggestions.compatibilityScore) <= 50 ? "Compatibility score must be above 50% to adjust" : ""}
+                      >
+                        Adjust
+                      </button>
+                      <button
+                        onClick={handleShowRejectModal}
+                        className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 text-md font-semibold cursor-pointer"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                    
+                    <div
+  className="rounded-md px-4 py-2 mt-6 text-xs mx-auto text-gray-700"
+  style={{
+    backgroundColor: "#f1f6f4",
+    border: "1px solid #c7d5cf",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+    maxWidth: "800px",
+    textAlign: "center"
+  }}
+>
+  CENTROsuggests may not always be fully accurate. Please review key details before proceeding.
 </div>
+
+
                   </>
                 ) : (
-                  <div className="flex justify-center items-center h-48">
+                  <div className="flex justify-center items-center h-48">CENTROsuggests may contain inaccuracies. Verify important details.
+
                     <p className="text-emerald-900 font-semibold">
                       Failed to generate suggestions. Please try again.
                     </p>
@@ -1037,35 +1102,35 @@ const handleNextApplicant = () => {
             </div>
           </div>
 
-<div className="flex justify-evenly px-4 py-3 border-gray-300">
-  <button
-    onClick={handlePreviousApplicant}
-    disabled={currentVolunteerIndex <= 0}
-    className={`border font-semibold px-4 py-2 rounded-lg text-md ${
-      currentVolunteerIndex <= 0
-        ? "border-gray-500 text-gray-300 cursor-not-allowed"
-        : "border-emerald-600 text-emerald-600 hover:bg-emerald-100"
-    }`}
-  >
-    Previous ({currentVolunteerIndex + 1} of{" "}
-    {allVolunteers.length})
-  </button>
-  <button
-    onClick={handleNextApplicant}
-    disabled={currentVolunteerIndex >= allVolunteers.length - 1}
-    className={`font-semibold px-4 py-2 rounded-lg text-md ${
-      currentVolunteerIndex >= allVolunteers.length - 1
-        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-        : "bg-emerald-600 text-white hover:bg-emerald-700"
-    }`}
-  >
-    Next 
-  </button>
-</div>
+          <div className="flex justify-evenly px-4 py-3">
+            <button
+              onClick={handlePreviousApplicant}
+              disabled={currentVolunteerIndex <= 0}
+              className={`border font-semibold px-4 py-2 rounded-lg text-md cursor-pointer ${
+                currentVolunteerIndex <= 0
+                  ? "border-gray-500 text-gray-300 cursor-not-allowed"
+                  : "border-emerald-600 text-emerald-600 hover:bg-emerald-100"
+              }`}
+            >
+              Previous ({currentVolunteerIndex + 1} of{" "}
+              {allVolunteers.length})
+            </button>
+            <button
+              onClick={handleNextApplicant}
+              disabled={currentVolunteerIndex >= allVolunteers.length - 1}
+              className={`font-semibold px-4 py-2 rounded-lg text-md cursor-pointer ${
+                currentVolunteerIndex >= allVolunteers.length - 1
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-emerald-600 text-white hover:bg-emerald-700"
+              }`}
+            >
+              Next 
+            </button>
+          </div>
         </div>
       </main>
 
-      {/* All modals remain the same */}
+      {/* All modals */}
       {showAdjustConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
@@ -1257,7 +1322,7 @@ const handleNextApplicant = () => {
               </button>
               <button
                 onClick={handleRejectAdjusted}
-                className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 cursor-pointer"
+                className="flex-1 bg-[#e08a8a] text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-[#e08a8a] transition-all duration-200 hover:bg-[#d67676] cursor-pointer"
               >
                 Reject
               </button>
@@ -1303,14 +1368,14 @@ const handleNextApplicant = () => {
 
       {showSuccessReject && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500 p-6 max-w-md w-full mx-4 animate-slideIn">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-[#e08a8a] p-6 max-w-md w-full mx-4 animate-slideIn">
             <div className="text-center">
               <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-[#e08a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </div>
-              <h3 className="text-3xl font-bold text-red-900 mb-2">
+              <h3 className="text-3xl font-bold text-[#d67676] mb-2">
                 Application Rejected
               </h3>
               <p className="text-gray-700 mb-4">
@@ -1433,10 +1498,10 @@ const handleNextApplicant = () => {
           className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
           onClick={(e) => e.target === e.currentTarget && handleCloseRejectModal()}
         >
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-red-700 p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-[#e08a8a] p-6 max-w-md w-full mx-4">
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
-                <h3 className="text-xl font-bold text-red-600">
+                <h3 className="text-xl font-bold text-red-400">
                   Reject 
                 </h3>
               </div>
@@ -1453,7 +1518,7 @@ const handleNextApplicant = () => {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 mb-4 border border-red-700">
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 mb-4 border border-red-400">
               <div className="flex items-center gap-3">
                 <img
                   src={
@@ -1486,7 +1551,7 @@ const handleNextApplicant = () => {
               />
             </div>
 
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-700 rounded-lg p-3 mb-4">
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-400 rounded-lg p-3 mb-4">
               <p className="text-red-700 text-sm font-semibold leading-relaxed">
                 <span className="font-bold">Warning:</span> The volunteer will receive an email notification with your reason.
               </p>
@@ -1503,7 +1568,7 @@ const handleNextApplicant = () => {
               <button
                 onClick={handleConfirmReject}
                 disabled={isSendingEmail}
-                className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 bg-red-400 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-400 transition-all duration-200 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSendingEmail ? "Rejecting..." : "Reject"}
               </button>

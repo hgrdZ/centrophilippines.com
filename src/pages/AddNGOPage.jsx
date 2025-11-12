@@ -92,7 +92,6 @@ function AddNGOPage() {
 
   const supportedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
 
-  // Preferred volunteering options
   const volunteeringOptions = [
     "Education & Youth Development",
     "Healthcare & Medical Aid",
@@ -104,7 +103,6 @@ function AddNGOPage() {
     "Animal Welfare"
   ];
 
-  // Handle close/back navigation with confirmation
   const handleClose = () => {
     const hasFormData = Object.entries(formData).some(([key, value]) => {
       if (key === 'adminType') return value !== 'admin';
@@ -187,7 +185,6 @@ function AddNGOPage() {
     }
   };
 
-  // Handle preferred volunteering selection
   const handleVolunteeringChange = (option) => {
     setFormData(prev => {
       if (prev.preferredVolunteering.includes(option)) {
@@ -204,7 +201,6 @@ function AddNGOPage() {
     });
   };
 
-  // Upload logo to Supabase Storage
   const uploadNgoLogo = async (file) => {
     if (!file) return null;
 
@@ -333,7 +329,6 @@ function AddNGOPage() {
     if (!formData.phone.trim()) missingFields.push("Phone Number");
     if (!formData.email.trim()) missingFields.push("Official Email");
     if (!formData.location.trim()) missingFields.push("NGO Location");
-    if (formData.preferredVolunteering.length === 0) missingFields.push("Preferred Volunteering Types");
     if (formData.preferredVolunteering.length === 0) missingFields.push("Preferred Volunteering Types");
 
     if (missingFields.length > 0) {
@@ -504,50 +499,47 @@ function AddNGOPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmitClick} className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-           {/* Login ID */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Login ID *</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-white mt-1 focus-within:ring-2 focus-within:ring-emerald-400">
+          <form onSubmit={handleSubmitClick} className="p-8 space-y-5 text-left">
+            {/* Row 1: Login ID + Password */}
+            <div className="w-full flex flex-wrap gap-6">
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 font-semibold text-base text-emerald-900">Login ID</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                   <input
-                  type="text"
-                  name="loginId"
-                  value={formData.loginId}
-                  onChange={handleChange}
-                  placeholder="Enter login ID"
-                  className="w-full outline-none"
-                  required
-                  disabled={loading || logoUploading}
-                />
-                <img
-                  src={AdminIcon}
-                  alt="Login Icon"
-                  className="w-5 h-5 ml-2"
-                />
+                    type="text"
+                    name="loginId"
+                    value={formData.loginId}
+                    onChange={handleChange}
+                    placeholder="Enter login ID"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img src={AdminIcon} alt="Login Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
+                </div>
               </div>
-            </div>
 
-            {/* Password with Icon */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Password *</label>
-              <div className="flex items-center bg-white border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-400 mt-1">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter password"
-                  className="w-full outline-none"
-                  required
-                  disabled={loading || logoUploading}
-                />
-                <img
-                  src={showPassword ? ShowPasswordIcon : PasswordIcon}
-                  alt={showPassword ? "Hide password" : "Password icon"}
-                  className="w-5 h-5 ml-2 cursor-pointer hover:opacity-70 transition-opacity duration-200"
-                  onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? "Hide Password" : "Show Password"}
-                />
+              <div className="flex-1 min-w-[250px]">
+                <label className="block mb-2 font-semibold text-base text-emerald-900">Password</label>
+                <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter password"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                    required
+                    disabled={loading || logoUploading}
+                  />
+                  <img
+                    src={showPassword ? ShowPasswordIcon : PasswordIcon}
+                    alt={showPassword ? "Hide password" : "Password icon"}
+                    className="w-5 h-5 ml-2 opacity-70 cursor-pointer hover:opacity-100 transition-opacity duration-200 flex-shrink-0"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? "Hide Password" : "Show Password"}
+                  />
+                </div>
               </div>
             </div>
 
@@ -741,48 +733,11 @@ function AddNGOPage() {
                   value={formData.location}
                   onChange={handleChange}
                   placeholder="Enter NGO location"
-                    className="w-full outline-none text-sm"
-                    required
-                    disabled={loading || logoUploading}
-                  />
-                  <img
-                    src={LocationIcon}
-                    alt="Location Icon"
-                    className="w-5 h-5 ml-2 flex-shrink-0"
-                  />
-                </div>
-              </div>
-
-            {/* Preferred Volunteering Types */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preferred Volunteering Types *
-              </label>
-              <div className="border rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {volunteeringOptions.map((option) => (
-                    <label 
-                      key={option} 
-                      className="flex items-center p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.preferredVolunteering.includes(option)}
-                        onChange={() => handleVolunteeringChange(option)}
-                        disabled={loading || logoUploading}
-                        className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
-                      />
-                      <span className="ml-3 text-sm text-gray-700">{option}</span>
-                    </label>
-                  ))}
-                </div>
-                {formData.preferredVolunteering.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-emerald-200">
-                    <p className="text-xs text-emerald-700 font-medium">
-                      Selected: {formData.preferredVolunteering.join(", ")}
-                    </p>
-                  </div>
-                )}
+                  className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+                  required
+                  disabled={loading || logoUploading}
+                />
+                <img src={LocationIcon} alt="Location Icon" className="w-5 h-5 ml-2 opacity-70 flex-shrink-0" />
               </div>
             </div>
 
