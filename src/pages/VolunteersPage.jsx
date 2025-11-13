@@ -484,8 +484,11 @@ const VolunteersPage = () => {
                     <h3 className="text-2xl text-emerald-900 font-montserrat mt-6 font-bold leading-tight">
                       {selectedVolunteer.firstname} <br /> {selectedVolunteer.lastname}
                     </h3>
-<p className="flex items-center gap-2 text-sm text-gray-600 font-montserrat font-semibold bg-emerald-100 mt-1 px-3 py-1 rounded-full inline-block">
-  {selectedVolunteer.user_id}
+<div className="flex items-center gap-2 mt-1">
+  <p className="text-sm text-gray-600 font-montserrat font-semibold bg-emerald-100 px-3 py-1 rounded-full inline-block">
+    {selectedVolunteer.user_id}
+  </p>
+
   {selectedVolunteer.gender && (
     <img
       src={selectedVolunteer.gender === "Male" ? MaleIcon : FemaleIcon}
@@ -493,7 +496,7 @@ const VolunteersPage = () => {
       className="w-4 h-4"
     />
   )}
-</p>
+</div>
                   </div>
                 </div>
 
