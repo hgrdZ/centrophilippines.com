@@ -3,7 +3,8 @@ import { useLocation, Link } from "react-router-dom";
 import supabase from "../config/supabaseClient";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import Sidebar from "../components/Sidebar";
-
+import MaleIcon from "../images/male.png";
+import FemaleIcon from "../images/female.png";
 export default function ReviewApplicationPage() {
   const [pendingApplications, setPendingApplications] = useState([]);
   const [selectedVolunteer, setSelectedVolunteer] = useState(null);
@@ -445,9 +446,19 @@ export default function ReviewApplicationPage() {
                         alt={selectedVolunteer.firstname}
                         className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
                       />
-                      <h3 className="text-2xl text-emerald-900 font-bold text-center mb-6">
-                        {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-                      </h3>
+<div className="flex justify-center items-center gap-2 mb-6">
+  <h3 className="text-2xl text-emerald-900 font-bold text-center">
+    {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+  </h3>
+
+  {selectedVolunteer.gender && (
+    <img
+      src={selectedVolunteer.gender === "Male" ? MaleIcon : FemaleIcon}
+      alt={selectedVolunteer.gender}
+      className="w-5 h-5"
+    />
+  )}
+</div>
                       <p className="text-m text-emerald-900 mb-4">
                         <span className="font-bold text-xl">Email Address</span>
                         <br />
