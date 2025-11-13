@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
@@ -8,7 +7,8 @@ import CreateEventIcon from "../images/create-event.svg";
 import MaleIcon from "../images/male.png";
 import FemaleIcon from "../images/female.png";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable"; // FIX: Import autoTable as a function
+import React, { useState, useEffect, useRef } from "react";
 import {
   PieChart,
   Pie,
@@ -1269,19 +1269,19 @@ export default function DashboardPage() {
         .eq("ngo_code", ngoCode)
         .single();
 
-      const { data: registeredVols } = await supabase
-        .from("Registered_Volunteers")
-        .select("user_id, joined_ngo")
-        .like("joined_ngo", `%${ngoCode}%`);
+const { data: registeredVols } = await supabase
+  .from("Registered_Volunteers")
+  .select("user_id, joined_ngo")
+  .like("joined_ngo", `%${ngoCode}%`);
 
-      const volunteerIds =
-        registeredVols
-          ?.filter((vol) => {
-            if (!vol.joined_ngo) return false;
-            const ngoCodes = vol.joined_ngo.split("-");
-            return ngoCodes.includes(ngoCode);
-          })
-          .map((v) => v.user_id) || [];
+// Ensure registeredVols is always an array
+const volunteerIds = (registeredVols || [])
+  .filter((vol) => {
+    if (!vol.joined_ngo) return false;
+    const ngoCodes = vol.joined_ngo.split("-");
+    return ngoCodes.includes(ngoCode);
+  })
+  .map((v) => v.user_id);
 
       const totalVolunteers = volunteerIds.length;
       const genderData = await fetchGenderDataRealtime(volunteerIds);
@@ -1503,7 +1503,7 @@ export default function DashboardPage() {
 
       if (activeFilters.gender !== "all") {
         const { data: usersData } = await supabase
-          .from("User_Information")
+          .from("LoginInformation") // FIX: Changed from User_Information
           .select("user_id, gender")
           .in("user_id", filteredVolunteerIds)
           .eq("gender", activeFilters.gender);
@@ -1586,7 +1586,7 @@ export default function DashboardPage() {
 
       const userIds = [...new Set(filteredEventUsers.map((eu) => eu.user_id))];
       const { data: usersData } = await supabase
-        .from("User_Information")
+        .from("LoginInformation") // FIX: Changed from User_Information
         .select("user_id, gender")
         .in("user_id", userIds);
 
@@ -1739,7 +1739,7 @@ export default function DashboardPage() {
 
       const userIds = [...new Set(eventUsers.map((eu) => eu.user_id))];
       const { data: usersData } = await supabase
-        .from("User_Information")
+        .from("LoginInformation") // FIX: Changed from User_Information
         .select("user_id, gender")
         .in("user_id", userIds);
 
@@ -1806,23 +1806,582 @@ export default function DashboardPage() {
     }));
   };
 
+// Helper function to add logo to PDF
+  const addLogo = async (doc, x, y, width, height, opacity = 1) => {
+    if (!dashboardData.ngoLogo) return;
+    
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = dashboardData.ngoLogo;
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      
+      if (opacity < 1) {
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({ opacity }));
+      }
+      
+      doc.addImage(img, "PNG", x, y, width, height);
+      
+      if (opacity < 1) {
+        doc.restoreGraphicsState();
+      }
+    } catch (error) {
+      console.error("Error adding logo:", error);
+    }
+  };
+
+  // Helper function to format date
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Helper function to format time
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "N/A";
+    return new Date(`2000-01-01T${timeStr}`).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Helper function to calculate duration
+  const calculateDuration = (startTime, endTime) => {
+    if (!startTime || !endTime) return "N/A";
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const diff = Math.abs(end - start) / 36e5; // hours
+    return `${diff.toFixed(1)} hours`;
+  };
+
   const handleGenerateReport = async (
     selectedData,
     selectedYear,
     reportType
   ) => {
     try {
-      alert(
-        `Generating ${reportType} report for ${
-          reportType === "single"
-            ? "month " + selectedData
-            : selectedData.length + " months"
-        } in ${selectedYear || "selected period"}...`
-      );
       setReportModalOpen(false);
+      setLoading(true);
+
+      const ngoCode = viewingContext?.ngo_code;
+      if (!ngoCode) {
+        alert("NGO information not found.");
+        setLoading(false);
+        return;
+      }
+
+      // Determine month(s) and report details
+      let selectedMonth, selectedMonths;
+      let isAnnualReport = false;
+      let reportTitle;
+
+      if (reportType === "single") {
+        selectedMonth = selectedData;
+        const monthName = new Date(selectedYear, selectedData - 1).toLocaleString(
+          "default", { month: "long" }
+        );
+        reportTitle = `Monthly Report: ${monthName} ${selectedYear}`;
+      } else if (reportType === "multiple") {
+        selectedMonths = selectedData; // array of "YYYY-MM" strings
+        reportTitle = `Multi-Month Report (${selectedMonths.length} months) - ${selectedYear}`;
+      } else if (reportType === "annual") {
+        isAnnualReport = true;
+        reportTitle = `Annual Report ${selectedYear}`;
+      }
+
+      // --- 1. DATA FETCHING ---
+      console.log("Starting data fetch...");
+      
+      const [
+        eventsResult, 
+        eventUsersResult, 
+        applicationsResult, 
+        taskSubmissionsResult, 
+        registeredVolunteersResult
+      ] = await Promise.all([
+        supabase.from("Event_Information").select("*").eq("ngo_id", ngoCode),
+        supabase.from("Event_User").select("user_id, event_id, status, date_joined").eq("ngo_id", ngoCode),
+        supabase.from("Application_Status").select("application_id, date_application, result").eq("ngo_id", ngoCode),
+        supabase.from("Task_Submissions").select("user_id, event_id, status"),
+        supabase.from("Registered_Volunteers").select("user_id, joined_ngo").like("joined_ngo", `%${ngoCode}%`)
+      ]);
+
+      const events = eventsResult.data || [];
+      const eventUsers = eventUsersResult.data || [];
+      const applications = applicationsResult.data || [];
+      const taskSubmissions = taskSubmissionsResult.data || [];
+      const registeredVolunteers = registeredVolunteersResult.data || [];
+
+      console.log(`Fetched ${events.length} events`);
+
+      if (events.length === 0) {
+        alert("No events found for this NGO.");
+        setLoading(false);
+        return;
+      }
+
+      // Get all user IDs and fetch profiles
+      const allUserIds = [...new Set(eventUsers.map(u => u.user_id))];
+      let userProfiles = [];
+      
+      if (allUserIds.length > 0) {
+        const [loginResult, profileResult] = await Promise.all([
+          supabase.from("LoginInformation").select("user_id, gender").in("user_id", allUserIds),
+          supabase.from("LoginInformation").select("user_id, birthdate, city").in("user_id", allUserIds) // FIX: Changed from User_Information
+        ]);
+
+        const loginData = loginResult.data || [];
+        const profileData = profileResult.data || [];
+
+        // Merge gender and profile data
+        userProfiles = allUserIds.map(userId => {
+          const login = loginData.find(l => l.user_id === userId);
+          const profile = profileData.find(p => p.user_id === userId);
+          return {
+            user_id: userId,
+            sex: login?.gender,
+            birthdate: profile?.birthdate,
+            city: profile?.city
+          };
+        });
+      }
+
+      console.log(`Fetched ${userProfiles.length} user profiles`);
+
+      // --- 2. DATA FILTERING & PROCESSING ---
+      let filteredEvents;
+
+      if (isAnnualReport) {
+        filteredEvents = events.filter(
+          (ev) => ev.date && new Date(ev.date).getFullYear() === parseInt(selectedYear)
+        );
+      } else if (reportType === "multiple") {
+        filteredEvents = events.filter((ev) => {
+          if (!ev.date) return false;
+          const eventMonth = ev.date.substring(0, 7); // "YYYY-MM"
+          return selectedMonths.includes(eventMonth);
+        });
+      } else {
+        filteredEvents = events.filter((ev) => {
+          if (!ev.date) return false;
+          const d = new Date(ev.date);
+          return (
+            d.getMonth() + 1 === parseInt(selectedMonth) &&
+            d.getFullYear() === parseInt(selectedYear)
+          );
+        });
+      }
+
+      console.log(`Filtered to ${filteredEvents.length} events`);
+
+      if (!filteredEvents || filteredEvents.length === 0) {
+        alert("No events found for the selected period.");
+        setLoading(false);
+        return;
+      }
+
+      const sortedEvents = filteredEvents.sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+      const eventIdsInReport = sortedEvents.map(e => e.event_id);
+
+      const reportEventUsers = eventUsers.filter(eu => eventIdsInReport.includes(eu.event_id));
+      const reportTaskSubmissions = taskSubmissions.filter(ts => eventIdsInReport.includes(ts.event_id));
+      
+      const totalNgoVolunteers = registeredVolunteers
+          .filter(vol => vol.joined_ngo?.split('-').includes(ngoCode))
+          .length;
+
+      // --- 3. HELPER FUNCTIONS ---
+      const getEventMetrics = (event, allEventUsers, allTaskSubmissions) => {
+        const eventUsers = allEventUsers.filter(eu => eu.event_id === event.event_id);
+        const approvedUsers = eventUsers.filter(eu => eu.status === "APPROVED");
+        const approvedUserIds = approvedUsers.map(eu => eu.user_id);
+
+        const attendedUsers = allTaskSubmissions.filter(ts => 
+          ts.event_id === event.event_id &&
+          approvedUserIds.includes(ts.user_id) &&
+          ts.status === "APPROVED"
+        );
+        const uniqueAttendedUserIds = [...new Set(attendedUsers.map(ts => ts.user_id))];
+
+        const metrics = {
+          totalSignups: eventUsers.length,
+          approvedCount: approvedUsers.length,
+          pendingCount: eventUsers.filter(eu => eu.status === "PENDING").length,
+          rejectedCount: eventUsers.filter(eu => eu.status === "REJECTED").length,
+          attendanceCount: uniqueAttendedUserIds.length,
+        };
+
+        metrics.attendanceRate = metrics.approvedCount > 0 
+          ? ((metrics.attendanceCount / metrics.approvedCount) * 100).toFixed(0) + "%" 
+          : "0%";
+          
+        metrics.participationRate = totalNgoVolunteers > 0
+          ? ((metrics.approvedCount / totalNgoVolunteers) * 100).toFixed(1) + "%"
+          : "N/A";
+
+        return metrics;
+      };
+
+      const getDemographics = (userIds, allUserProfiles) => {
+        const profiles = allUserProfiles.filter(p => userIds.includes(p.user_id));
+        const demographics = {
+          gender: {},
+          ageGroups: { 'Under 18': 0, '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55+': 0, 'Unknown': 0 },
+          locations: {}
+        };
+
+        profiles.forEach(p => {
+          const sex = p.sex || 'Unknown';
+          demographics.gender[sex] = (demographics.gender[sex] || 0) + 1;
+
+          if (p.birthdate) {
+            try {
+              const age = new Date().getFullYear() - new Date(p.birthdate).getFullYear();
+              if (age < 18) demographics.ageGroups['Under 18']++;
+              else if (age <= 24) demographics.ageGroups['18-24']++;
+              else if (age <= 34) demographics.ageGroups['25-34']++;
+              else if (age <= 44) demographics.ageGroups['35-44']++;
+              else if (age <= 54) demographics.ageGroups['45-54']++;
+              else demographics.ageGroups['55+']++;
+            } catch { demographics.ageGroups['Unknown']++; }
+          } else {
+            demographics.ageGroups['Unknown']++;
+          }
+
+          const city = p.city || 'Unknown';
+          demographics.locations[city] = (demographics.locations[city] || 0) + 1;
+        });
+
+        return demographics;
+      };
+
+      // --- 4. PRE-COMPUTE ALL DATA ---
+      console.log("Processing events data...");
+      const processedEvents = sortedEvents.map(event => {
+        const metrics = getEventMetrics(event, reportEventUsers, reportTaskSubmissions);
+        const approvedUserIds = reportEventUsers
+          .filter(eu => eu.event_id === event.event_id && eu.status === "APPROVED")
+          .map(eu => eu.user_id);
+        const demographics = getDemographics(approvedUserIds, userProfiles);
+        return { ...event, metrics, demographics };
+      });
+
+      console.log("Starting PDF generation...");
+
+      // --- 5. PDF INITIALIZATION ---
+      const doc = new jsPDF("l", "mm", "a4");
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      let y = 25;
+
+      // --- 6. PDF PAGE GENERATION ---
+      // PAGE 1: COVER PAGE
+      console.log("Creating cover page...");
+      if (dashboardData.ngoLogo) {
+        try {
+          await addLogo(doc, pageW / 2 - 35, 20, 70, 70);
+        } catch (error) {
+          console.error("Error adding logo to cover:", error);
+        }
+      }
+      y = 100;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(0, 100, 0);
+      doc.text(dashboardData.ngoName || "CENTRO Organization", pageW / 2, y, { align: "center" });
+      y += 12;
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Organization Accomplishment Report", pageW / 2, y, { align: "center" });
+      y += 12;
+      doc.setFontSize(14);
+      doc.text(reportTitle, pageW / 2, y, { align: "center" });
+
+      // PAGE 2: OVERALL REPORT SUMMARY
+      console.log("Creating summary page...");
+      doc.addPage();
+      y = 25;
+      
+      if (dashboardData.ngoLogo) {
+        try {
+          await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
+        } catch (error) {
+          console.error("Error adding watermark:", error);
+        }
+      }
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(0, 100, 0);
+      doc.text("Overall Report Summary", 14, y);
+      y += 10;
+      
+      const totalSignups = processedEvents.reduce((sum, e) => sum + e.metrics.totalSignups, 0);
+      const totalApproved = processedEvents.reduce((sum, e) => sum + e.metrics.approvedCount, 0);
+      const totalAttended = processedEvents.reduce((sum, e) => sum + e.metrics.attendanceCount, 0);
+      
+      let filteredApplications = applications || [];
+      if (isAnnualReport) {
+        filteredApplications = filteredApplications.filter(app => {
+          if (!app.date_application) return false;
+          const appDate = new Date(app.date_application);
+          return appDate.getFullYear() === parseInt(selectedYear) &&
+                 appDate.getMonth() + 1 === parseInt(selectedMonth);
+        });
+      }
+      const totalApplications = filteredApplications.length;
+      
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`•  Total Events in Period: ${processedEvents.length}`, 16, y); y+=6;
+      doc.text(`•  Total Event Signups: ${totalSignups}`, 16, y); y+=6;
+      doc.text(`•  Total Approved Volunteers (Unique): ${[...new Set(reportEventUsers.filter(eu => eu.status === 'APPROVED').map(eu => eu.user_id))].length}`, 16, y); y+=6;
+      doc.text(`•  Total Attended Volunteers (Unique): ${[...new Set(reportTaskSubmissions.filter(ts => ts.status === 'APPROVED').map(ts => ts.user_id))].length}`, 16, y); y+=6;
+      doc.text(`•  Total New Applications in Period: ${totalApplications}`, 16, y); y+=6;
+      doc.text(`•  Total Registered Volunteers (NGO-wide): ${totalNgoVolunteers}`, 16, y); y+=10;
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(0, 100, 0);
+      doc.text("Event Summary Table", 14, y);
+      y += 6;
+
+      const summaryTableHeaders = [
+        "Event ID", "Title", "Date", "Status", "Signups", "Approved", "Attendance", "Attendance Rate", "Participation Rate"
+      ];
+      const summaryTableBody = processedEvents.map(e => [
+        e.event_id,
+        e.event_title,
+        formatDate(e.date),
+        e.status || "N/A",
+        e.metrics.totalSignups,
+        e.metrics.approvedCount,
+        e.metrics.attendanceCount,
+        e.metrics.attendanceRate,
+        e.metrics.participationRate
+      ]);
+      
+      autoTable(doc, { // FIX: Use autoTable function
+        startY: y,
+        head: [summaryTableHeaders],
+        body: summaryTableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 100, 0] },
+        styles: { fontSize: 8 },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+
+      // PAGE 3: OVERALL DEMOGRAPHICS SUMMARY
+      console.log("Creating demographics page...");
+      doc.addPage();
+      y = 25;
+      
+      if (dashboardData.ngoLogo) {
+        try {
+          await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
+        } catch (error) {
+          console.error("Error adding watermark:", error);
+        }
+      }
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(0, 100, 0);
+      doc.text("Overall Volunteer Demographics", 14, y);
+      y += 10;
+      doc.setFontSize(10);
+      doc.setTextColor(0,0,0);
+      doc.text("(Based on all unique approved volunteers for events in this period)", 14, y);
+      y += 10;
+
+      const allApprovedUserIds = [...new Set(reportEventUsers.filter(eu => eu.status === "APPROVED").map(eu => eu.user_id))];
+      const overallDemographics = getDemographics(allApprovedUserIds, userProfiles);
+      
+      const col1X = 14;
+      const col2X = pageW / 3 + 10;
+      const col3X = (pageW / 3) * 2 + 10;
+      const tableWidth = pageW / 3 - 20;
+      let y_col1 = y, y_col2 = y, y_col3 = y;
+
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+      doc.text("Gender Distribution", col1X, y_col1); y_col1 += 6;
+      autoTable(doc, { // FIX: Use autoTable function
+        startY: y_col1,
+        head: [['Gender', 'Count']],
+        body: Object.entries(overallDemographics.gender).map(([key, value]) => [key, value]),
+        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
+        margin: { right: pageW - (col1X + tableWidth) }
+      });
+      y_col1 = doc.lastAutoTable.finalY;
+
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+      doc.text("Age Distribution", col2X, y_col2); y_col2 += 6;
+      autoTable(doc, { // FIX: Use autoTable function
+        startY: y_col2,
+        head: [['Age Group', 'Count']],
+        body: Object.entries(overallDemographics.ageGroups).map(([key, value]) => [key, value]),
+        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
+        margin: { left: col2X, right: pageW - (col2X + tableWidth) }
+      });
+      y_col2 = doc.lastAutoTable.finalY;
+
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+      doc.text("Location Distribution (City)", col3X, y_col3); y_col3 += 6;
+      autoTable(doc, { // FIX: Use autoTable function
+        startY: y_col3,
+        head: [['City', 'Count']],
+        body: Object.entries(overallDemographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10),
+        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
+        margin: { left: col3X }
+      });
+      y_col3 = doc.lastAutoTable.finalY;
+
+      // PAGE 4+: INDIVIDUAL EVENT REPORTS
+      console.log(`Creating ${processedEvents.length} individual event pages...`);
+      for (const event of processedEvents) {
+        doc.addPage();
+        y = 25;
+        
+        if (dashboardData.ngoLogo) {
+          try {
+            await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
+          } catch (error) {
+            console.error("Error adding watermark:", error);
+          }
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(0, 100, 0);
+        const eventTitle = event.event_title || "Untitled Event";
+        doc.text(`Detailed Report for: ${eventTitle}`, 14, y);
+        y += 10;
+
+        const detailsTableWidth = pageW / 2 - 20;
+        const metricsTableX = pageW / 2 + 5;
+
+        const detailsBody = [
+          ["Event ID", event.event_id],
+          ["Date", formatDate(event.date)],
+          ["Time", `${formatTime(event.time_start)} – ${formatTime(event.time_end)}`],
+          ["Duration", calculateDuration(event.time_start, event.time_end)],
+          ["Location", event.location || "TBA"],
+          ["Status", event.status || "N/A"]
+        ];
+        autoTable(doc, { // FIX: Use autoTable function
+          startY: y,
+          head: [['Field', 'Value']],
+          body: detailsBody,
+          theme: 'grid',
+          headStyles: { fillColor: [0, 100, 0] },
+          margin: { right: pageW - (14 + detailsTableWidth) }
+        });
+        let y_left = doc.lastAutoTable.finalY;
+
+        const metricsBody = [
+          ["Total Signups", event.metrics.totalSignups],
+          ["Approved", event.metrics.approvedCount],
+          ["Pending", event.metrics.pendingCount],
+          ["Rejected", event.metrics.rejectedCount],
+          ["Attended", event.metrics.attendanceCount],
+          ["Attendance Rate", event.metrics.attendanceRate + " (Attended / Approved)"],
+          ["Participation Rate", event.metrics.participationRate + " (Approved / Total NGO Vols)"]
+        ];
+        autoTable(doc, { // FIX: Use autoTable function
+          startY: y,
+          head: [['Metric', 'Value']],
+          body: metricsBody,
+          theme: 'grid',
+          headStyles: { fillColor: [0, 100, 0] },
+          margin: { left: metricsTableX }
+        });
+        let y_right = doc.lastAutoTable.finalY;
+
+        y = Math.max(y_left, y_right) + 10;
+
+        doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+        doc.setTextColor(0, 100, 0);
+        doc.text("Event-Specific Volunteer Demographics", 14, y);
+        y += 8;
+
+        let y_col1_event = y, y_col2_event = y, y_col3_event = y;
+
+        doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+        doc.text("Gender", col1X, y_col1_event); y_col1_event += 5;
+        autoTable(doc, { // FIX: Use autoTable function
+          startY: y_col1_event,
+          head: [['Gender', 'Count']],
+          body: Object.entries(event.demographics.gender).map(([key, value]) => [key, value]),
+          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
+          margin: { right: pageW - (col1X + tableWidth) }
+        });
+
+        doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+        doc.text("Age", col2X, y_col2_event); y_col2_event += 5;
+        autoTable(doc, { // FIX: Use autoTable function
+          startY: y_col2_event,
+          head: [['Age Group', 'Count']],
+          body: Object.entries(event.demographics.ageGroups).map(([key, value]) => [key, value]),
+          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
+          margin: { left: col2X, right: pageW - (col2X + tableWidth) }
+        });
+
+        doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+        doc.text("Location (Top 10)", col3X, y_col3_event); y_col3_event += 5;
+        autoTable(doc, { // FIX: Use autoTable function
+          startY: y_col3_event,
+          head: [['City', 'Count']],
+          body: Object.entries(event.demographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10),
+          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
+          margin: { left: col3X }
+        });
+      }
+
+      // FINAL PAGE & FOOTER
+      console.log("Adding page numbers and footer...");
+      const totalPages = doc.internal.getNumberOfPages();
+      const generatedDate = new Date().toLocaleString("en-US", {
+        year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
+      });
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 10, { align: "center" });
+        doc.text(`Generated: ${generatedDate}`, 14, pageH - 10);
+      }
+
+      let fileName;
+      if (isAnnualReport) {
+        fileName = `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`;
+      } else if (reportType === "multiple") {
+        fileName = `${dashboardData.ngoName || "NGO"}_Multi_Month_Report_${selectedYear}.pdf`;
+      } else {
+        const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' });
+        fileName = `${dashboardData.ngoName || "NGO"}_${monthName}_${selectedYear}_Report.pdf`;
+      }
+      
+      console.log("Saving PDF:", fileName);
+      doc.save(fileName);
+      
+      console.log("Report generated successfully!");
+      alert("Report generated successfully!");
+      setLoading(false);
     } catch (error) {
       console.error("Error generating report:", error);
-      alert("An error occurred while generating the report.");
+      alert("An error occurred while generating the report. Please check the console for details.");
+      setLoading(false);
     }
   };
 
