@@ -37,16 +37,16 @@ const COLORS = {
 };
 
 // Helper function for real-time gender counting
-const fetchGenderDataRealtime = async (volunteerIds) => {
-  if (!volunteerIds || volunteerIds.length === 0) {
+const fetchGenderDataRealtime = async (userIds) => {
+  if (!userIds || userIds.length === 0) {
     return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
   }
 
   try {
     const { data: usersData, error } = await supabase
-      .from("User_Information")
+      .from("LoginInformation")
       .select("user_id, gender")
-      .in("user_id", volunteerIds);
+      .in("user_id", userIds);
 
     if (error) {
       console.error("Error fetching gender data:", error);
@@ -57,8 +57,8 @@ const fetchGenderDataRealtime = async (volunteerIds) => {
     let femaleCount = 0;
 
     usersData?.forEach((user) => {
-      if (user.gender === "Male") maleCount++;
-      else if (user.gender === "Female") femaleCount++;
+      if (user.gender?.toLowerCase() === "male") maleCount++;
+      else if (user.gender?.toLowerCase() === "female") femaleCount++;
     });
 
     const total = maleCount + femaleCount;
