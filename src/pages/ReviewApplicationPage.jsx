@@ -43,7 +43,7 @@ export default function ReviewApplicationPage() {
             data.map(async (application) => {
               const { data: volunteerData, error: userError } = await supabase
                 .from("LoginInformation")
-                .select("user_id, firstname, lastname, email, profile_picture, contact_number, preferred_volunteering")
+                .select("user_id, firstname, lastname, email, profile_picture, contact_number, gender, preferred_volunteering")
                 .eq("user_id", application.user_id)
                 .single();
 

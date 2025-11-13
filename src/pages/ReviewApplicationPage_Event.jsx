@@ -96,7 +96,7 @@ export default function ReviewApplicationEventPage() {
         const { data: volunteerData, error: userError } = await supabase
           .from("LoginInformation")
           .select(
-            "user_id, firstname, lastname, email, contact_number, profile_picture, preferred_volunteering"
+            "user_id, firstname, lastname, email, contact_number, profile_picture, gender, preferred_volunteering"
           )
           .eq("user_id", app.user_id)
           .single();
