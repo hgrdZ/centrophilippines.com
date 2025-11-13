@@ -629,7 +629,7 @@ function ManageReports() {
 
               <button
                 onClick={() => setShowReportModal(true)}
-                className="bg-emerald-900 text-white font-semibold px-6 py-2 rounded-lg hover:bg-emerald-800 transition flex items-center gap-2"
+                className="px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-700 cursor-pointer"
               >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -652,69 +652,154 @@ function ManageReports() {
 
           {/* Report Generation Modal */}
           {showReportModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-emerald-900">Generate Report</h2>
+            <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full flex overflow-hidden" style={{ height: "650px" }} onClick={(e) => e.stopPropagation()}>
+                
+                {/* Left Sidebar */}
+                <div className="w-1/3 border-r bg-white overflow-y-auto">
+                  <div className="p-4 bg-emerald-900 text-white">
+                    <h3 className="text-lg font-bold">Report Generator</h3>
+                  </div>
                   <button
-                    onClick={() => setShowReportModal(false)}
-                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                    onClick={() => {}}
+                    className="w-full px-6 py-4 text-left hover:bg-emerald-100 transition-all cursor-pointer bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
                   >
-                    ×
+                    Report Type
                   </button>
                 </div>
 
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Select Month
-                    </label>
-                    <select
-                      value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                {/* Right Content */}
+                <div className="flex-1 flex flex-col">
+                  {/* Header */}
+                  <div className="px-6 py-4 bg-emerald-900 text-white relative">
+                    <h3 className="text-xl font-bold">Report Type</h3>
+                    <button
+                      onClick={() => setShowReportModal(false)}
+                      className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors cursor-pointer"
                     >
-                      <option value="">-- Select Month --</option>
-                      <option value="all">All Months</option>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <option key={i + 1} value={i + 1}>
-                          {new Date(0, i).toLocaleString("default", { month: "long" })}
-                        </option>
-                      ))}
-                    </select>
+                      ×
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Select Year
-                    </label>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(e.target.value)}
-                      className="w-full border-2 border-emerald-900 rounded-lg px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="">-- Select Year --</option>
-                      {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+                    <div className="space-y-3">
+                      <label className="flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all bg-emerald-50 border-emerald-500 shadow-lg">
+                        <input
+                          type="radio"
+                          name="reportType"
+                          value="single"
+                          checked={selectedMonth !== "all"}
+                          onChange={() => setSelectedMonth("")}
+                          className="mt-1 w-4 h-4 text-emerald-600"
+                        />
+                        <div className="ml-3 flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="font-bold text-gray-800">Single Month</div>
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">Generate report for a specific month</div>
+                          
+                          {selectedMonth !== "all" && (
+                            <div className="mt-4 space-y-3">
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  Select Month
+                                </label>
+                                <select
+                                  value={selectedMonth}
+                                  onChange={(e) => setSelectedMonth(e.target.value)}
+                                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
+                                >
+                                  <option value="">-- Select Month --</option>
+                                  {Array.from({ length: 12 }, (_, i) => (
+                                    <option key={i + 1} value={i + 1}>
+                                      {new Date(0, i).toLocaleString("default", { month: "long" })}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  Select Year
+                                </label>
+                                <select
+                                  value={selectedYear}
+                                  onChange={(e) => setSelectedYear(e.target.value)}
+                                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
+                                >
+                                  <option value="">-- Select Year --</option>
+                                  {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                                    <option key={year} value={year}>
+                                      {year}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </label>
 
-                <div className="flex gap-3 mt-8">
-                  <button
-                    onClick={() => setShowReportModal(false)}
-                    className="flex-1 bg-gray-300 text-gray-700 font-semibold px-4 py-3 rounded-lg hover:bg-gray-400 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleGenerateMonthlyReport}
-                    className="flex-1 bg-emerald-900 text-white font-semibold px-4 py-3 rounded-lg hover:bg-emerald-800 transition"
-                  >
-                    Generate PDF
-                  </button>
+                      <label className="flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50">
+                        <input
+                          type="radio"
+                          name="reportType"
+                          value="annual"
+                          checked={selectedMonth === "all"}
+                          onChange={() => setSelectedMonth("all")}
+                          className="mt-1 w-4 h-4 text-emerald-600"
+                        />
+                        <div className="ml-3 flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="font-bold text-gray-800">Annual Report</div>
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">Generate yearly report</div>
+                          
+                          {selectedMonth === "all" && (
+                            <div className="mt-4">
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Select Year
+                              </label>
+                              <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
+                              >
+                                <option value="">-- Select Year --</option>
+                                {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                                  <option key={year} value={year}>
+                                    {year}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-4 bg-white border-t-2 border-gray-200 flex gap-3">
+                    <button
+                      onClick={() => {
+                        setSelectedMonth("");
+                        setSelectedYear("");
+                      }}
+                      className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-bold transition-all cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={handleGenerateMonthlyReport}
+                      className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Generate PDF 
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
