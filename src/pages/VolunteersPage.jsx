@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import Sidebar from "../components/Sidebar"; 
 import supabase from "../config/supabaseClient";
+import MaleIcon from "../images/male.png";
+import FemaleIcon from "../images/female.png";
 
 // Badge Icons
 import GoldMedalIcon from "../images/gold-badge.png";
@@ -482,9 +484,16 @@ const VolunteersPage = () => {
                     <h3 className="text-2xl text-emerald-900 font-montserrat mt-6 font-bold leading-tight">
                       {selectedVolunteer.firstname} <br /> {selectedVolunteer.lastname}
                     </h3>
-                    <p className="text-sm text-gray-600 font-montserrat font-semibold bg-emerald-100 mt-1 px-3 py-1 rounded-full inline-block">
-                      {selectedVolunteer.user_id}
-                    </p>
+<p className="flex items-center gap-2 text-sm text-gray-600 font-montserrat font-semibold bg-emerald-100 mt-1 px-3 py-1 rounded-full inline-block">
+  {selectedVolunteer.user_id}
+  {selectedVolunteer.gender && (
+    <img
+      src={selectedVolunteer.gender === "Male" ? MaleIcon : FemaleIcon}
+      alt={selectedVolunteer.gender}
+      className="w-4 h-4"
+    />
+  )}
+</p>
                   </div>
                 </div>
 
