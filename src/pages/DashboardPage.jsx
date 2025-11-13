@@ -5,8 +5,8 @@ import CentroAdminBg from "../images/CENTRO_ADMIN.png";
 import supabase from "../config/supabaseClient";
 import CreateAnnouncementIcon from "../images/create-announcement.svg";
 import CreateEventIcon from "../images/create-event.svg";
-import MaleIcon from "../images/male.svg";
-import FemaleIcon from "../images/female.svg";
+import MaleIcon from "../images/male.png";
+import FemaleIcon from "../images/female.png";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import {
