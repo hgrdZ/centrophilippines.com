@@ -1056,7 +1056,7 @@ function ChartModal({ isOpen, onClose, title, children, showGenderBreakdown, gen
       style={{ backdropFilter: "blur(4px)" }}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-200 max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-200 w-full max-w-4xl max-h-[50vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-white border-b-2 border-emerald-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
@@ -2818,7 +2818,7 @@ const volunteerIds = (registeredVols || [])
       >
         <div
           className="relative z-10 space-y-6 w-full mx-auto"
-          style={{ maxWidth: "1400px" }}
+          style={{ maxWidth: "2000px" }}
         >
           <div className="flex items-center justify-between gap-4">
             <h2 className="flex-1 text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
