@@ -490,11 +490,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
     setCustomDateFrom("");
     setCustomDateTo("");
     setSelectedMonths([]);
-    setSelectedMetrics([
-      "completion", "volunteers", "participation", "feedback", 
-      "growth", "beneficiaries", "activeEvents", "nonParticipants", 
-      "attendance", "certifications"
-    ]);
+    setSelectedMetrics([]);
   };
 
   const handleMetricToggle = (metricValue) => {
@@ -900,7 +896,7 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
     setSelectedMonth("");
     setSelectedYear("");
     setSelectedMonths([]);
-    setReportSection("reportType");
+    setSelectedMetrics([]);
   };
 
   return (
