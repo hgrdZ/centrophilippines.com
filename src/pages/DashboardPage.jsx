@@ -440,7 +440,7 @@ function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
   );
 }
 
-// Enhanced Filter Modal Component
+// Enhanced Filter Modal Component with Report Options
 function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   const [selectedCategory, setSelectedCategory] = useState("timePeriod");
   const [dateRange, setDateRange] = useState("all");
@@ -453,13 +453,17 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   const [showCustomCalendar, setShowCustomCalendar] = useState(false);
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState([]);
+  
+  // NEW: Report Options state
+  const [selectedMetrics, setSelectedMetrics] = useState([]);
 
   const categories = [
     { id: "timePeriod", label: "Time Period" },
     { id: "event", label: "Event"},
     { id: "eventStatus", label: "Event Status"},
     { id: "gender", label: "Gender"},
-    { id: "volunteers", label: "Volunteers"}
+    { id: "volunteers", label: "Volunteers"},
+    { id: "reportOptions", label: "Report Options"} // NEW
   ];
 
   const handleApply = () => {
@@ -472,6 +476,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
       customDateFrom,
       customDateTo,
       selectedMonths,
+      selectedMetrics // NEW
     });
     onClose();
   };
@@ -485,6 +490,19 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
     setCustomDateFrom("");
     setCustomDateTo("");
     setSelectedMonths([]);
+    setSelectedMetrics([
+      "completion", "volunteers", "participation", "feedback", 
+      "growth", "beneficiaries", "activeEvents", "nonParticipants", 
+      "attendance", "certifications"
+    ]);
+  };
+
+  const handleMetricToggle = (metricValue) => {
+    if (selectedMetrics.includes(metricValue)) {
+      setSelectedMetrics(selectedMetrics.filter(m => m !== metricValue));
+    } else {
+      setSelectedMetrics([...selectedMetrics, metricValue]);
+    }
   };
 
   if (!isOpen) return null;
@@ -497,7 +515,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
           {/* Left Sidebar */}
           <div className="w-1/3 border-r bg-white overflow-y-auto">
             <div className="p-4 bg-emerald-900 text-white">
-              <h3 className="text-lg font-bold">Filter</h3>
+              <h3 className="text-lg font-bold">Filter & Report Settings</h3>
             </div>
             {categories.map((category) => (
               <button
@@ -509,7 +527,6 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                     : "border-l-4 border-transparent text-gray-700"
                 }`}
               >
-                <span className="text-xl mr-3">{category.icon}</span>
                 {category.label}
               </button>
             ))}
@@ -530,6 +547,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+              {/* Existing categories remain the same... */}
               {selectedCategory === "timePeriod" && (
                 <div className="space-y-2">
                   {[
@@ -665,7 +683,6 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                         onChange={(e) => setStatus(e.target.value)}
                         className="w-4 h-4 text-emerald-600"
                       />
-                      <span className="ml-3 text-xl">{option.icon}</span>
                       <span className="ml-2 font-semibold text-gray-800">{option.label}</span>
                     </label>
                   ))}
@@ -693,7 +710,6 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                         onChange={(e) => setGender(e.target.value)}
                         className="w-4 h-4 text-emerald-600"
                       />
-                      <span className="ml-3 text-xl">{option.icon}</span>
                       <span className="ml-2 font-semibold text-gray-800">{option.label}</span>
                     </label>
                   ))}
@@ -723,10 +739,77 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                         onChange={(e) => setVolunteerRange(e.target.value)}
                         className="w-4 h-4 text-emerald-600"
                       />
-                      <span className="ml-3 text-xl">{option.icon}</span>
                       <span className="ml-2 font-semibold text-gray-800">{option.label}</span>
                     </label>
                   ))}
+                </div>
+              )}
+
+              {/* NEW: Report Options Category */}
+              {selectedCategory === "reportOptions" && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 mb-3 font-medium">Select metrics to include in reports and downloads:</p>
+                  {[
+                    { value: "completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
+                    { value: "volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
+                    { value: "participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
+                    { value: "feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
+                    { value: "growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
+                    { value: "beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
+                    { value: "activeEvents", label: "Active Events", fullLabel: "Active Events This Month"},
+                    { value: "nonParticipants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
+                    { value: "attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
+                    { value: "certifications", label: "Certifications", fullLabel: "Certifications Given"}
+                  ].map((metric) => (
+                    <label
+                      key={metric.value}
+                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                        selectedMetrics.includes(metric.value)
+                          ? "bg-emerald-50 border-emerald-500 shadow-md" 
+                          : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMetrics.includes(metric.value)}
+                        onChange={() => handleMetricToggle(metric.value)}
+                        className="mt-1 w-4 h-4 text-emerald-600 rounded"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-800">{metric.label}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">{metric.fullLabel}</div>
+                      </div>
+                    </label>
+                  ))}
+                  
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => setSelectedMetrics([
+                        "completion", "volunteers", "participation", "feedback", 
+                        "growth", "beneficiaries", "activeEvents", "nonParticipants", 
+                        "attendance", "certifications"
+                      ])}
+                      className="flex-1 px-3 py-2 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 font-semibold transition-colors cursor-pointer"
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={() => setSelectedMetrics([])}
+                      className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold transition-colors cursor-pointer"
+                    >
+                      Clear 
+                    </button>
+                  </div>
+                  
+                  {selectedMetrics.length > 0 && (
+                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <p className="text-sm font-semibold text-emerald-800">
+                        {selectedMetrics.length} metric{selectedMetrics.length !== 1 ? 's' : ''} selected for reports
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -777,7 +860,6 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   );
 }
 
-// Enhanced Report Modal Component
 function ReportModal({ isOpen, onClose, onGenerate }) {
   const [reportType, setReportType] = useState("single");
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -785,7 +867,14 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState([]);
 
+  const [selectedMetrics, setSelectedMetrics] = useState([]);
+  const [reportSection, setReportSection] = useState("reportType");
+
+  if (!isOpen) return null;
+
   const handleGenerate = () => {
+    if (reportSection !== "reportType") return;
+
     if (reportType === "single" && (!selectedMonth || !selectedYear)) {
       alert("Please select a month and year first.");
       return;
@@ -798,6 +887,7 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
       alert("Please select a year first.");
       return;
     }
+
     onGenerate(
       reportType === "single" ? selectedMonth : selectedMonths,
       selectedYear,
@@ -806,37 +896,62 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
   };
 
   const handleReset = () => {
+    setReportType("single");
     setSelectedMonth("");
     setSelectedYear("");
     setSelectedMonths([]);
-    setReportType("single");
+    setReportSection("reportType");
   };
-
-  if (!isOpen) return null;
 
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full flex overflow-hidden" style={{ height: "650px" }} onClick={(e) => e.stopPropagation()}>
-          
-          {/* Left Sidebar */}
+        <div
+          className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full flex overflow-hidden"
+          style={{ height: "650px" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+
+          {/* LEFT SIDEBAR */}
           <div className="w-1/3 border-r bg-white overflow-y-auto">
             <div className="p-4 bg-emerald-900 text-white">
               <h3 className="text-lg font-bold">Report Generator</h3>
             </div>
+
+            {/* Report Type Button */}
             <button
-              onClick={() => {}}
-              className="w-full px-6 py-4 text-left hover:bg-emerald-100 transition-all cursor-pointer bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
+              onClick={() => setReportSection("reportType")}
+              className={`w-full px-6 py-4 text-left transition-all cursor-pointer ${
+                reportSection === "reportType"
+                  ? "bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
+                  : "border-l-4 border-transparent text-gray-700 hover:bg-emerald-50"
+              }`}
             >
               Report Type
             </button>
+
+            {/* Report Options Button */}
+            <button
+              onClick={() => setReportSection("reportOptions")}
+              className={`w-full px-6 py-4 text-left transition-all cursor-pointer ${
+                reportSection === "reportOptions"
+                  ? "bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
+                  : "border-l-4 border-transparent text-gray-700 hover:bg-emerald-50"
+              }`}
+            >
+              Report Options
+            </button>
           </div>
 
-          {/* Right Content */}
+          {/* RIGHT CONTENT AREA */}
           <div className="flex-1 flex flex-col">
-            {/* Header */}
+
+            {/* HEADER */}
             <div className="px-6 py-4 bg-emerald-900 text-white relative">
-              <h3 className="text-xl font-bold">Report Type</h3>
+              <h3 className="text-xl font-bold">
+                {reportSection === "reportType" ? "Report Type" : "Report Options"}
+              </h3>
+
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors cursor-pointer"
@@ -845,55 +960,179 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
               </button>
             </div>
 
-            {/* Content */}
+            {/* RIGHT CONTENT */}
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-              <div className="space-y-3">
-                <label className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                  reportType === "single" 
-                    ? "bg-emerald-50 border-emerald-500 shadow-lg" 
-                    : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                }`}>
-                  <input
-                    type="radio"
-                    name="reportType"
-                    value="single"
-                    checked={reportType === "single"}
-                    onChange={(e) => setReportType(e.target.value)}
-                    className="mt-1 w-4 h-4 text-emerald-600"
-                  />
-                  <div className="ml-3 flex-1">
-                    <div className="flex items-center gap-2">
+              {reportSection === "reportType" && (
+                <div className="space-y-3">
+
+                  {/* SINGLE MONTH */}
+                  <label
+                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                      reportType === "single"
+                        ? "bg-emerald-50 border-emerald-500 shadow-lg"
+                        : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="reportType"
+                      value="single"
+                      checked={reportType === "single"}
+                      onChange={(e) => setReportType(e.target.value)}
+                      className="mt-1 w-4 h-4 text-emerald-600"
+                    />
+                    <div className="ml-3 flex-1">
                       <div className="font-bold text-gray-800">Single Month</div>
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">Generate report for a specific month</div>
-                    
-                    {reportType === "single" && (
-                      <div className="mt-4 space-y-3">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Select Month
-                          </label>
-                          <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
-                          >
-                            <option value="">-- Select Month --</option>
-                            {Array.from({ length: 12 }, (_, i) => (
-                              <option key={i + 1} value={i + 1}>
-                                {new Date(0, i).toLocaleString("default", { month: "long" })}
-                              </option>
-                            ))}
-                          </select>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Generate report for a specific month
+                      </div>
+
+                      {reportType === "single" && (
+                        <div className="mt-4 space-y-3">
+
+                          {/* MONTH SELECT */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Select Month
+                            </label>
+                            <select
+                              value={selectedMonth}
+                              onChange={(e) => setSelectedMonth(e.target.value)}
+                              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:ring-2 focus:ring-emerald-500 bg-white"
+                            >
+                              <option value="">-- Select Month --</option>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                  {new Date(0, i).toLocaleString("default", {
+                                    month: "long",
+                                  })}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* YEAR SELECT */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Select Year
+                            </label>
+                            <select
+                              value={selectedYear}
+                              onChange={(e) => setSelectedYear(e.target.value)}
+                              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:ring-2 focus:ring-emerald-500 bg-white"
+                            >
+                              <option value="">-- Select Year --</option>
+                              {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                                <option key={year} value={year}>
+                                  {year}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
-                        <div>
+                      )}
+                    </div>
+                  </label>
+
+                  {/* MULTIPLE MONTHS */}
+                  <label
+                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                      reportType === "multiple"
+                        ? "bg-emerald-50 border-emerald-500 shadow-lg"
+                        : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="reportType"
+                      value="multiple"
+                      checked={reportType === "multiple"}
+                      onChange={(e) => setReportType(e.target.value)}
+                      className="mt-1 w-4 h-4 text-emerald-600"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="font-bold text-gray-800">Multiple Months</div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Generate report for selected months
+                      </div>
+
+                      {reportType === "multiple" && (
+                        <div className="mt-4">
+
+                          <button
+                            onClick={() => setShowMonthCalendar(true)}
+                            className="w-full px-5 py-4 border-2 border-emerald-600 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold"
+                          >
+                            Choose Months ({selectedMonths.length} selected)
+                          </button>
+
+                          {selectedMonths.length > 0 && (
+                            <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                              <p className="text-sm font-bold text-emerald-900 mb-2">
+                                Selected Months:
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedMonths.map((month) => (
+                                  <span
+                                    key={month}
+                                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2"
+                                  >
+                                    {new Date(month + "-01").toLocaleDateString("en-US", {
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                    <button
+                                      onClick={() =>
+                                        setSelectedMonths(
+                                          selectedMonths.filter((m) => m !== month)
+                                        )
+                                      }
+                                      className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+
+                  {/* ANNUAL */}
+                  <label
+                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                      reportType === "annual"
+                        ? "bg-emerald-50 border-emerald-500 shadow-lg"
+                        : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="reportType"
+                      value="annual"
+                      checked={reportType === "annual"}
+                      onChange={(e) => setReportType(e.target.value)}
+                      className="mt-1 w-4 h-4 text-emerald-600"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="font-bold text-gray-800">Annual Report</div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Generate yearly report
+                      </div>
+
+                      {reportType === "annual" && (
+                        <div className="mt-4">
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Select Year
                           </label>
+
                           <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(e.target.value)}
-                            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
+                            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 bg-white"
                           >
                             <option value="">-- Select Year --</option>
                             {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
@@ -903,128 +1142,128 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                             ))}
                           </select>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </label>
-
-                <label className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                  reportType === "multiple" 
-                    ? "bg-emerald-50 border-emerald-500 shadow-lg" 
-                    : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                }`}>
-                  <input
-                    type="radio"
-                    name="reportType"
-                    value="multiple"
-                    checked={reportType === "multiple"}
-                    onChange={(e) => setReportType(e.target.value)}
-                    className="mt-1 w-4 h-4 text-emerald-600"
-                  />
-                  <div className="ml-3 flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="font-bold text-gray-800">Multiple Months</div>
+                      )}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">Generate report for selected months</div>
-                    
-                    {reportType === "multiple" && (
-                      <div className="mt-4">
-                        <button
-                          onClick={() => setShowMonthCalendar(true)}
-                          className="w-full px-5 py-4 border-2 border-emerald-600 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold transition-all shadow-sm"
-                        >
-                          Choose Months ({selectedMonths.length} selected)
-                        </button>
-                        {selectedMonths.length > 0 && (
-                          <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
-                            <p className="text-sm font-bold text-emerald-900 mb-2">Selected Months:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {selectedMonths.map((month) => (
-                                <span
-                                  key={month}
-                                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
-                                >
-                                  {new Date(month + "-01").toLocaleDateString("en-US", {
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                  <button
-                                    onClick={() =>
-                                      setSelectedMonths(selectedMonths.filter((m) => m !== month))
-                                    }
-                                    className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
-                                  >
-                                    ×
-                                  </button>
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </label>
+                  </label>
+                </div>
+              )}
 
-                <label className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                  reportType === "annual" 
-                    ? "bg-emerald-50 border-emerald-500 shadow-lg" 
-                    : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                }`}>
-                  <input
-                    type="radio"
-                    name="reportType"
-                    value="annual"
-                    checked={reportType === "annual"}
-                    onChange={(e) => setReportType(e.target.value)}
-                    className="mt-1 w-4 h-4 text-emerald-600"
-                  />
-                  <div className="ml-3 flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="font-bold text-gray-800">Annual Report</div>
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">Generate yearly report</div>
-                    
-                    {reportType === "annual" && (
-                      <div className="mt-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Select Year
-                        </label>
-                        <select
-                          value={selectedYear}
-                          onChange={(e) => setSelectedYear(e.target.value)}
-                          className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
-                        >
-                          <option value="">-- Select Year --</option>
-                          {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          ))}
-                        </select>
+              {/* ============================== */}
+              {/* REPORT OPTIONS SECTION */}
+              {/* ============================== */}
+              {reportSection === "reportOptions" && (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600 mb-3 font-medium">Select metrics to include in reports and downloads:</p>
+                  {[
+                    { value: "completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
+                    { value: "volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
+                    { value: "participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
+                    { value: "feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
+                    { value: "growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
+                    { value: "beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
+                    { value: "activeEvents", label: "Active Events", fullLabel: "Active Events This Month"},
+                    { value: "nonParticipants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
+                    { value: "attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
+                    { value: "certifications", label: "Certifications", fullLabel: "Certifications Given"}
+                   ].map((metric) => (
+                    <label
+                      key={metric.value}
+                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                        selectedMetrics.includes(metric.value)
+                          ? "bg-emerald-50 border-emerald-500 shadow-md" 
+                          : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMetrics.includes(metric.value)}
+                        onChange={() => {
+                          if (selectedMetrics.includes(metric.value)) {
+                            setSelectedMetrics(
+                              selectedMetrics.filter((m) => m !== metric.value)
+                            );
+                          } else {
+                            setSelectedMetrics([...selectedMetrics, metric.value]);
+                          }
+                        }}
+                        className="mt-1 w-4 h-4 text-emerald-600"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-800">{metric.label}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">{metric.fullLabel}</div>
                       </div>
-                    )}
+                    </label>
+                    
+                  ))}
+
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() =>
+                        setSelectedMetrics([
+                          "completion",
+                          "volunteers",
+                          "participation",
+                          "feedback",
+                          "growth",
+                          "beneficiaries",
+                          "activeEvents",
+                          "nonParticipants",
+                          "attendance",
+                          "certifications",
+                        ])
+                      }
+                      className="flex-1 px-3 py-2 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 font-semibold cursor-pointer"
+                    >
+                      Select All
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedMetrics([])}
+                      className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold cursor-pointer"
+                    >
+                      Clear
+                    </button>
                   </div>
-                </label>
-              </div>
+                  <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+  <p className="text-sm font-semibold text-emerald-800">
+    {selectedMetrics.length > 0
+      ? ` ${selectedMetrics.length} metric${selectedMetrics.length > 1 ? "s" : ""} selected for reports`
+      : "No metric selected"}
+  </p>
+</div>
+                </div>
+              )}
             </div>
 
-            {/* Footer */}
+            {/* FOOTER */}
             <div className="px-6 py-4 bg-white border-t-2 border-gray-200 flex gap-3">
               <button
                 onClick={handleReset}
-                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-bold transition-all cursor-pointer"
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-bold cursor-pointer"
               >
                 Reset
               </button>
+
               <button
                 onClick={handleGenerate}
-                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer ${
+                  reportSection === "reportType"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                }`}
+                disabled={reportSection !== "reportType"}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
-                Generate PDF Report
+                Generate PDF
               </button>
             </div>
           </div>
@@ -1044,6 +1283,7 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
     </>
   );
 }
+
 
 // Chart Modal with Real-time Gender Breakdown
 function ChartModal({ isOpen, onClose, title, children, showGenderBreakdown, genderData }) {
@@ -1201,15 +1441,20 @@ export default function DashboardPage() {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
-    dateRange: "all",
-    selectedEvent: "all",
-    gender: "all",
-    status: "all",
-    volunteerRange: "all",
-    customDateFrom: "",
-    customDateTo: "",
-    selectedMonths: [],
-  });
+  dateRange: "all",
+  selectedEvent: "all",
+  gender: "all",
+  status: "all",
+  volunteerRange: "all",
+  customDateFrom: "",
+  customDateTo: "",
+  selectedMonths: [],
+  selectedMetrics: [ // NEW
+    "completion", "volunteers", "participation", "feedback", 
+    "growth", "beneficiaries", "activeEvents", "nonParticipants", 
+    "attendance", "certifications"
+  ]
+});
 
   useEffect(() => {
     initializeDashboard();
@@ -1863,6 +2108,84 @@ const volunteerIds = (registeredVols || [])
     return `${diff.toFixed(1)} hours`;
   };
 
+  // Calculate non-participants
+const calculateNonParticipants = async (ngoCode, filteredEvents, allVolunteerIds) => {
+  try {
+    const eventIds = filteredEvents.map(e => e.event_id);
+    
+    const { data: eventUsers } = await supabase
+      .from("Event_User")
+      .select("user_id")
+      .eq("ngo_id", ngoCode)
+      .in("event_id", eventIds)
+      .eq("status", "APPROVED");
+    
+    const participatedUserIds = new Set(eventUsers?.map(eu => eu.user_id) || []);
+    const nonParticipants = allVolunteerIds.filter(id => !participatedUserIds.has(id));
+    
+    return nonParticipants.length;
+  } catch (error) {
+    console.error("Error calculating non-participants:", error);
+    return 0;
+  }
+};
+
+// Calculate attendance
+const calculateAttendance = async (ngoCode, filteredEvents) => {
+  try {
+    const eventIds = filteredEvents.map(e => e.event_id);
+    
+    const { data: taskSubmissions } = await supabase
+      .from("Task_Submissions")
+      .select("user_id, event_id")
+      .in("event_id", eventIds)
+      .eq("status", "APPROVED");
+    
+    const uniqueAttendees = new Set(taskSubmissions?.map(ts => ts.user_id) || []);
+    
+    return {
+      total: uniqueAttendees.size,
+      byEvent: filteredEvents.map(event => ({
+        event_id: event.event_id,
+        event_title: event.event_title,
+        attended: taskSubmissions?.filter(ts => ts.event_id === event.event_id).length || 0
+      }))
+    };
+  } catch (error) {
+    console.error("Error calculating attendance:", error);
+    return { total: 0, byEvent: [] };
+  }
+};
+
+// Calculate certifications  
+const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDate) => {
+  try {
+    const eventIds = filteredEvents.map(e => e.event_id);
+    
+    let query = supabase
+      .from("Certificate")
+      .select("certificate_id, user_id, event_id, date_created")
+      .in("event_id", eventIds);
+    
+    if (startDate) query = query.gte("date_created", startDate);
+    if (endDate) query = query.lte("date_created", endDate);
+    
+    const { data: certificates } = await query;
+    
+    return {
+      total: certificates?.length || 0,
+      byEvent: filteredEvents.map(event => ({
+        event_id: event.event_id,
+        event_title: event.event_title,
+        certificates: certificates?.filter(cert => cert.event_id === event.event_id).length || 0
+      }))
+    };
+  } catch (error) {
+    console.error("Error calculating certifications:", error);
+    return { total: 0, byEvent: [] };
+  }
+};
+
   const handleGenerateReport = async (
     selectedData,
     selectedYear,
@@ -1898,6 +2221,37 @@ const volunteerIds = (registeredVols || [])
         reportTitle = `Annual Report ${selectedYear}`;
       }
 
+      // Calculate additional metrics based on selected filters
+const selectedMetrics = activeFilters.selectedMetrics || [];
+let additionalMetrics = {};
+
+if (selectedMetrics.includes("nonParticipants")) {
+  additionalMetrics.nonParticipants = await calculateNonParticipants(
+    ngoCode, 
+    processedEvents, 
+    allApprovedUserIds
+  );
+}
+
+if (selectedMetrics.includes("attendance")) {
+  additionalMetrics.attendance = await calculateAttendance(ngoCode, processedEvents);
+}
+
+if (selectedMetrics.includes("certifications")) {
+  const startDate = reportType === "single" 
+    ? `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
+    : reportType === "annual" ? `${selectedYear}-01-01` : null;
+  const endDate = reportType === "single"
+    ? `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-31`
+    : reportType === "annual" ? `${selectedYear}-12-31` : null;
+    
+  additionalMetrics.certifications = await calculateCertifications(
+    ngoCode, 
+    processedEvents, 
+    startDate, 
+    endDate
+  );
+}
       // --- 1. DATA FETCHING ---
       console.log("Starting data fetch...");
       
@@ -2385,6 +2739,7 @@ const volunteerIds = (registeredVols || [])
     }
   };
 
+  
   const handleDragStart = (e, itemId) => {
     setDraggedItem(itemId);
     e.dataTransfer.effectAllowed = "move";
@@ -2464,6 +2819,7 @@ const volunteerIds = (registeredVols || [])
 
   const renderDraggableCard = (itemId, content) => {
     const isDragOver = dragOverItem === itemId;
+    
 
     return (
       <div
@@ -2479,6 +2835,7 @@ const volunteerIds = (registeredVols || [])
         }`}
         style={{ cursor: "grab" }}
       >
+        
         <div className="relative h-full">
           <div className="absolute top-2 left-2 text-gray-400 z-10 cursor-move">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -2501,6 +2858,8 @@ const volunteerIds = (registeredVols || [])
       </div>
     );
   }
+
+  
 
   const cardComponents = {
     completion: (
@@ -2943,7 +3302,7 @@ const volunteerIds = (registeredVols || [])
                   }
                   className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
                 >
-                  Clear All
+                  Clear 
                 </button>
               </div>
             </div>
