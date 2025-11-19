@@ -8,6 +8,107 @@ import supabase from "../config/supabaseClient";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+// Month Calendar Component
+function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [localSelectedMonths, setLocalSelectedMonths] = useState(selectedMonths);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleMonthClick = (monthIndex) => {
+    const monthKey = `${currentYear}-${String(monthIndex + 1).padStart(2, "0")}`;
+    if (localSelectedMonths.includes(monthKey)) {
+      setLocalSelectedMonths(localSelectedMonths.filter((m) => m !== monthKey));
+    } else {
+      setLocalSelectedMonths([...localSelectedMonths, monthKey]);
+    }
+  };
+
+  const handleApply = () => {
+    onApply(localSelectedMonths);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+        {/* Header with emerald gradient */}
+        <div className="bg-emerald-900 text-white px-6 py-4 relative">
+          <h3 className="text-xl text-center font-bold">Months</h3>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white hover:bg-emerald-800 w-9 h-9 rounded-full flex items-center justify-center text-2xl transition-colors"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6">
+          {/* Year selector */}
+          <div className="flex justify-between items-center mb-6 bg-gray-50 p-3 rounded-lg">
+            <button
+              onClick={() => setCurrentYear(currentYear - 1)}
+              className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <span className="text-2xl font-bold text-gray-800">{currentYear}</span>
+            <button
+              onClick={() => setCurrentYear(currentYear + 1)}
+              className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Months grid */}
+          <div className="grid grid-cols-3 gap-3">
+            {months.map((month, index) => {
+              const monthKey = `${currentYear}-${String(index + 1).padStart(2, "0")}`;
+              const isSelected = localSelectedMonths.includes(monthKey);
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleMonthClick(index)}
+                  className={`p-4 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                    isSelected
+                      ? "bg-emerald-600 text-white shadow-lg scale-105"
+                      : "bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700"
+                  }`}
+                >
+                  {month.substring(0, 3)}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer buttons */}
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => setLocalSelectedMonths([])}
+              className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+            >
+              Clear 
+            </button>
+            <button
+              onClick={handleApply}
+              className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold transition-colors shadow-md"
+            >
+              Apply ({localSelectedMonths.length})
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ManageReports() {
   const [showOngoing, setShowOngoing] = useState(true);
@@ -28,6 +129,11 @@ function ManageReports() {
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
   
+  // NEW: Multi-month states
+  const [reportType, setReportType] = useState("single");
+  const [selectedMonths, setSelectedMonths] = useState([]);
+  const [showMonthCalendar, setShowMonthCalendar] = useState(false);
+  
   const handleButtonClick = (button) => setActiveButton(button);
 
   useEffect(() => {
@@ -35,7 +141,6 @@ function ManageReports() {
     fetchEvents();
   }, []);
 
-  // Fetch NGO logo & name
   const fetchNgoDetails = async () => {
     try {
       const adminData = JSON.parse(localStorage.getItem("admin"));
@@ -54,7 +159,6 @@ function ManageReports() {
     }
   };
 
-  // Fetch events for NGO
   const fetchEvents = async () => {
     try {
       setLoading(true);
@@ -81,7 +185,6 @@ function ManageReports() {
     }
   };
 
-  // Search logic
   useEffect(() => {
     if (!searchQuery.trim()) setFilteredEvents(allEvents);
     else {
@@ -94,7 +197,6 @@ function ManageReports() {
     }
   }, [searchQuery, allEvents]);
 
-  // Date helpers
   const categorizeEventByDate = (event) => {
     const today = new Date(); today.setHours(0,0,0,0);
     const eventDate = new Date(event.date); eventDate.setHours(0,0,0,0);
@@ -121,7 +223,6 @@ function ManageReports() {
     .filter((event) => event.status === "COMPLETED" || categorizeEventByDate(event) === "completed")
     .sort((a, b) => (a.event_id || "").localeCompare(b.event_id || ""));
 
-  // Formatting
   const formatDate = (dateString) => {
     if (!dateString) return "TBA";
     const date = new Date(dateString);
@@ -153,24 +254,22 @@ function ManageReports() {
     } catch { return ""; }
   };
 
-  // Render event card with status-based colors
   const renderEventCard = (event, index) => {
-    // Determine color based on event status/category
     const eventCategory = categorizeEventByDate(event);
     let headerBgColor;
     let textColor;
     
     if (eventCategory === "ongoing" || event.status === "ONGOING") {
-      headerBgColor = "#4a7c59"; // Professional forest green
+      headerBgColor = "#4a7c59";
       textColor = "#ffffff";
     } else if (eventCategory === "upcoming" && event.status === "UPCOMING") {
-      headerBgColor = "#d4a574"; // Warm caramel
+      headerBgColor = "#d4a574";
       textColor = "#ffffff";
     } else if (eventCategory === "completed" || event.status === "COMPLETED") {
-      headerBgColor = "#6b7280"; // Neutral slate gray
+      headerBgColor = "#6b7280";
       textColor = "#ffffff";
     } else {
-      headerBgColor = "#4a7c59"; // Default to ongoing color
+      headerBgColor = "#4a7c59";
       textColor = "#ffffff";
     }
 
@@ -180,7 +279,6 @@ function ManageReports() {
         key={event.event_id}
         className="group block rounded-2xl overflow-hidden backdrop-blur-md bg-white/90 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200"
       >
-        {/* Header */}
         <div
           style={{ backgroundColor: headerBgColor, color: textColor }}
           className="relative text-lg font-montserrat font-semibold px-4 py-2 text-center"
@@ -188,12 +286,9 @@ function ManageReports() {
           <span className="tracking-wider drop-shadow-md">
             {event.event_id}
           </span>
-
-          {/* Decorative bottom bar */}
           <div className="absolute bottom-0 left-0 w-full h-1 bg-black/10"></div>
         </div>
 
-        {/* Body */}
         <div className="p-4 text-center">
           <h3 className="font-bold font-montserrat text-emerald-900 mb-2 text-xl group-hover:text-emerald-700 transition-colors duration-200">
             {event.event_title}
@@ -215,14 +310,12 @@ function ManageReports() {
           </div>
         </div>
 
-        {/* Hover Accent Bar */}
         <div className="h-1 bg-emerald-800 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
       </Link>
     );
   };
 
-  // --- PDF HELPERS ---
-
+  // PDF HELPERS
   const splitToBullets = (text) => {
     if (!text) return [];
     return String(text).replace(/\r\n/g, "\n").replace(/\n/g, " - ").split("-").map(s=>s.trim()).filter(Boolean);
@@ -301,10 +394,18 @@ function ManageReports() {
     doc.line(40, pageH/2 + 22, pageW - 40, pageH/2 + 22);
   };
 
-  // PDF generation main function
   const handleGenerateMonthlyReport = async () => {
-    if (!selectedMonth || !selectedYear) {
+    // Validation
+    if (reportType === "single" && (!selectedMonth || !selectedYear)) {
       alert("Please select a month and year first.");
+      return;
+    }
+    if (reportType === "annual" && !selectedYear) {
+      alert("Please select a year first.");
+      return;
+    }
+    if (reportType === "multiple" && selectedMonths.length === 0) {
+      alert("Please select at least one month.");
       return;
     }
 
@@ -337,16 +438,11 @@ function ManageReports() {
       .select("*")
       .eq("ngo_id", ngoCode);
 
-    const isAnnualReport = selectedMonth === "all";
     let filteredEvents;
     let reportTitle;
+    let fileName;
 
-    if (isAnnualReport) {
-      filteredEvents = events.filter(
-        (ev) => new Date(ev.date).getFullYear() === parseInt(selectedYear)
-      );
-      reportTitle = `Year ${selectedYear}`;
-    } else {
+    if (reportType === "single") {
       filteredEvents = events.filter((ev) => {
         const d = new Date(ev.date);
         return (
@@ -358,6 +454,21 @@ function ManageReports() {
         "default",
         { month: "long", year: "numeric" }
       );
+      fileName = `${ngoName || "NGO"}_Monthly_Report_${selectedYear}-${selectedMonth}.pdf`;
+    } else if (reportType === "annual") {
+      filteredEvents = events.filter(
+        (ev) => new Date(ev.date).getFullYear() === parseInt(selectedYear)
+      );
+      reportTitle = `Year ${selectedYear}`;
+      fileName = `${ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`;
+    } else if (reportType === "multiple") {
+      filteredEvents = events.filter((ev) => {
+        if (!ev.date) return false;
+        const eventMonth = ev.date.substring(0, 7); // "YYYY-MM"
+        return selectedMonths.includes(eventMonth);
+      });
+      reportTitle = `Multi-Month Report (${selectedMonths.length} months)`;
+      fileName = `${ngoName || "NGO"}_Multi_Month_Report.pdf`;
     }
 
     if (!filteredEvents || filteredEvents.length === 0) {
@@ -412,12 +523,18 @@ function ManageReports() {
     const completedCount = sortedEvents.filter((e) => e.status === "COMPLETED").length;
     const ongoingCount = sortedEvents.filter((e) => e.status === "ONGOING").length;
     const upcomingCount = sortedEvents.filter((e) => e.status === "UPCOMING").length;
+    
     const monthlyApplications = (applications || []).filter((app) => {
       const appDate = new Date(app.date_application);
-      return isAnnualReport
-        ? appDate.getFullYear() === parseInt(selectedYear)
-        : appDate.getFullYear() === parseInt(selectedYear) &&
+      if (reportType === "annual") {
+        return appDate.getFullYear() === parseInt(selectedYear);
+      } else if (reportType === "multiple") {
+        const appMonth = app.date_application.substring(0, 7);
+        return selectedMonths.includes(appMonth);
+      } else {
+        return appDate.getFullYear() === parseInt(selectedYear) &&
           appDate.getMonth() + 1 === parseInt(selectedMonth);
+      }
     });
 
     doc.setDrawColor(0, 100, 0);
@@ -437,7 +554,7 @@ function ManageReports() {
     doc.text(`•  Total Unique Volunteers: ${totalVolunteers}`, 30, y); y+=6;
     doc.text(`•  Total New Applications: ${monthlyApplications.length}`, 30, y);
 
-    // Helper to render a single event
+    // Render event helper
     const renderEvent = async (doc, event) => {
       let y = 25;
 
@@ -530,8 +647,8 @@ function ManageReports() {
       }
     };
 
-    // Render events
-    if (isAnnualReport) {
+    // Render events based on report type
+    if (reportType === "annual") {
       const eventsByMonth = {};
       sortedEvents.forEach((e) => {
         const m = new Date(e.date).getMonth();
@@ -544,6 +661,26 @@ function ManageReports() {
         await createMonthSeparatorPage(doc, monthName, selectedYear, pageW, pageH);
 
         for (const event of eventsByMonth[monthNum]) {
+          doc.addPage();
+          await renderEvent(doc, event);
+        }
+      }
+    } else if (reportType === "multiple") {
+      // Group by month
+      const eventsByMonth = {};
+      sortedEvents.forEach((e) => {
+        const monthKey = e.date.substring(0, 7); // "YYYY-MM"
+        if (!eventsByMonth[monthKey]) eventsByMonth[monthKey] = [];
+        eventsByMonth[monthKey].push(e);
+      });
+
+      const sortedMonthKeys = Object.keys(eventsByMonth).sort();
+      for (const monthKey of sortedMonthKeys) {
+        const [year, month] = monthKey.split("-");
+        const monthName = new Date(year, parseInt(month) - 1).toLocaleString("default", { month: "long" });
+        await createMonthSeparatorPage(doc, monthName, year, pageW, pageH);
+
+        for (const event of eventsByMonth[monthKey]) {
           doc.addPage();
           await renderEvent(doc, event);
         }
@@ -568,9 +705,6 @@ function ManageReports() {
       doc.text(`Generated: ${generatedDate}`, 14, pageH - 10);
     }
 
-    const fileName = isAnnualReport
-      ? `${ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`
-      : `${ngoName || "NGO"}_Monthly_Report_${selectedYear}-${selectedMonth}.pdf`;
     doc.save(fileName);
   };
 
@@ -684,13 +818,20 @@ function ManageReports() {
                   {/* Content */}
                   <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
                     <div className="space-y-3">
-                      <label className="flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all bg-emerald-50 border-emerald-500 shadow-lg">
+                      {/* SINGLE MONTH */}
+                      <label
+                        className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                          reportType === "single"
+                            ? "bg-emerald-50 border-emerald-500 shadow-lg"
+                            : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                        }`}
+                      >
                         <input
                           type="radio"
                           name="reportType"
                           value="single"
-                          checked={selectedMonth !== "all"}
-                          onChange={() => setSelectedMonth("")}
+                          checked={reportType === "single"}
+                          onChange={(e) => setReportType(e.target.value)}
                           className="mt-1 w-4 h-4 text-emerald-600"
                         />
                         <div className="ml-3 flex-1">
@@ -699,7 +840,7 @@ function ManageReports() {
                           </div>
                           <div className="text-sm text-gray-600 mt-1">Generate report for a specific month</div>
                           
-                          {selectedMonth !== "all" && (
+                          {reportType === "single" && (
                             <div className="mt-4 space-y-3">
                               <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -740,13 +881,84 @@ function ManageReports() {
                         </div>
                       </label>
 
-                      <label className="flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50">
+                      {/* MULTIPLE MONTHS */}
+                      <label
+                        className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                          reportType === "multiple"
+                            ? "bg-emerald-50 border-emerald-500 shadow-lg"
+                            : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="reportType"
+                          value="multiple"
+                          checked={reportType === "multiple"}
+                          onChange={(e) => setReportType(e.target.value)}
+                          className="mt-1 w-4 h-4 text-emerald-600"
+                        />
+                        <div className="ml-3 flex-1">
+                          <div className="font-bold text-gray-800">Multiple Months</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            Generate report for selected months
+                          </div>
+
+                          {reportType === "multiple" && (
+                            <div className="mt-4">
+                              <button
+                                onClick={() => setShowMonthCalendar(true)}
+                                className="w-full px-5 py-4 border-2 border-emerald-600 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 font-bold"
+                              >
+                                Choose Months ({selectedMonths.length} selected)
+                              </button>
+
+                              {selectedMonths.length > 0 && (
+                                <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                                  <p className="text-sm font-bold text-emerald-900 mb-2">
+                                    Selected Months:
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedMonths.sort().map((month) => (
+                                      <span
+                                        key={month}
+                                        className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2"
+                                      >
+                                        {new Date(month + "-01").toLocaleDateString("en-US", {
+                                          month: "short",
+                                          year: "numeric",
+                                        })}
+                                        <button
+                                          onClick={() =>
+                                            setSelectedMonths(
+                                              selectedMonths.filter((m) => m !== month)
+                                            )
+                                          }
+                                          className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                                        >
+                                          ×
+                                        </button>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </label>
+
+                      {/* ANNUAL REPORT */}
+                      <label className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
+                          reportType === "annual"
+                            ? "bg-emerald-50 border-emerald-500 shadow-lg"
+                            : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                        }`}>
                         <input
                           type="radio"
                           name="reportType"
                           value="annual"
-                          checked={selectedMonth === "all"}
-                          onChange={() => setSelectedMonth("all")}
+                          checked={reportType === "annual"}
+                          onChange={(e) => setReportType(e.target.value)}
                           className="mt-1 w-4 h-4 text-emerald-600"
                         />
                         <div className="ml-3 flex-1">
@@ -755,7 +967,7 @@ function ManageReports() {
                           </div>
                           <div className="text-sm text-gray-600 mt-1">Generate yearly report</div>
                           
-                          {selectedMonth === "all" && (
+                          {reportType === "annual" && (
                             <div className="mt-4">
                               <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 Select Year
@@ -783,8 +995,10 @@ function ManageReports() {
                   <div className="px-6 py-4 bg-white border-t-2 border-gray-200 flex gap-3">
                     <button
                       onClick={() => {
+                        setReportType("single");
                         setSelectedMonth("");
                         setSelectedYear("");
+                        setSelectedMonths([]);
                       }}
                       className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-bold transition-all cursor-pointer"
                     >
@@ -803,6 +1017,18 @@ function ManageReports() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Month Calendar Modal */}
+          {showMonthCalendar && (
+            <MonthCalendar
+              onClose={() => setShowMonthCalendar(false)}
+              onApply={(months) => {
+                setSelectedMonths(months);
+                setShowMonthCalendar(false);
+              }}
+              selectedMonths={selectedMonths}
+            />
           )}
 
           {/* Error Message */}

@@ -547,15 +547,15 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               {selectedCategory === "timePeriod" && (
                 <div className="space-y-2">
                   {[
-                    { value: "all", label: "All Time", desc: "No date restrictions" },
-                    { value: "today", label: "Today so far", desc: "Current day only" },
-                    { value: "yesterday", label: "Yesterday", desc: "Previous day" },
-                    { value: "1week", label: "Last 7 days", desc: "Past week" },
-                    { value: "1month", label: "Last 30 days", desc: "Past month" },
-                    { value: "thisMonth", label: "This month so far", desc: "Current month" },
-                    { value: "lastMonth", label: "Last month", desc: "Previous month" },
-                    { value: "specific-months", label: "Select Specific Months", desc: "Choose multiple months" },
-                    { value: "custom", label: "Custom Range", desc: "Pick start and end dates" }
+                    { value: "All", label: "All Time", desc: "No date restrictions" },
+                    { value: "Today", label: "Today so far", desc: "Current day only" },
+                    { value: "Yesterday", label: "Yesterday", desc: "Previous day" },
+                    { value: "1 Week", label: "Last 7 days", desc: "Past week" },
+                    { value: "1 Month", label: "Last 30 days", desc: "Past month" },
+                    { value: "This Month", label: "This month so far", desc: "Current month" },
+                    { value: "Last Month", label: "Last month", desc: "Previous month" },
+                    { value: "Specific Months", label: "Select Specific Months", desc: "Choose multiple months" },
+                    { value: "Custom", label: "Custom Range", desc: "Pick start and end dates" }
                   ].map((option) => (
                     <label
                       key={option.value}
@@ -660,7 +660,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               {selectedCategory === "eventStatus" && (
                 <div className="space-y-2">
                   {[
-                    { value: "all", label: "All Statuses"},
+                    { value: "All", label: "All Statuses"},
                     { value: "UPCOMING", label: "Upcoming"},
                     { value: "ONGOING", label: "Ongoing"},
                     { value: "COMPLETED", label: "Completed"}
@@ -688,7 +688,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               {selectedCategory === "gender" && (
                 <div className="space-y-2">
                   {[
-                    { value: "all", label: "All Genders"},
+                    { value: "All", label: "All Genders"},
                     { value: "Male", label: "Male"},
                     { value: "Female", label: "Female"}
                   ].map((option) => (
@@ -715,7 +715,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               {selectedCategory === "volunteers" && (
                 <div className="space-y-2">
                   {[
-                    { value: "all", label: "All Ranges"},
+                    { value: "All", label: "All Ranges"},
                     { value: "1-50", label: "1 - 50 volunteers"},
                     { value: "51-100", label: "51 - 100 volunteers"},
                     { value: "101-200", label: "101 - 200 volunteers"},
@@ -746,16 +746,16 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 mb-3 font-medium">Select metrics to include in reports and downloads:</p>
                   {[
-                    { value: "completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
-                    { value: "volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
-                    { value: "participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
-                    { value: "feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
-                    { value: "growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
-                    { value: "beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
-                    { value: "activeEvents", label: "Active Events", fullLabel: "Active Events This Month"},
-                    { value: "nonParticipants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
-                    { value: "attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
-                    { value: "certifications", label: "Certifications", fullLabel: "Certifications Given"}
+                    { value: "Completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
+                    { value: "Volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
+                    { value: "Participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
+                    { value: "Feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
+                    { value: "Growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
+                    { value: "Beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
+                    { value: "Active Events", label: "Active Events", fullLabel: "Active Events This Month"},
+                    { value: "Non-Participants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
+                    { value: "Attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
+                    { value: "Certifications", label: "Certifications", fullLabel: "Certifications Given"}
                   ].map((metric) => (
                     <label
                       key={metric.value}

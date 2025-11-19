@@ -1049,6 +1049,12 @@
   .bg-gray-500 {
     background-color: var(--color-gray-500);
   }
+  .bg-gray-600 {
+    background-color: var(--color-gray-600);
+  }
+  .bg-gray-700 {
+    background-color: var(--color-gray-700);
+  }
   .bg-green-400 {
     background-color: var(--color-green-400);
   }
@@ -1141,6 +1147,9 @@
   }
   .bg-yellow-500 {
     background-color: var(--color-yellow-500);
+  }
+  .bg-yellow-600 {
+    background-color: var(--color-yellow-600);
   }
   .bg-\[length\:100\%_100\%\] {
     background-size: 100% 100%;
@@ -1675,6 +1684,13 @@
       }
     }
   }
+  .hover\:bg-gray-700 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-gray-700);
+      }
+    }
+  }
   .hover\:bg-green-200 {
     &:hover {
       @media (hover: hover) {
@@ -1742,6 +1758,20 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-yellow-600);
+      }
+    }
+  }
+  .hover\:bg-yellow-700 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-yellow-700);
+      }
+    }
+  }
+  .hover\:bg-yellow-800 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-yellow-800);
       }
     }
   }
