@@ -453,8 +453,6 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   const [showCustomCalendar, setShowCustomCalendar] = useState(false);
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState([]);
-  
-  // NEW: Report Options state
   const [selectedMetrics, setSelectedMetrics] = useState([]);
 
   const categories = [
@@ -476,7 +474,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
       customDateFrom,
       customDateTo,
       selectedMonths,
-      selectedMetrics // NEW
+      selectedMetrics, 
     });
     onClose();
   };
@@ -494,12 +492,12 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   };
 
   const handleMetricToggle = (metricValue) => {
-    if (selectedMetrics.includes(metricValue)) {
-      setSelectedMetrics(selectedMetrics.filter(m => m !== metricValue));
-    } else {
-      setSelectedMetrics([...selectedMetrics, metricValue]);
-    }
-  };
+  if (selectedMetrics.includes(metricValue)) {
+    setSelectedMetrics(selectedMetrics.filter(m => m !== metricValue));
+  } else {
+    setSelectedMetrics([...selectedMetrics, metricValue]);
+  }
+};
 
   if (!isOpen) return null;
 
@@ -782,11 +780,11 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                   
                   <div className="mt-4 flex gap-2">
                     <button
-                      onClick={() => setSelectedMetrics([
-                        "completion", "volunteers", "participation", "feedback", 
-                        "growth", "beneficiaries", "activeEvents", "nonParticipants", 
-                        "attendance", "certifications"
-                      ])}
+                    onClick={() => setSelectedMetrics([
+                      "Completion", "Volunteers", "Participation", "Feedback", 
+                      "Growth", "Beneficiaries", "Active Events", "Non-Participants", 
+                      "Attendance", "Certifications"
+                    ])} 
                       className="flex-1 px-3 py-2 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 font-semibold transition-colors cursor-pointer"
                     >
                       Select All
@@ -1144,23 +1142,20 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                 </div>
               )}
 
-              {/* ============================== */}
-              {/* REPORT OPTIONS SECTION */}
-              {/* ============================== */}
               {reportSection === "reportOptions" && (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600 mb-3 font-medium">Select metrics to include in reports and downloads:</p>
                   {[
-                    { value: "completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
-                    { value: "volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
-                    { value: "participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
-                    { value: "feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
-                    { value: "growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
-                    { value: "beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
-                    { value: "activeEvents", label: "Active Events", fullLabel: "Active Events This Month"},
-                    { value: "nonParticipants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
-                    { value: "attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
-                    { value: "certifications", label: "Certifications", fullLabel: "Certifications Given"}
+                    { value: "Completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
+                    { value: "Volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
+                    { value: "Participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
+                    { value: "Feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
+                    { value: "Growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
+                    { value: "Beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
+                    { value: "ActiveEvents", label: "Active Events", fullLabel: "Active Events This Month"},
+                    { value: "Non-Participants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
+                    { value: "Attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
+                    { value: "Certifications", label: "Certifications", fullLabel: "Certifications Given"}
                    ].map((metric) => (
                     <label
                       key={metric.value}
@@ -1198,16 +1193,16 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                     <button
                       onClick={() =>
                         setSelectedMetrics([
-                          "completion",
-                          "volunteers",
-                          "participation",
-                          "feedback",
-                          "growth",
-                          "beneficiaries",
-                          "activeEvents",
-                          "nonParticipants",
-                          "attendance",
-                          "certifications",
+                          "Completion",
+                          "Volunteers",
+                          "Participation",
+                          "Feedback",
+                          "Growth",
+                          "Beneficiaries",
+                          "ActiveEvents",
+                          "Non-Participants",
+                          "Attendance",
+                          "Certifications",
                         ])
                       }
                       className="flex-1 px-3 py-2 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 font-semibold cursor-pointer"
@@ -1445,11 +1440,7 @@ export default function DashboardPage() {
   customDateFrom: "",
   customDateTo: "",
   selectedMonths: [],
-  selectedMetrics: [ // NEW
-    "completion", "volunteers", "participation", "feedback", 
-    "growth", "beneficiaries", "activeEvents", "nonParticipants", 
-    "attendance", "certifications"
-  ]
+  selectedMetrics: [],
 });
 
   useEffect(() => {
@@ -2221,7 +2212,7 @@ const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDa
 const selectedMetrics = activeFilters.selectedMetrics || [];
 let additionalMetrics = {};
 
-if (selectedMetrics.includes("nonParticipants")) {
+if (selectedMetrics.includes("Non-Participants")) {
   additionalMetrics.nonParticipants = await calculateNonParticipants(
     ngoCode, 
     processedEvents, 
@@ -2229,11 +2220,11 @@ if (selectedMetrics.includes("nonParticipants")) {
   );
 }
 
-if (selectedMetrics.includes("attendance")) {
+if (selectedMetrics.includes("Attendance")) {
   additionalMetrics.attendance = await calculateAttendance(ngoCode, processedEvents);
 }
 
-if (selectedMetrics.includes("certifications")) {
+if (selectedMetrics.includes("Certifications")) {
   const startDate = reportType === "single" 
     ? `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
     : reportType === "annual" ? `${selectedYear}-01-01` : null;
@@ -3228,7 +3219,8 @@ if (selectedMetrics.includes("certifications")) {
             activeFilters.selectedEvent !== "all" ||
             activeFilters.gender !== "all" ||
             activeFilters.status !== "all" ||
-            activeFilters.volunteerRange !== "all") && (
+            activeFilters.volunteerRange !== "all" ||
+            activeFilters.selectedMetrics.length > 0) && (
             <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -3282,7 +3274,35 @@ if (selectedMetrics.includes("certifications")) {
                       {activeFilters.volunteerRange}
                     </span>
                   )}
-                </div>
+                   {activeFilters.selectedMetrics.length > 0 && (
+          <>
+            {activeFilters.selectedMetrics.map((metricValue) => {
+              // Mapping ng values to display labels
+              const metricLabels = {
+                "Completion": "Project Completion",
+                "Volunteers": "Total Volunteers",
+                "Participation": "Participation Rate",
+                "Feedback": "Feedback Score",
+                "Growth": "Growth Rate",
+                "Beneficiaries": "Beneficiaries",
+                "Active Events": "Active Events",
+                "Non-Participants": "Non-Participants",
+                "Attendance": "Attendance",
+                "Certifications": "Certifications"
+              };
+              
+              return (
+                <span 
+                  key={metricValue}
+                  className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm"
+                >
+                  {metricLabels[metricValue] || metricValue}
+                </span>
+              );
+            })}
+          </>
+        )}
+      </div>
                 <button
                   onClick={() =>
                     handleApplyFilters({
@@ -3294,6 +3314,8 @@ if (selectedMetrics.includes("certifications")) {
                       customDateFrom: "",
                       customDateTo: "",
                       selectedMonths: [],
+                      selectedMetrics: []
+
                     })
                   }
                   className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
