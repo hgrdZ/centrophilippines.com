@@ -1374,6 +1374,20 @@ function ChartModal({ isOpen, onClose, title, children, showGenderBreakdown, gen
   );
 }
 
+// PDF Generation Loading Overlay
+function PDFLoadingOverlay({ isVisible }) {
+  if (!isVisible) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[150] flex items-center justify-center">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-600 border-t-transparent"></div>
+        <p className="text-emerald-700 font-semibold text-lg">Generating PDF Report...</p>
+        <p className="text-gray-500 text-sm">Please wait</p>
+      </div>
+    </div>
+  );
+}
+
 // MAIN DASHBOARD COMPONENT
 export default function DashboardPage() {
   const { ngoCode } = useParams();
@@ -1404,7 +1418,8 @@ export default function DashboardPage() {
     monthlyVolunteerData: [],
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [viewingContext, setViewingContext] = useState(null);
   const [modalState, setModalState] = useState({ isOpen: false, type: null });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -2180,12 +2195,12 @@ const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDa
   ) => {
     try {
       setReportModalOpen(false);
-      setLoading(true);
+      setPdfLoading(true);
 
       const ngoCode = viewingContext?.ngo_code;
       if (!ngoCode) {
-        alert("NGO information not found.");
-        setLoading(false);
+      console.error("NGO information not found.");
+      setPdfLoading(false);
         return;
       }
 
@@ -2265,8 +2280,8 @@ if (selectedMetrics.includes("Certifications")) {
       console.log(`Fetched ${events.length} events`);
 
       if (events.length === 0) {
-        alert("No events found for this NGO.");
-        setLoading(false);
+      console.error("No events found for this NGO.");
+      setPdfLoading(false);
         return;
       }
 
@@ -2325,8 +2340,8 @@ if (selectedMetrics.includes("Certifications")) {
       console.log(`Filtered to ${filteredEvents.length} events`);
 
       if (!filteredEvents || filteredEvents.length === 0) {
-        alert("No events found for the selected period.");
-        setLoading(false);
+        console.error("No events found for the selected period.");
+        setPdfLoading(false);
         return;
       }
 
@@ -2715,14 +2730,13 @@ if (selectedMetrics.includes("Certifications")) {
       
       console.log("Saving PDF:", fileName);
       doc.save(fileName);
-      
+
       console.log("Report generated successfully!");
-      alert("Report generated successfully!");
-      setLoading(false);
+      setPdfLoading(false);
+
     } catch (error) {
       console.error("Error generating report:", error);
-      alert("An error occurred while generating the report. Please check the console for details.");
-      setLoading(false);
+      setPdfLoading(false);
     }
   };
 
@@ -3151,6 +3165,9 @@ if (selectedMetrics.includes("Certifications")) {
       }}
     >
       <Sidebar onCollapseChange={setSidebarCollapsed} />
+
+      <PDFLoadingOverlay isVisible={pdfLoading} />
+
 
       <main
         className="flex-1 p-6 overflow-y-auto transition-all duration-300"
