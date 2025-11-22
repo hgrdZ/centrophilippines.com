@@ -95,6 +95,26 @@ const VolunteersPage = () => {
   }, []);
 
   useEffect(() => {
+  const handleEscKey = (e) => {
+    if (e.key === 'Escape') {
+      if (showConfirmModal) {
+        setShowConfirmModal(false);
+        setRemovalReason("");
+      }
+      if (showResultModal) {
+        setShowResultModal(false);
+      }
+      if (showSortDropdown) {
+        setShowSortDropdown(false);
+      }
+    }
+  };
+
+  document.addEventListener('keydown', handleEscKey);
+  return () => document.removeEventListener('keydown', handleEscKey);
+}, [showConfirmModal, showResultModal, showSortDropdown]);
+
+  useEffect(() => {
     if (showConfirmModal || showResultModal) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "unset";
     return () => (document.body.style.overflow = "unset");
@@ -631,14 +651,14 @@ const VolunteersPage = () => {
               <button
                 onClick={handleCancelRemove}
                 disabled={isSendingEmail}
-                className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-montserrat font-bold py-3 px-6 rounded-lg border-2 border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-montserrat font-bold py-3 px-6 rounded-lg border-2 border-gray-400 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmRemove}
                 disabled={isSendingEmail}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-red-800 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isSendingEmail ? "Removing..." : "Remove"}
               </button>

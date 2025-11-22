@@ -13,6 +13,22 @@ function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [localSelectedMonths, setLocalSelectedMonths] = useState(selectedMonths);
 
+useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
+  
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -135,6 +151,28 @@ function ManageReports() {
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   
   const handleButtonClick = (button) => setActiveButton(button);
+
+  useEffect(() => {
+  const handleEscKey = (e) => {
+    if (e.key === 'Escape') {
+      if (showMonthCalendar) {
+        setShowMonthCalendar(false);
+      } else if (showReportModal) {
+        setShowReportModal(false);
+      }
+    }
+  };
+
+  if (showReportModal || showMonthCalendar) {
+    document.addEventListener('keydown', handleEscKey);
+    document.body.style.overflow = 'hidden';
+  }
+
+  return () => {
+    document.removeEventListener('keydown', handleEscKey);
+    document.body.style.overflow = 'unset';
+  };
+}, [showReportModal, showMonthCalendar]);
 
   useEffect(() => {
     fetchNgoDetails();

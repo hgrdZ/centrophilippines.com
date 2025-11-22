@@ -66,6 +66,7 @@ export default function ReviewApplicationPage() {
         }
       }
     };
+    
 
     fetchPendingApplications();
   }, []);
@@ -89,6 +90,37 @@ export default function ReviewApplicationPage() {
       setShowAcceptModal(true);
     }
   };
+useEffect(() => {
+  const handleEscKey = (e) => {
+    if (e.key === 'Escape') {
+      if (showAcceptModal) {
+        setShowAcceptModal(false);
+      }
+      if (showRejectModal) {
+        setShowRejectModal(false);
+        setRejectReason("");
+      }
+      if (showSuccessPopup) {
+        setShowSuccessPopup(false);
+        setAcceptedVolunteerName("");
+      }
+      if (showRejectSuccessPopup) {
+        setShowRejectSuccessPopup(false);
+        setRejectedVolunteerName("");
+      }
+    }
+  };
+
+  const isAnyModalOpen = showAcceptModal || showRejectModal || showSuccessPopup || showRejectSuccessPopup;
+  
+  if (isAnyModalOpen) {
+    document.addEventListener('keydown', handleEscKey);
+  }
+
+  return () => {
+    document.removeEventListener('keydown', handleEscKey);
+  };
+}, [showAcceptModal, showRejectModal, showSuccessPopup, showRejectSuccessPopup]);
 
   // Show reject modal
   const handleRejectClick = () => {
@@ -547,8 +579,8 @@ export default function ReviewApplicationPage() {
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <h3 className="text-2xl font-bold text-emerald-900 mb-2">Accept Application</h3>
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <h3 className="text-2xl font-bold text-emerald-900 mb-2">Application</h3>
               </div>
               <p className="text-lg text-gray-700">
                 Are you sure you want to accept <br /><span className="font-bold text-emerald-900">{selectedVolunteer.firstname} {selectedVolunteer.lastname}</span>'s application?
@@ -571,8 +603,8 @@ export default function ReviewApplicationPage() {
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-green-800 text-sm">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+              <p className="text-emerald-800 text-sm">
                 <span className="font-bold">Note:</span> This volunteer will be added to your organization and will have access to your events and tasks.
               </p>
             </div>
@@ -586,9 +618,9 @@ export default function ReviewApplicationPage() {
               </button>
               <button
                 onClick={handleConfirmAccept}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-green-800 transition-colors cursor-pointer"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-emerald-800 transition-colors cursor-pointer"
               >
-                Yes, Accept
+                Accept
               </button>
             </div>
           </div>
@@ -624,8 +656,8 @@ export default function ReviewApplicationPage() {
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <h3 className="text-2xl font-bold text-red-700">Reject Application</h3>
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <h3 className="text-2xl font-bold text-red-700">Reject</h3>
               </div>
               <p className="text-lg text-gray-700">
                 Are you sure you want to reject <br /> <span className="font-bold text-emerald-700">{selectedVolunteer.firstname} {selectedVolunteer.lastname}</span>'s application?
@@ -680,7 +712,7 @@ export default function ReviewApplicationPage() {
                 disabled={!rejectReason.trim()}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-red-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Yes, Reject
+                Reject
               </button>
             </div>
           </div>
@@ -709,30 +741,30 @@ export default function ReviewApplicationPage() {
           ></div>
 
           <div 
-            className="relative bg-white rounded-lg shadow-2xl border-2 border-green-500 p-8 max-w-md w-full mx-4 transform animate-scaleIn"
+            className="relative bg-white rounded-lg shadow-2xl border-2 border-emerald-500 p-8 max-w-md w-full mx-4 transform animate-scaleIn"
             style={{ 
               zIndex: 100000000,
               position: 'relative'
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-30 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <h3 className="text-3xl font-bold text-emerald-900 mb-2">Application Accepted!</h3>
+              <div className="mx-auto w-30 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                <h3 className="text-3xl font-bold text-emerald-900 mb-2"> Accepted!</h3>
               </div>
               <p className="text-lg text-gray-700">
                 <span className="font-bold text-emerald-900">{acceptedVolunteerName}</span> has been successfully added to your organization.
               </p>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-green-800 text-sm text-center">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+              <p className="text-emerald-800 text-sm text-center">
                 The volunteer has been notified and can now access your organization's events and tasks.
               </p>
             </div>
 
             <button
               onClick={handleCloseSuccessPopup}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-green-800 transition-colors cursor-pointer"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-emerald-800 transition-colors cursor-pointer"
             >
               Got it!
             </button>
@@ -770,7 +802,7 @@ export default function ReviewApplicationPage() {
           >
             <div className="text-center mb-6">
               <div className="mx-auto w-32 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <h3 className="text-3xl font-bold text-red-700 mb-2">Application Rejected</h3>
+                <h3 className="text-3xl font-bold text-red-700 mb-2">Rejected</h3>
               </div>
               <p className="text-lg text-gray-700">
                 <span className="font-bold text-red-700">{rejectedVolunteerName}</span>'s application has been rejected.

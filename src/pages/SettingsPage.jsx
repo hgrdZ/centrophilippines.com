@@ -383,7 +383,7 @@ const SettingsPage = () => {
     flex flex-col gap-10"
   >
     {/* Action Buttons */}
-    <div className="absolute top-6 right-6 flex flex-wrap gap-3">
+    <div className="absolute top-4 right-4 flex flex-wrap mb-4 gap-3">
       {editMode ? (
         <>
           <button
@@ -773,7 +773,7 @@ const SettingsPage = () => {
                   onClick={handleUpdateLogo}
                   className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
                 >
-                  Select Logo
+                  Select 
                 </button>
                 <button
                   onClick={() => setShowUpdateLogoConfirm(false)}
@@ -798,7 +798,7 @@ const SettingsPage = () => {
 
           <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-emerald-700">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center">
                 <h2 className="text-3xl font-bold text-emerald-700 mb-2 font-montserrat">
                   Save 
                 </h2>
@@ -810,7 +810,7 @@ const SettingsPage = () => {
                 Are you sure you want to save all changes to your organization information? This will update your profile in the database.
               </p>
 
-              <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <div className="flex flex-col sm:flex-row justify-center mb-4 gap-3">
                 <button
                   onClick={handleSaveChanges}
                   className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-lg font-montserrat border-2 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"

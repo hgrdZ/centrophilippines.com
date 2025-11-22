@@ -52,6 +52,31 @@ const [sidebarCollapsed, setSidebarCollapsed] = useState(
     };
   }, [showConfirmModal, showSuccessModal, showAddNGOModal, showWarningModal]);
 
+  useEffect(() => {
+  const handleEscKey = (e) => {
+    if (e.key === 'Escape') {
+      if (showConfirmModal) {
+        cancelRemove();
+      } else if (showSuccessModal) {
+        closeSuccessModal();
+      } else if (showAddNGOModal) {
+        cancelAddNGO();
+      } else if (showWarningModal) {
+        setShowWarningModal(false);
+      }
+    }
+  };
+
+  // Add event listener when any modal is open
+  if (showConfirmModal || showSuccessModal || showAddNGOModal || showWarningModal) {
+    document.addEventListener('keydown', handleEscKey);
+  }
+
+  return () => {
+    document.removeEventListener('keydown', handleEscKey);
+  };
+}, [showConfirmModal, showSuccessModal, showAddNGOModal, showWarningModal]);
+
   // Fetch NGOs with calculated statistics
   const fetchNGOsWithStats = async () => {
     setLoading(true);

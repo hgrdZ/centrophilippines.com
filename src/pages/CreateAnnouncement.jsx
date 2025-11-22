@@ -13,6 +13,17 @@ import EventIcon from "../images/event.svg";
 
 // 🔹 Reusable Modal Component
 function ConfirmationModal({ title, message, onConfirm, onCancel, type = "confirm" }) {
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape") {
+        onCancel();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => document.removeEventListener("keydown", handleEscapeKey);
+  }, [onCancel]);
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center z-50 animate-fadeIn"

@@ -88,6 +88,28 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
         setIsOpen(false);
       }
     }
+    
+    function handleEscKey(e) {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscKey);  
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscKey);  
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -148,6 +170,23 @@ function CustomCalendar({ onClose, onApply, startDate, endDate }) {
   const [selectedStart, setSelectedStart] = useState(startDate ? new Date(startDate) : null);
   const [selectedEnd, setSelectedEnd] = useState(endDate ? new Date(endDate) : null);
   const [isSelectingStart, setIsSelectingStart] = useState(true);
+
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
+
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
@@ -356,6 +395,21 @@ function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
       setLocalSelectedMonths([...localSelectedMonths, monthKey]);
     }
   };
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
 
   const handleApply = () => {
     onApply(localSelectedMonths);
@@ -464,6 +518,24 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
     { id: "reportOptions", label: "Report Options"} // NEW
   ];
 
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
   const handleApply = () => {
     onApplyFilters({
       dateRange,
@@ -543,81 +615,93 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
               {/* Existing categories remain the same... */}
               {selectedCategory === "timePeriod" && (
-                <div className="space-y-2">
-                  {[
-                    { value: "All", label: "All Time", desc: "No date restrictions" },
-                    { value: "Today", label: "Today so far", desc: "Current day only" },
-                    { value: "Yesterday", label: "Yesterday", desc: "Previous day" },
-                    { value: "1 Week", label: "Last 7 days", desc: "Past week" },
-                    { value: "1 Month", label: "Last 30 days", desc: "Past month" },
-                    { value: "This Month", label: "This month so far", desc: "Current month" },
-                    { value: "Last Month", label: "Last month", desc: "Previous month" },
-                    { value: "Specific Months", label: "Select Specific Months", desc: "Choose multiple months" },
-                    { value: "Custom", label: "Custom Range", desc: "Pick start and end dates" }
-                  ].map((option) => (
-                    <label
-                      key={option.value}
-                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                        dateRange === option.value 
-                          ? "bg-emerald-50 border-emerald-500 shadow-md" 
-                          : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="dateRange"
-                        value={option.value}
-                        checked={dateRange === option.value}
-                        onChange={(e) => {
-                          setDateRange(e.target.value);
-                          if (e.target.value === "custom") {
-                            setShowCustomCalendar(true);
-                          } else if (e.target.value === "specific-months") {
-                            setShowMonthCalendar(true);
-                          }
-                        }}
-                        className="mt-1 w-4 h-4 text-emerald-600"
-                      />
-                      <div className="ml-3 flex-1">
-                        <div className="font-semibold text-gray-800">{option.label}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{option.desc}</div>
-                      </div>
-                    </label>
-                  ))}
+  <div className="space-y-2">
+    {[
+      { value: "all", label: "All Time", desc: "No date restrictions" },
+      { value: "today", label: "Today so far", desc: "Current day only" },
+      { value: "yesterday", label: "Yesterday", desc: "Previous day" },
+      { value: "1week", label: "Last 7 days", desc: "Past week" },
+      { value: "1month", label: "Last 30 days", desc: "Past month" },
+      { value: "thisMonth", label: "This month so far", desc: "Current month" },
+      { value: "lastMonth", label: "Last month", desc: "Previous month" },
+      { value: "specific-months", label: "Select Specific Months", desc: "Choose multiple months" },
+      { value: "custom", label: "Custom Range", desc: "Pick start and end dates" }
+    ].map((option) => (
+      <label
+        key={option.value}
+        className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
+          dateRange === option.value 
+            ? "bg-emerald-50 border-emerald-500 shadow-md" 
+            : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+        }`}
+      >
+        <input
+          type="radio"
+          name="dateRange"
+          value={option.value}
+          checked={dateRange === option.value}
+          onChange={(e) => {
+            setDateRange(e.target.value);
+            if (e.target.value === "custom") {
+              setShowCustomCalendar(true);
+            } else if (e.target.value === "specific-months") {
+              setShowMonthCalendar(true);
+            }
+          }}
+          className="mt-1 w-4 h-4 text-emerald-600"
+        />
+        <div className="ml-3 flex-1">
+          <div className="font-semibold text-gray-800">{option.label}</div>
+          <div className="text-xs text-gray-500 mt-0.5">{option.desc}</div>
+        </div>
+      </label>
+    ))}
 
-                  {dateRange === "custom" && customDateFrom && customDateTo && (
-                    <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
-                      <p className="text-sm font-bold text-emerald-900 mb-1">📅 Selected Range:</p>
-                      <p className="text-sm text-emerald-700 font-medium">{customDateFrom} → {customDateTo}</p>
-                    </div>
-                  )}
+    {dateRange === "custom" && customDateFrom && customDateTo && (
+      <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+        <p className="text-sm font-bold text-emerald-900 mb-1">Selected Range:</p>
+        <p className="text-sm text-emerald-700 font-medium">{customDateFrom} → {customDateTo}</p>
+        <button
+          onClick={() => setShowCustomCalendar(true)}
+          className="mt-2 text-xs text-emerald-600 hover:text-emerald-800 underline"
+        >
+          Change
+        </button>
+      </div>
+    )}
 
-                  {dateRange === "specific-months" && selectedMonths.length > 0 && (
-                    <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
-                      <p className="text-sm font-bold text-emerald-900 mb-2">📅 Selected Months:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedMonths.map((month) => (
-                          <span
-                            key={month}
-                            className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
-                          >
-                            {new Date(month + "-01").toLocaleDateString("en-US", {
-                              month: "short",
-                              year: "numeric",
-                            })}
-                            <button
-                              onClick={() => setSelectedMonths(selectedMonths.filter((m) => m !== month))}
-                              className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+    {dateRange === "specific-months" && selectedMonths.length > 0 && (
+      <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+        <p className="text-sm font-bold text-emerald-900 mb-2">Selected Months:</p>
+        <div className="flex flex-wrap gap-2">
+          {selectedMonths.map((month) => (
+            <span
+              key={month}
+              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
+            >
+              {new Date(month + "-01").toLocaleDateString("en-US", {
+                month: "short",
+                year: "numeric",
+              })}
+              <button
+                onClick={() => setSelectedMonths(selectedMonths.filter((m) => m !== month))}
+                className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowMonthCalendar(true)}
+          className="mt-2 text-xs text-emerald-600 hover:text-emerald-800 underline"
+        >
+          Change 
+        </button>
+      </div>
+    )}
+  </div>
+)}
 
               {selectedCategory === "event" && (
                 <div className="space-y-2">
@@ -863,6 +947,24 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
 
   const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [reportSection, setReportSection] = useState("reportType");
+
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -1939,18 +2041,7 @@ const volunteerIds = (registeredVols || [])
         .order("date_joined", { ascending: true });
 
       const months = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+        "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
       ];
       const currentDate = new Date();
 
@@ -3290,116 +3381,125 @@ if (selectedMetrics.includes("Certifications")) {
             </div>
           )}
 
-          {(activeFilters.dateRange !== "all" ||
-            activeFilters.selectedEvent !== "all" ||
-            activeFilters.gender !== "all" ||
-            activeFilters.status !== "all" ||
-            activeFilters.volunteerRange !== "all" ||
-            activeFilters.selectedMetrics.length > 0) && (
-            <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-emerald-800">
-                    Filters:
-                  </span>
-                  {activeFilters.dateRange !== "all" && (
-                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {activeFilters.dateRange === "custom"
-                        ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}`
-                        : activeFilters.dateRange}
-                    </span>
-                  )}
-                  {activeFilters.selectedEvent !== "all" && (
-                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {dashboardData.events.find(
-                        (e) => e.event_id === activeFilters.selectedEvent
-                      )?.event_title || activeFilters.selectedEvent}
-                    </span>
-                  )}
-                  {activeFilters.status !== "all" && (
-                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {activeFilters.status}
-                    </span>
-                  )}
-                  {activeFilters.gender !== "all" && (
-                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm flex items-center gap-2">
-                      {activeFilters.gender === "Male" ? (
-                        <>
-                          <img
-                            src={MaleIcon}
-                            alt="Male Icon"
-                            className="w-4 h-4"
-                          />
-                          Male
-                        </>
-                      ) : (
-                        <>
-                          <img
-                            src={FemaleIcon}
-                            alt="Female Icon"
-                            className="w-4 h-4"
-                          />
-                          Female
-                        </>
-                      )}
-                    </span>
-                  )}
-                  {activeFilters.volunteerRange !== "all" && (
-                    <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-                      {activeFilters.volunteerRange}
-                    </span>
-                  )}
-                   {activeFilters.selectedMetrics.length > 0 && (
-          <>
-            {activeFilters.selectedMetrics.map((metricValue) => {
-              // Mapping ng values to display labels
-              const metricLabels = {
-                "Completion": "Project Completion",
-                "Volunteers": "Total Volunteers",
-                "Participation": "Participation Rate",
-                "Feedback": "Feedback Score",
-                "Growth": "Growth Rate",
-                "Beneficiaries": "Beneficiaries",
-                "Active Events": "Active Events",
-                "Non-Participants": "Non-Participants",
-                "Attendance": "Attendance",
-                "Certifications": "Certifications"
-              };
-              
-              return (
-                <span 
-                  key={metricValue}
-                  className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm"
-                >
-                  {metricLabels[metricValue] || metricValue}
-                </span>
-              );
-            })}
-          </>
+         {(activeFilters.dateRange !== "all" ||
+  activeFilters.selectedEvent !== "all" ||
+  activeFilters.gender !== "all" ||
+  activeFilters.status !== "all" ||
+  activeFilters.volunteerRange !== "all" ||
+  activeFilters.selectedMetrics.length > 0) && (
+  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-semibold text-emerald-800">
+          Filters:
+        </span>
+        
+        {/* For date ranges OTHER than specific-months */}
+        {activeFilters.dateRange !== "all" && activeFilters.dateRange !== "specific-months" && (
+          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+            {activeFilters.dateRange === "custom"
+              ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}`
+              : activeFilters.dateRange}
+          </span>
         )}
+        
+        {/* Display individual selected months with comma separation */}
+        {activeFilters.dateRange === "specific-months" && activeFilters.selectedMonths.length > 0 && (
+          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+            {activeFilters.selectedMonths
+              .map((month) =>
+                new Date(month + "-01").toLocaleDateString("en-US", {
+                  month: "short",
+                  year: "numeric",
+                })
+              )
+              .join(", ")}
+          </span>
+        )}
+        
+        {activeFilters.selectedEvent !== "all" && (
+          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+            {dashboardData.events.find(
+              (e) => e.event_id === activeFilters.selectedEvent
+            )?.event_title || activeFilters.selectedEvent}
+          </span>
+        )}
+        {activeFilters.status !== "all" && (
+          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+            {activeFilters.status}
+          </span>
+        )}
+        {activeFilters.gender !== "all" && (
+          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm flex items-center gap-2">
+            {activeFilters.gender === "Male" ? (
+              <>
+                <img
+                  src={MaleIcon}
+                  alt="Male Icon"
+                  className="w-4 h-4"
+                />
+                Male
+              </>
+            ) : (
+              <>
+                <img
+                  src={FemaleIcon}
+                  alt="Female Icon"
+                  className="w-4 h-4"
+                />
+                Female
+              </>
+            )}
+          </span>
+        )}
+        {activeFilters.volunteerRange !== "all" && (
+          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+            {activeFilters.volunteerRange}
+          </span>
+        )}
+        {activeFilters.selectedMetrics.length > 0 && (
+  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+    {activeFilters.selectedMetrics
+      .map((metricValue) => {
+        const metricLabels = {
+          "Completion": "Project Completion",
+          "Volunteers": "Total Volunteers",
+          "Participation": "Participation Rate",
+          "Feedback": "Feedback Score",
+          "Growth": "Growth Rate",
+          "Beneficiaries": "Beneficiaries",
+          "Active Events": "Active Events",
+          "Non-Participants": "Non-Participants",
+          "Attendance": "Attendance",
+          "Certifications": "Certifications"
+        };
+        return metricLabels[metricValue] || metricValue;
+      })
+      .join(", ")}
+  </span>
+)}
       </div>
-                <button
-                  onClick={() =>
-                    handleApplyFilters({
-                      dateRange: "all",
-                      selectedEvent: "all",
-                      gender: "all",
-                      status: "all",
-                      volunteerRange: "all",
-                      customDateFrom: "",
-                      customDateTo: "",
-                      selectedMonths: [],
-                      selectedMetrics: []
-
-                    })
-                  }
-                  className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
-                >
-                  Clear 
-                </button>
-              </div>
-            </div>
-          )}
+      <button
+        onClick={() =>
+          handleApplyFilters({
+            dateRange: "all",
+            selectedEvent: "all",
+            gender: "all",
+            status: "all",
+            volunteerRange: "all",
+            customDateFrom: "",
+            customDateTo: "",
+            selectedMonths: [],
+            selectedMetrics: []
+          })
+        }
+        className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
+      >
+        Clear 
+      </button>
+    </div>
+  </div>
+)}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             <div
