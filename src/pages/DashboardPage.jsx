@@ -1418,7 +1418,7 @@ export default function DashboardPage() {
     monthlyVolunteerData: [],
   });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [viewingContext, setViewingContext] = useState(null);
   const [modalState, setModalState] = useState({ isOpen: false, type: null });
