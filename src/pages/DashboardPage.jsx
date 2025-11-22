@@ -1276,76 +1276,134 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
 }
 
 
-// Chart Modal with Real-time Gender Breakdown
+
+
+// Chart Modal with Real-time Gender Breakdown - RESPONSIVE HEIGHT VERSION
 function ChartModal({ isOpen, onClose, title, children, showGenderBreakdown, genderData }) {
+  useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
-      style={{ backdropFilter: "blur(4px)" }}
+      style={{
+        backdropFilter: "blur(4px)",
+        backgroundColor: "rgba(0, 0, 0, 0.6)"
+      }}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl border-2 border-emerald-200 w-full max-w-4xl max-h-[50vh] overflow-y-auto"
+        className="bg-white rounded-2xl border-2 border-emerald-200 w-1/2 flex flex-col"
+        style={{
+          maxWidth: "95vw",
+          maxHeight: "95vh", // Changed from fixed height
+          width: "auto",
+          minWidth: "800px",
+          boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.25)"
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white border-b-2 border-emerald-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
-          <h3 className="text-2xl font-bold font-montserrat text-emerald-800">
+        {/* Fixed Header */}
+        <div className="flex-shrink-0 bg-white border-b-2 border-emerald-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+          <h3 className="text-lg font-bold text-emerald-800 truncate pr-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none hover:bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+            className="text-gray-500 hover:text-gray-700 font-bold hover:bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer transition-all"
+            style={{ fontSize: '1.875rem', lineHeight: '1' }}
           >
             ×
           </button>
         </div>
-        <div className="p-6">
+
+        {/* Scrollable Content - Auto height based on content */}
+        <div className="overflow-y-auto p-6">
           {children}
 
           {showGenderBreakdown && genderData && (
-            <div className="mt-8 pt-6 border-t-2 border-gray-200">
-              <h4 className="text-xl font-bold text-gray-800 mb-4">
+            <div className="mt-6 pt-4 border-t-2 border-gray-200">
+              <h4 className="text-lg font-bold text-gray-800 mb-3">
                 Real-time Gender Breakdown
               </h4>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 transform transition-all hover:scale-105">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-semibold text-blue-800 flex items-center gap-2">
-                      <img src={MaleIcon} alt="Male Icon" className="w-5 h-5" />{" "}
-                      Male
+              <div className="grid grid-cols-2 gap-4">
+                <div
+                  className="p-4 rounded-xl transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: "#eff6ff",
+                    border: "2px solid #bfdbfe"
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span
+                      className="text-base font-semibold flex items-center gap-2"
+                      style={{ color: "#1e40af" }}
+                    >
+                      <img src={MaleIcon} alt="Male Icon" className="w-4 h-4" /> Male
                     </span>
                   </div>
-                  <p className="text-4xl font-extrabold text-blue-600">
+                  <p
+                    className="text-3xl font-extrabold"
+                    style={{ color: "#2563eb" }}
+                  >
                     {genderData.male}
                   </p>
-                  <p className="text-sm text-blue-600 mt-1">
+                  <p
+                    className="text-sm"
+                    style={{ color: "#2563eb" }}
+                  >
                     {genderData.malePercentage}% of total
                   </p>
                 </div>
-                <div className="bg-pink-50 p-6 rounded-xl border-2 border-pink-200 transform transition-all hover:scale-105">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-semibold text-pink-800 flex items-center gap-2">
-                      <img
-                        src={FemaleIcon}
-                        alt="Female Icon"
-                        className="w-5 h-5"
-                      />{" "}
-                      Female
+                <div
+                  className="p-4 rounded-xl transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: "#fdf2f8",
+                    border: "2px solid #fbcfe8"
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span
+                      className="text-base font-semibold flex items-center gap-2"
+                      style={{ color: "#9d174d" }}
+                    >
+                      <img src={FemaleIcon} alt="Female Icon" className="w-4 h-4" /> Female
                     </span>
                   </div>
-                  <p className="text-4xl font-extrabold text-pink-600">
+                  <p
+                    className="text-3xl font-extrabold"
+                    style={{ color: "#db2777" }}
+                  >
                     {genderData.female}
                   </p>
-                  <p className="text-sm text-pink-600 mt-1">
+                  <p
+                    className="text-sm"
+                    style={{ color: "#db2777" }}
+                  >
                     {genderData.femalePercentage}% of total
                   </p>
                 </div>
               </div>
 
               <div className="mt-4">
-                <ResponsiveContainer width="100%" height={150}>
+                <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
                       data={[
@@ -1353,8 +1411,8 @@ function ChartModal({ isOpen, onClose, title, children, showGenderBreakdown, gen
                         { name: "Female", value: genderData.female },
                       ]}
                       dataKey="value"
-                      innerRadius={40}
-                      outerRadius={60}
+                      innerRadius={35}
+                      outerRadius={50}
                       label={({ name, percent }) =>
                         `${name}: ${(percent * 100).toFixed(0)}%`
                       }
