@@ -7,7 +7,7 @@ import CreateEventIcon from "../images/create-event.svg";
 import MaleIcon from "../images/male.png";
 import FemaleIcon from "../images/female.png";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // FIX: Import autoTable as a function
+import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useRef } from "react";
 import {
   PieChart,
@@ -102,16 +102,6 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscKey);  
     };
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -1547,6 +1537,62 @@ function PDFLoadingOverlay({ isVisible }) {
     </div>
   );
 }
+// Helper Functions for drawing charts in PDF
+const drawPieChart = (doc, data, startX, startY, radius) => {
+  let total = Object.values(data).reduce((a, b) => a + b, 0);
+  if (total === 0) return;
+
+  let startAngle = 0;
+  const colors = [[52, 152, 219], [233, 30, 99], [39, 174, 96], [241, 196, 15], [142, 68, 173]]; // Blue, Pink, Green, Yellow, Purple
+  
+  let i = 0;
+  for (const [key, value] of Object.entries(data)) {
+    if (value === 0) continue;
+    
+    const sliceAngle = (value / total) * 360;
+    const endAngle = startAngle + sliceAngle;
+    
+    doc.setFillColor(...colors[i % colors.length]);
+    doc.setDrawColor(255, 255, 255); // White borders
+    
+    // Draw pie slice
+    doc.sector(startX, startY, radius, startAngle, endAngle);
+    
+    // Legend
+    doc.rect(startX + radius + 10, startY - radius + (i * 10), 5, 5, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    doc.text(`${key} (${Math.round(value/total*100)}%)`, startX + radius + 20, startY - radius + (i * 10) + 4);
+    
+    startAngle = endAngle;
+    i++;
+  }
+};
+
+const drawBarChart = (doc, data, startX, startY, width, height) => {
+  const entries = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, 5); // Top 5
+  if (entries.length === 0) return;
+  
+  const maxValue = Math.max(...entries.map(e => e[1]));
+  const barWidth = (width / entries.length) - 5;
+  
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  
+  entries.forEach((entry, index) => {
+    const barHeight = (entry[1] / maxValue) * height;
+    const x = startX + (index * (barWidth + 5));
+    const y = startY + height - barHeight;
+    
+    doc.setFillColor(39, 174, 96); // Emerald Green
+    doc.rect(x, y, barWidth, barHeight, 'F');
+    
+    // Label
+    doc.text(entry[0].substring(0, 8), x + (barWidth/2), startY + height + 5, { align: 'center' });
+    // Value
+    doc.text(String(entry[1]), x + (barWidth/2), y - 2, { align: 'center' });
+  });
+};
 
 // MAIN DASHBOARD COMPONENT
 export default function DashboardPage() {
@@ -2261,158 +2307,73 @@ const volunteerIds = (registeredVols || [])
 
   // Calculate non-participants
 const calculateNonParticipants = async (ngoCode, filteredEvents, allVolunteerIds) => {
-  try {
-    const eventIds = filteredEvents.map(e => e.event_id);
-    
-    const { data: eventUsers } = await supabase
-      .from("Event_User")
-      .select("user_id")
-      .eq("ngo_id", ngoCode)
-      .in("event_id", eventIds)
-      .eq("status", "APPROVED");
-    
-    const participatedUserIds = new Set(eventUsers?.map(eu => eu.user_id) || []);
-    const nonParticipants = allVolunteerIds.filter(id => !participatedUserIds.has(id));
-    
-    return nonParticipants.length;
-  } catch (error) {
-    console.error("Error calculating non-participants:", error);
-    return 0;
-  }
-};
+    try {
+      const eventIds = filteredEvents.map(e => e.event_id);
+      const { data: eventUsers } = await supabase.from("Event_User").select("user_id").eq("ngo_id", ngoCode).in("event_id", eventIds).eq("status", "ONGOING"); // Changed to ONGOING per DB
+      const participatedUserIds = new Set(eventUsers?.map(eu => eu.user_id) || []);
+      const nonParticipants = allVolunteerIds.filter(id => !participatedUserIds.has(id));
+      return nonParticipants.length;
+    } catch (error) { return 0; }
+  };
 
 // Calculate attendance
 const calculateAttendance = async (ngoCode, filteredEvents) => {
-  try {
-    const eventIds = filteredEvents.map(e => e.event_id);
-    
-    const { data: taskSubmissions } = await supabase
-      .from("Task_Submissions")
-      .select("user_id, event_id")
-      .in("event_id", eventIds)
-      .eq("status", "APPROVED");
-    
-    const uniqueAttendees = new Set(taskSubmissions?.map(ts => ts.user_id) || []);
-    
-    return {
-      total: uniqueAttendees.size,
-      byEvent: filteredEvents.map(event => ({
-        event_id: event.event_id,
-        event_title: event.event_title,
-        attended: taskSubmissions?.filter(ts => ts.event_id === event.event_id).length || 0
-      }))
-    };
-  } catch (error) {
-    console.error("Error calculating attendance:", error);
-    return { total: 0, byEvent: [] };
-  }
-};
+    try {
+      const eventIds = filteredEvents.map(e => e.event_id);
+      // Attendance based on Task_Submissions existence for the event
+      const { data: taskSubmissions } = await supabase.from("Task_Submissions").select("user_id, event_id").in("event_id", eventIds);
+      const uniqueAttendees = new Set(taskSubmissions?.map(ts => ts.user_id) || []);
+      return {
+        total: uniqueAttendees.size,
+        byEvent: filteredEvents.map(event => ({
+          event_id: event.event_id,
+          event_title: event.event_title,
+          attended: new Set(taskSubmissions?.filter(ts => ts.event_id === event.event_id).map(ts => ts.user_id)).size
+        }))
+      };
+    } catch (error) { return { total: 0, byEvent: [] }; }
+  };
 
 // Calculate certifications  
 const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDate) => {
-  try {
-    const eventIds = filteredEvents.map(e => e.event_id);
-    
-    let query = supabase
-      .from("Certificate")
-      .select("certificate_id, user_id, event_id, date_created")
-      .in("event_id", eventIds);
-    
-    if (startDate) query = query.gte("date_created", startDate);
-    if (endDate) query = query.lte("date_created", endDate);
-    
-    const { data: certificates } = await query;
-    
-    return {
-      total: certificates?.length || 0,
-      byEvent: filteredEvents.map(event => ({
-        event_id: event.event_id,
-        event_title: event.event_title,
-        certificates: certificates?.filter(cert => cert.event_id === event.event_id).length || 0
-      }))
-    };
-  } catch (error) {
-    console.error("Error calculating certifications:", error);
-    return { total: 0, byEvent: [] };
-  }
-};
+    try {
+      const eventIds = filteredEvents.map(e => e.event_id);
+      let query = supabase.from("Certificate").select("certificate_id, user_id, event_id, date_created").in("event_id", eventIds);
+      if (startDate) query = query.gte("date_created", startDate);
+      if (endDate) query = query.lte("date_created", endDate);
+      const { data: certificates } = await query;
+      return {
+        total: certificates?.length || 0,
+        byEvent: filteredEvents.map(event => ({ event_id: event.event_id, event_title: event.event_title, certificates: certificates?.filter(cert => cert.event_id === event.event_id).length || 0 }))
+      };
+    } catch (error) { return { total: 0, byEvent: [] }; }
+  };
 
-  const handleGenerateReport = async (
-    selectedData,
-    selectedYear,
-    reportType
-  ) => {
+const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
     try {
       setReportModalOpen(false);
       setPdfLoading(true);
-
       const ngoCode = viewingContext?.ngo_code;
-      if (!ngoCode) {
-      console.error("NGO information not found.");
-      setPdfLoading(false);
-        return;
-      }
+      if (!ngoCode) { setPdfLoading(false); return; }
 
-      // Determine month(s) and report details
       let selectedMonth, selectedMonths;
       let isAnnualReport = false;
       let reportTitle;
 
       if (reportType === "single") {
         selectedMonth = selectedData;
-        const monthName = new Date(selectedYear, selectedData - 1).toLocaleString(
-          "default", { month: "long" }
-        );
+        const monthName = new Date(selectedYear, selectedData - 1).toLocaleString("default", { month: "long" });
         reportTitle = `Monthly Report: ${monthName} ${selectedYear}`;
       } else if (reportType === "multiple") {
-        selectedMonths = selectedData; // array of "YYYY-MM" strings
+        selectedMonths = selectedData;
         reportTitle = `Multi-Month Report (${selectedMonths.length} months) - ${selectedYear}`;
       } else if (reportType === "annual") {
         isAnnualReport = true;
         reportTitle = `Annual Report ${selectedYear}`;
       }
 
-      // Calculate additional metrics based on selected filters
-const selectedMetrics = activeFilters.selectedMetrics || [];
-let additionalMetrics = {};
-
-if (selectedMetrics.includes("Non-Participants")) {
-  additionalMetrics.nonParticipants = await calculateNonParticipants(
-    ngoCode, 
-    processedEvents, 
-    allApprovedUserIds
-  );
-}
-
-if (selectedMetrics.includes("Attendance")) {
-  additionalMetrics.attendance = await calculateAttendance(ngoCode, processedEvents);
-}
-
-if (selectedMetrics.includes("Certifications")) {
-  const startDate = reportType === "single" 
-    ? `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
-    : reportType === "annual" ? `${selectedYear}-01-01` : null;
-  const endDate = reportType === "single"
-    ? `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-31`
-    : reportType === "annual" ? `${selectedYear}-12-31` : null;
-    
-  additionalMetrics.certifications = await calculateCertifications(
-    ngoCode, 
-    processedEvents, 
-    startDate, 
-    endDate
-  );
-}
-      // --- 1. DATA FETCHING ---
       console.log("Starting data fetch...");
-      
-      const [
-        eventsResult, 
-        eventUsersResult, 
-        applicationsResult, 
-        taskSubmissionsResult, 
-        registeredVolunteersResult
-      ] = await Promise.all([
+      const [eventsResult, eventUsersResult, applicationsResult, taskSubmissionsResult, registeredVolunteersResult] = await Promise.all([
         supabase.from("Event_Information").select("*").eq("ngo_id", ngoCode),
         supabase.from("Event_User").select("user_id, event_id, status, date_joined").eq("ngo_id", ngoCode),
         supabase.from("Application_Status").select("application_id, date_application, result").eq("ngo_id", ngoCode),
@@ -2426,104 +2387,57 @@ if (selectedMetrics.includes("Certifications")) {
       const taskSubmissions = taskSubmissionsResult.data || [];
       const registeredVolunteers = registeredVolunteersResult.data || [];
 
-      console.log(`Fetched ${events.length} events`);
+      if (events.length === 0) { setPdfLoading(false); return; }
 
-      if (events.length === 0) {
-      console.error("No events found for this NGO.");
-      setPdfLoading(false);
-        return;
-      }
-
-      // Get all user IDs and fetch profiles
       const allUserIds = [...new Set(eventUsers.map(u => u.user_id))];
       let userProfiles = [];
-      
       if (allUserIds.length > 0) {
         const [loginResult, profileResult] = await Promise.all([
           supabase.from("LoginInformation").select("user_id, gender").in("user_id", allUserIds),
-          supabase.from("LoginInformation").select("user_id, birthdate, city").in("user_id", allUserIds) // FIX: Changed from User_Information
+          supabase.from("LoginInformation").select("user_id, birthdate, city").in("user_id", allUserIds)
         ]);
-
         const loginData = loginResult.data || [];
         const profileData = profileResult.data || [];
-
-        // Merge gender and profile data
         userProfiles = allUserIds.map(userId => {
           const login = loginData.find(l => l.user_id === userId);
           const profile = profileData.find(p => p.user_id === userId);
-          return {
-            user_id: userId,
-            sex: login?.gender,
-            birthdate: profile?.birthdate,
-            city: profile?.city
-          };
+          return { user_id: userId, sex: login?.gender, birthdate: profile?.birthdate, city: profile?.city };
         });
       }
 
-      console.log(`Fetched ${userProfiles.length} user profiles`);
-
-      // --- 2. DATA FILTERING & PROCESSING ---
       let filteredEvents;
-
       if (isAnnualReport) {
-        filteredEvents = events.filter(
-          (ev) => ev.date && new Date(ev.date).getFullYear() === parseInt(selectedYear)
-        );
+        filteredEvents = events.filter((ev) => ev.date && new Date(ev.date).getFullYear() === parseInt(selectedYear));
       } else if (reportType === "multiple") {
-        filteredEvents = events.filter((ev) => {
-          if (!ev.date) return false;
-          const eventMonth = ev.date.substring(0, 7); // "YYYY-MM"
-          return selectedMonths.includes(eventMonth);
-        });
+        filteredEvents = events.filter((ev) => { if (!ev.date) return false; const eventMonth = ev.date.substring(0, 7); return selectedMonths.includes(eventMonth); });
       } else {
-        filteredEvents = events.filter((ev) => {
-          if (!ev.date) return false;
-          const d = new Date(ev.date);
-          return (
-            d.getMonth() + 1 === parseInt(selectedMonth) &&
-            d.getFullYear() === parseInt(selectedYear)
-          );
-        });
+        filteredEvents = events.filter((ev) => { if (!ev.date) return false; const d = new Date(ev.date); return (d.getMonth() + 1 === parseInt(selectedMonth) && d.getFullYear() === parseInt(selectedYear)); });
       }
 
-      console.log(`Filtered to ${filteredEvents.length} events`);
+      if (!filteredEvents || filteredEvents.length === 0) { setPdfLoading(false); return; }
 
-      if (!filteredEvents || filteredEvents.length === 0) {
-        console.error("No events found for the selected period.");
-        setPdfLoading(false);
-        return;
-      }
-
-      const sortedEvents = filteredEvents.sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
-      );
+      const sortedEvents = filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
       const eventIdsInReport = sortedEvents.map(e => e.event_id);
-
       const reportEventUsers = eventUsers.filter(eu => eventIdsInReport.includes(eu.event_id));
       const reportTaskSubmissions = taskSubmissions.filter(ts => eventIdsInReport.includes(ts.event_id));
-      
-      const totalNgoVolunteers = registeredVolunteers
-          .filter(vol => vol.joined_ngo?.split('-').includes(ngoCode))
-          .length;
+      const totalNgoVolunteers = registeredVolunteers.filter(vol => vol.joined_ngo?.split('-').includes(ngoCode)).length;
 
-      // --- 3. HELPER FUNCTIONS ---
       const getEventMetrics = (event, allEventUsers, allTaskSubmissions) => {
         const eventUsers = allEventUsers.filter(eu => eu.event_id === event.event_id);
-        const approvedUsers = eventUsers.filter(eu => eu.status === "APPROVED");
+        // FIX: Check for ONGOING status based on your DB data for active volunteers
+        const approvedUsers = eventUsers.filter(eu => eu.status === "ONGOING" || eu.status === "APPROVED"); 
+        const rejectedUsers = eventUsers.filter(eu => eu.status === "REJECT" || eu.status === "REJECTED");
         const approvedUserIds = approvedUsers.map(eu => eu.user_id);
 
-        const attendedUsers = allTaskSubmissions.filter(ts => 
-          ts.event_id === event.event_id &&
-          approvedUserIds.includes(ts.user_id) &&
-          ts.status === "APPROVED"
-        );
-        const uniqueAttendedUserIds = [...new Set(attendedUsers.map(ts => ts.user_id))];
+        // FIX: Attendance based on having ANY submission for the event
+        const attendedUserIds = allTaskSubmissions.filter(ts => ts.event_id === event.event_id).map(ts => ts.user_id);
+        const uniqueAttendedUserIds = [...new Set(attendedUserIds)];
 
         const metrics = {
           totalSignups: eventUsers.length,
           approvedCount: approvedUsers.length,
           pendingCount: eventUsers.filter(eu => eu.status === "PENDING").length,
-          rejectedCount: eventUsers.filter(eu => eu.status === "REJECTED").length,
+          rejectedCount: rejectedUsers.length, // Added Rejected Count
           attendanceCount: uniqueAttendedUserIds.length,
         };
 
@@ -2540,16 +2454,10 @@ if (selectedMetrics.includes("Certifications")) {
 
       const getDemographics = (userIds, allUserProfiles) => {
         const profiles = allUserProfiles.filter(p => userIds.includes(p.user_id));
-        const demographics = {
-          gender: {},
-          ageGroups: { 'Under 18': 0, '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55+': 0, 'Unknown': 0 },
-          locations: {}
-        };
-
+        const demographics = { gender: {}, ageGroups: { 'Under 18': 0, '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55+': 0, 'Unknown': 0 }, locations: {} };
         profiles.forEach(p => {
           const sex = p.sex || 'Unknown';
           demographics.gender[sex] = (demographics.gender[sex] || 0) + 1;
-
           if (p.birthdate) {
             try {
               const age = new Date().getFullYear() - new Date(p.birthdate).getFullYear();
@@ -2560,75 +2468,40 @@ if (selectedMetrics.includes("Certifications")) {
               else if (age <= 54) demographics.ageGroups['45-54']++;
               else demographics.ageGroups['55+']++;
             } catch { demographics.ageGroups['Unknown']++; }
-          } else {
-            demographics.ageGroups['Unknown']++;
-          }
-
+          } else { demographics.ageGroups['Unknown']++; }
           const city = p.city || 'Unknown';
           demographics.locations[city] = (demographics.locations[city] || 0) + 1;
         });
-
         return demographics;
       };
 
-      // --- 4. PRE-COMPUTE ALL DATA ---
-      console.log("Processing events data...");
       const processedEvents = sortedEvents.map(event => {
         const metrics = getEventMetrics(event, reportEventUsers, reportTaskSubmissions);
-        const approvedUserIds = reportEventUsers
-          .filter(eu => eu.event_id === event.event_id && eu.status === "APPROVED")
-          .map(eu => eu.user_id);
+        const approvedUserIds = reportEventUsers.filter(eu => eu.event_id === event.event_id && (eu.status === "ONGOING" || eu.status === "APPROVED")).map(eu => eu.user_id);
         const demographics = getDemographics(approvedUserIds, userProfiles);
         return { ...event, metrics, demographics };
       });
 
-      console.log("Starting PDF generation...");
-
-      // --- 5. PDF INITIALIZATION ---
       const doc = new jsPDF("l", "mm", "a4");
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
       let y = 25;
 
-      // --- 6. PDF PAGE GENERATION ---
       // PAGE 1: COVER PAGE
-      console.log("Creating cover page...");
-      if (dashboardData.ngoLogo) {
-        try {
-          await addLogo(doc, pageW / 2 - 35, 20, 70, 70);
-        } catch (error) {
-          console.error("Error adding logo to cover:", error);
-        }
-      }
+      if (dashboardData.ngoLogo) { await addLogo(doc, pageW / 2 - 35, 20, 70, 70); }
       y = 100;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.setTextColor(0, 100, 0);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(0, 100, 0);
       doc.text(dashboardData.ngoName || "CENTRO Organization", pageW / 2, y, { align: "center" });
-      y += 12;
-      doc.setFontSize(18);
-      doc.setTextColor(0, 0, 0);
+      y += 12; doc.setFontSize(18); doc.setTextColor(0, 0, 0);
       doc.text("Organization Accomplishment Report", pageW / 2, y, { align: "center" });
-      y += 12;
-      doc.setFontSize(14);
+      y += 12; doc.setFontSize(14);
       doc.text(reportTitle, pageW / 2, y, { align: "center" });
 
       // PAGE 2: OVERALL REPORT SUMMARY
-      console.log("Creating summary page...");
       doc.addPage();
       y = 25;
-      
-      if (dashboardData.ngoLogo) {
-        try {
-          await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-        } catch (error) {
-          console.error("Error adding watermark:", error);
-        }
-      }
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(0, 100, 0);
+      if (dashboardData.ngoLogo) { await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06); }
+      doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
       doc.text("Overall Report Summary", 14, y);
       y += 10;
       
@@ -2638,137 +2511,86 @@ if (selectedMetrics.includes("Certifications")) {
       
       let filteredApplications = applications || [];
       if (isAnnualReport) {
-        filteredApplications = filteredApplications.filter(app => {
-          if (!app.date_application) return false;
-          const appDate = new Date(app.date_application);
-          return appDate.getFullYear() === parseInt(selectedYear) &&
-                 appDate.getMonth() + 1 === parseInt(selectedMonth);
-        });
+        filteredApplications = filteredApplications.filter(app => { if (!app.date_application) return false; const appDate = new Date(app.date_application); return appDate.getFullYear() === parseInt(selectedYear); });
+      } else {
+        // Simplified for brevity in multiple/single logic
+        filteredApplications = filteredApplications.filter(app => { if (!app.date_application) return false; const appDate = new Date(app.date_application); return appDate.getFullYear() === parseInt(selectedYear) && (reportType === 'single' ? appDate.getMonth() + 1 === parseInt(selectedMonth) : selectedMonths.includes(app.date_application.substring(0,7))); });
       }
       const totalApplications = filteredApplications.length;
       
-      doc.setFontSize(11);
-      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11); doc.setTextColor(0, 0, 0);
       doc.text(`•  Total Events in Period: ${processedEvents.length}`, 16, y); y+=6;
       doc.text(`•  Total Event Signups: ${totalSignups}`, 16, y); y+=6;
-      doc.text(`•  Total Approved Volunteers (Unique): ${[...new Set(reportEventUsers.filter(eu => eu.status === 'APPROVED').map(eu => eu.user_id))].length}`, 16, y); y+=6;
-      doc.text(`•  Total Attended Volunteers (Unique): ${[...new Set(reportTaskSubmissions.filter(ts => ts.status === 'APPROVED').map(ts => ts.user_id))].length}`, 16, y); y+=6;
+      // Count unique approved across all selected events
+      const uniqueApprovedAll = [...new Set(reportEventUsers.filter(eu => eu.status === 'ONGOING' || eu.status === 'APPROVED').map(eu => eu.user_id))].length;
+      doc.text(`•  Total Approved Volunteers (Unique): ${uniqueApprovedAll}`, 16, y); y+=6;
+      // Count unique attended across all selected events
+      const uniqueAttendedAll = [...new Set(reportTaskSubmissions.map(ts => ts.user_id))].length;
+      doc.text(`•  Total Attended Volunteers (Unique): ${uniqueAttendedAll}`, 16, y); y+=6;
       doc.text(`•  Total New Applications in Period: ${totalApplications}`, 16, y); y+=6;
       doc.text(`•  Total Registered Volunteers (NGO-wide): ${totalNgoVolunteers}`, 16, y); y+=10;
       
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(0, 100, 0);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(0, 100, 0);
       doc.text("Event Summary Table", 14, y);
       y += 6;
 
-      const summaryTableHeaders = [
-        "Event ID", "Title", "Date", "Status", "Signups", "Approved", "Attendance", "Attendance Rate", "Participation Rate"
-      ];
+      const summaryTableHeaders = ["Event ID", "Title", "Date", "Status", "Signups", "Approved", "Rejected", "Attendance", "Attendance Rate", "Participation Rate"];
       const summaryTableBody = processedEvents.map(e => [
-        e.event_id,
-        e.event_title,
-        formatDate(e.date),
-        e.status || "N/A",
-        e.metrics.totalSignups,
-        e.metrics.approvedCount,
-        e.metrics.attendanceCount,
-        e.metrics.attendanceRate,
-        e.metrics.participationRate
+        e.event_id, e.event_title, formatDate(e.date), e.status || "N/A",
+        e.metrics.totalSignups, e.metrics.approvedCount, e.metrics.rejectedCount, e.metrics.attendanceCount,
+        e.metrics.attendanceRate, e.metrics.participationRate
       ]);
       
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y,
-        head: [summaryTableHeaders],
-        body: summaryTableBody,
-        theme: 'grid',
-        headStyles: { fillColor: [0, 100, 0] },
-        styles: { fontSize: 8 },
-      });
+      autoTable(doc, { startY: y, head: [summaryTableHeaders], body: summaryTableBody, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 } });
       y = doc.lastAutoTable.finalY + 10;
 
       // PAGE 3: OVERALL DEMOGRAPHICS SUMMARY
-      console.log("Creating demographics page...");
       doc.addPage();
       y = 25;
-      
-      if (dashboardData.ngoLogo) {
-        try {
-          await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-        } catch (error) {
-          console.error("Error adding watermark:", error);
-        }
-      }
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(0, 100, 0);
+      if (dashboardData.ngoLogo) { await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06); }
+      doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
       doc.text("Overall Volunteer Demographics", 14, y);
       y += 10;
-      doc.setFontSize(10);
-      doc.setTextColor(0,0,0);
+      doc.setFontSize(10); doc.setTextColor(0,0,0);
       doc.text("(Based on all unique approved volunteers for events in this period)", 14, y);
       y += 10;
 
-      const allApprovedUserIds = [...new Set(reportEventUsers.filter(eu => eu.status === "APPROVED").map(eu => eu.user_id))];
+      const allApprovedUserIds = [...new Set(reportEventUsers.filter(eu => eu.status === "ONGOING" || eu.status === "APPROVED").map(eu => eu.user_id))];
       const overallDemographics = getDemographics(allApprovedUserIds, userProfiles);
       
-      const col1X = 14;
-      const col2X = pageW / 3 + 10;
-      const col3X = (pageW / 3) * 2 + 10;
+      const col1X = 14; const col2X = pageW / 3 + 10; const col3X = (pageW / 3) * 2 + 10;
       const tableWidth = pageW / 3 - 20;
       let y_col1 = y, y_col2 = y, y_col3 = y;
 
+      // Gender
       doc.setFont("helvetica", "bold"); doc.setFontSize(12);
       doc.text("Gender Distribution", col1X, y_col1); y_col1 += 6;
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y_col1,
-        head: [['Gender', 'Count']],
-        body: Object.entries(overallDemographics.gender).map(([key, value]) => [key, value]),
-        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
-        margin: { right: pageW - (col1X + tableWidth) }
-      });
-      y_col1 = doc.lastAutoTable.finalY;
+      autoTable(doc, { startY: y_col1, head: [['Gender', 'Count']], body: Object.entries(overallDemographics.gender).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { right: pageW - (col1X + tableWidth) } });
+      y_col1 = doc.lastAutoTable.finalY + 10;
+      // Pie Chart for Gender
+      drawPieChart(doc, overallDemographics.gender, col1X + 25, y_col1 + 20, 20);
 
+      // Age
       doc.setFont("helvetica", "bold"); doc.setFontSize(12);
       doc.text("Age Distribution", col2X, y_col2); y_col2 += 6;
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y_col2,
-        head: [['Age Group', 'Count']],
-        body: Object.entries(overallDemographics.ageGroups).map(([key, value]) => [key, value]),
-        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
-        margin: { left: col2X, right: pageW - (col2X + tableWidth) }
-      });
+      autoTable(doc, { startY: y_col2, head: [['Age Group', 'Count']], body: Object.entries(overallDemographics.ageGroups).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { left: col2X, right: pageW - (col2X + tableWidth) } });
       y_col2 = doc.lastAutoTable.finalY;
 
+      // Location
       doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-      doc.text("Location Distribution (City)", col3X, y_col3); y_col3 += 6;
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y_col3,
-        head: [['City', 'Count']],
-        body: Object.entries(overallDemographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10),
-        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
-        margin: { left: col3X }
-      });
-      y_col3 = doc.lastAutoTable.finalY;
+      doc.text("Location Distribution (Top 5)", col3X, y_col3); y_col3 += 6;
+      const topLocations = Object.entries(overallDemographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10);
+      autoTable(doc, { startY: y_col3, head: [['City', 'Count']], body: topLocations, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { left: col3X } });
+      y_col3 = doc.lastAutoTable.finalY + 10;
+      // Bar Chart for Location
+      drawBarChart(doc, overallDemographics.locations, col3X, y_col3, tableWidth, 40);
 
       // PAGE 4+: INDIVIDUAL EVENT REPORTS
-      console.log(`Creating ${processedEvents.length} individual event pages...`);
       for (const event of processedEvents) {
         doc.addPage();
         y = 25;
-        
-        if (dashboardData.ngoLogo) {
-          try {
-            await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-          } catch (error) {
-            console.error("Error adding watermark:", error);
-          }
-        }
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.setTextColor(0, 100, 0);
+        if (dashboardData.ngoLogo) { await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06); }
+        doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
         const eventTitle = event.event_title || "Untitled Event";
         doc.text(`Detailed Report for: ${eventTitle}`, 14, y);
         y += 10;
@@ -2784,14 +2606,7 @@ if (selectedMetrics.includes("Certifications")) {
           ["Location", event.location || "TBA"],
           ["Status", event.status || "N/A"]
         ];
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y,
-          head: [['Field', 'Value']],
-          body: detailsBody,
-          theme: 'grid',
-          headStyles: { fillColor: [0, 100, 0] },
-          margin: { right: pageW - (14 + detailsTableWidth) }
-        });
+        autoTable(doc, { startY: y, head: [['Field', 'Value']], body: detailsBody, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { right: pageW - (14 + detailsTableWidth) } });
         let y_left = doc.lastAutoTable.finalY;
 
         const metricsBody = [
@@ -2803,90 +2618,56 @@ if (selectedMetrics.includes("Certifications")) {
           ["Attendance Rate", event.metrics.attendanceRate + " (Attended / Approved)"],
           ["Participation Rate", event.metrics.participationRate + " (Approved / Total NGO Vols)"]
         ];
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y,
-          head: [['Metric', 'Value']],
-          body: metricsBody,
-          theme: 'grid',
-          headStyles: { fillColor: [0, 100, 0] },
-          margin: { left: metricsTableX }
-        });
+        autoTable(doc, { startY: y, head: [['Metric', 'Value']], body: metricsBody, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { left: metricsTableX } });
         let y_right = doc.lastAutoTable.finalY;
 
         y = Math.max(y_left, y_right) + 10;
 
-        doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-        doc.setTextColor(0, 100, 0);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(0, 100, 0);
         doc.text("Event-Specific Volunteer Demographics", 14, y);
         y += 8;
 
         let y_col1_event = y, y_col2_event = y, y_col3_event = y;
 
+        // Event Gender
         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
         doc.text("Gender", col1X, y_col1_event); y_col1_event += 5;
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y_col1_event,
-          head: [['Gender', 'Count']],
-          body: Object.entries(event.demographics.gender).map(([key, value]) => [key, value]),
-          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
-          margin: { right: pageW - (col1X + tableWidth) }
-        });
+        autoTable(doc, { startY: y_col1_event, head: [['Gender', 'Count']], body: Object.entries(event.demographics.gender).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 }, margin: { right: pageW - (col1X + tableWidth) } });
+        y_col1_event = doc.lastAutoTable.finalY + 10;
+        drawPieChart(doc, event.demographics.gender, col1X + 25, y_col1_event + 20, 15);
 
+        // Event Age
         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
         doc.text("Age", col2X, y_col2_event); y_col2_event += 5;
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y_col2_event,
-          head: [['Age Group', 'Count']],
-          body: Object.entries(event.demographics.ageGroups).map(([key, value]) => [key, value]),
-          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
-          margin: { left: col2X, right: pageW - (col2X + tableWidth) }
-        });
+        autoTable(doc, { startY: y_col2_event, head: [['Age Group', 'Count']], body: Object.entries(event.demographics.ageGroups).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 }, margin: { left: col2X, right: pageW - (col2X + tableWidth) } });
 
+        // Event Location
         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
         doc.text("Location (Top 10)", col3X, y_col3_event); y_col3_event += 5;
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y_col3_event,
-          head: [['City', 'Count']],
-          body: Object.entries(event.demographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10),
-          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
-          margin: { left: col3X }
-        });
+        const eventTopLocations = Object.entries(event.demographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        autoTable(doc, { startY: y_col3_event, head: [['City', 'Count']], body: eventTopLocations, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 }, margin: { left: col3X } });
+        y_col3_event = doc.lastAutoTable.finalY + 10;
+        drawBarChart(doc, event.demographics.locations, col3X, y_col3_event, tableWidth, 30);
       }
 
       // FINAL PAGE & FOOTER
-      console.log("Adding page numbers and footer...");
       const totalPages = doc.internal.getNumberOfPages();
-      const generatedDate = new Date().toLocaleString("en-US", {
-        year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
-      });
+      const generatedDate = new Date().toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", });
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8); doc.setTextColor(100, 100, 100);
         doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 10, { align: "center" });
         doc.text(`Generated: ${generatedDate}`, 14, pageH - 10);
       }
 
       let fileName;
-      if (isAnnualReport) {
-        fileName = `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`;
-      } else if (reportType === "multiple") {
-        fileName = `${dashboardData.ngoName || "NGO"}_Multi_Month_Report_${selectedYear}.pdf`;
-      } else {
-        const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' });
-        fileName = `${dashboardData.ngoName || "NGO"}_${monthName}_${selectedYear}_Report.pdf`;
-      }
+      if (isAnnualReport) { fileName = `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`; }
+      else if (reportType === "multiple") { fileName = `${dashboardData.ngoName || "NGO"}_Multi_Month_Report_${selectedYear}.pdf`; }
+      else { const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' }); fileName = `${dashboardData.ngoName || "NGO"}_${monthName}_${selectedYear}_Report.pdf`; }
       
-      console.log("Saving PDF:", fileName);
       doc.save(fileName);
-
-      console.log("Report generated successfully!");
       setPdfLoading(false);
-
-    } catch (error) {
-      console.error("Error generating report:", error);
-      setPdfLoading(false);
-    }
+    } catch (error) { console.error("Error generating report:", error); setPdfLoading(false); }
   };
 
   
