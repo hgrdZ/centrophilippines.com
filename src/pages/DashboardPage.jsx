@@ -7,7 +7,7 @@ import CreateEventIcon from "../images/create-event.svg";
 import MaleIcon from "../images/male.png";
 import FemaleIcon from "../images/female.png";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // FIX: Import autoTable as a function
+import autoTable from "jspdf-autotable";
 import React, { useState, useEffect, useRef } from "react";
 import {
   PieChart,
@@ -104,16 +104,6 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
     };
   }, []);
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
     <div className="relative" ref={menuRef}>
       <button
@@ -166,21 +156,16 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
 
 // Custom Calendar Component
 function CustomCalendar({ onClose, onApply, startDate, endDate }) {
+  // ... (Same as original code)
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedStart, setSelectedStart] = useState(startDate ? new Date(startDate) : null);
   const [selectedEnd, setSelectedEnd] = useState(endDate ? new Date(endDate) : null);
   const [isSelectingStart, setIsSelectingStart] = useState(true);
 
-  useEffect(() => {
-    const handleEscKey = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
+useEffect(() => {
+    const handleEscKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handleEscKey);
     document.body.style.overflow = 'hidden';
-
     return () => {
       document.removeEventListener('keydown', handleEscKey);
       document.body.style.overflow = 'unset';
@@ -1547,6 +1532,62 @@ function PDFLoadingOverlay({ isVisible }) {
     </div>
   );
 }
+// Helper Functions for drawing charts in PDF
+const drawPieChart = (doc, data, startX, startY, radius) => {
+  let total = Object.values(data).reduce((a, b) => a + b, 0);
+  if (total === 0) return;
+
+  let startAngle = 0;
+  const colors = [[52, 152, 219], [233, 30, 99], [39, 174, 96], [241, 196, 15], [142, 68, 173]]; // Blue, Pink, Green, Yellow, Purple
+  
+  let i = 0;
+  for (const [key, value] of Object.entries(data)) {
+    if (value === 0) continue;
+    
+    const sliceAngle = (value / total) * 360;
+    const endAngle = startAngle + sliceAngle;
+    
+    doc.setFillColor(...colors[i % colors.length]);
+    doc.setDrawColor(255, 255, 255); // White borders
+    
+    // Draw pie slice
+    doc.sector(startX, startY, radius, startAngle, endAngle);
+    
+    // Legend
+    doc.rect(startX + radius + 10, startY - radius + (i * 10), 5, 5, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    doc.text(`${key} (${Math.round(value/total*100)}%)`, startX + radius + 20, startY - radius + (i * 10) + 4);
+    
+    startAngle = endAngle;
+    i++;
+  }
+};
+
+const drawBarChart = (doc, data, startX, startY, width, height) => {
+  const entries = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, 5); // Top 5
+  if (entries.length === 0) return;
+  
+  const maxValue = Math.max(...entries.map(e => e[1]));
+  const barWidth = (width / entries.length) - 5;
+  
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  
+  entries.forEach((entry, index) => {
+    const barHeight = (entry[1] / maxValue) * height;
+    const x = startX + (index * (barWidth + 5));
+    const y = startY + height - barHeight;
+    
+    doc.setFillColor(39, 174, 96); // Emerald Green
+    doc.rect(x, y, barWidth, barHeight, 'F');
+    
+    // Label
+    doc.text(entry[0].substring(0, 8), x + (barWidth/2), startY + height + 5, { align: 'center' });
+    // Value
+    doc.text(String(entry[1]), x + (barWidth/2), y - 2, { align: 'center' });
+  });
+};
 
 // MAIN DASHBOARD COMPONENT
 export default function DashboardPage() {
@@ -2203,216 +2244,89 @@ const volunteerIds = (registeredVols || [])
   };
 
 // Helper function to add logo to PDF
-  const addLogo = async (doc, x, y, width, height, opacity = 1) => {
+const addLogo = async (doc, x, y, width, height, opacity = 1) => {
     if (!dashboardData.ngoLogo) return;
-    
     try {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.src = dashboardData.ngoLogo;
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-      
-      if (opacity < 1) {
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({ opacity }));
-      }
-      
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
+      if (opacity < 1) { doc.saveGraphicsState(); doc.setGState(new doc.GState({ opacity })); }
       doc.addImage(img, "PNG", x, y, width, height);
-      
-      if (opacity < 1) {
-        doc.restoreGraphicsState();
-      }
-    } catch (error) {
-      console.error("Error adding logo:", error);
-    }
+      if (opacity < 1) { doc.restoreGraphicsState(); }
+    } catch (error) { console.error("Error adding logo:", error); }
   };
 
-  // Helper function to format date
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+  const formatDate = (dateStr) => { if (!dateStr) return "N/A"; return new Date(dateStr).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); };
+  const formatTime = (timeStr) => { if (!timeStr) return "N/A"; return new Date(`2000-01-01T${timeStr}`).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); };
+  const calculateDuration = (startTime, endTime) => { if (!startTime || !endTime) return "N/A"; const start = new Date(`2000-01-01T${startTime}`); const end = new Date(`2000-01-01T${endTime}`); const diff = Math.abs(end - start) / 36e5; return `${diff.toFixed(1)} hours`; };
+  
+  const calculateNonParticipants = async (ngoCode, filteredEvents, allVolunteerIds) => {
+    try {
+      const eventIds = filteredEvents.map(e => e.event_id);
+      const { data: eventUsers } = await supabase.from("Event_User").select("user_id").eq("ngo_id", ngoCode).in("event_id", eventIds).eq("status", "ONGOING"); // Changed to ONGOING per DB
+      const participatedUserIds = new Set(eventUsers?.map(eu => eu.user_id) || []);
+      const nonParticipants = allVolunteerIds.filter(id => !participatedUserIds.has(id));
+      return nonParticipants.length;
+    } catch (error) { return 0; }
   };
 
-  // Helper function to format time
-  const formatTime = (timeStr) => {
-    if (!timeStr) return "N/A";
-    return new Date(`2000-01-01T${timeStr}`).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const calculateAttendance = async (ngoCode, filteredEvents) => {
+    try {
+      const eventIds = filteredEvents.map(e => e.event_id);
+      // Attendance based on Task_Submissions existence for the event
+      const { data: taskSubmissions } = await supabase.from("Task_Submissions").select("user_id, event_id").in("event_id", eventIds);
+      const uniqueAttendees = new Set(taskSubmissions?.map(ts => ts.user_id) || []);
+      return {
+        total: uniqueAttendees.size,
+        byEvent: filteredEvents.map(event => ({
+          event_id: event.event_id,
+          event_title: event.event_title,
+          attended: new Set(taskSubmissions?.filter(ts => ts.event_id === event.event_id).map(ts => ts.user_id)).size
+        }))
+      };
+    } catch (error) { return { total: 0, byEvent: [] }; }
   };
 
-  // Helper function to calculate duration
-  const calculateDuration = (startTime, endTime) => {
-    if (!startTime || !endTime) return "N/A";
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
-    const diff = Math.abs(end - start) / 36e5; // hours
-    return `${diff.toFixed(1)} hours`;
+  const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDate) => {
+    try {
+      const eventIds = filteredEvents.map(e => e.event_id);
+      let query = supabase.from("Certificate").select("certificate_id, user_id, event_id, date_created").in("event_id", eventIds);
+      if (startDate) query = query.gte("date_created", startDate);
+      if (endDate) query = query.lte("date_created", endDate);
+      const { data: certificates } = await query;
+      return {
+        total: certificates?.length || 0,
+        byEvent: filteredEvents.map(event => ({ event_id: event.event_id, event_title: event.event_title, certificates: certificates?.filter(cert => cert.event_id === event.event_id).length || 0 }))
+      };
+    } catch (error) { return { total: 0, byEvent: [] }; }
   };
 
-  // Calculate non-participants
-const calculateNonParticipants = async (ngoCode, filteredEvents, allVolunteerIds) => {
-  try {
-    const eventIds = filteredEvents.map(e => e.event_id);
-    
-    const { data: eventUsers } = await supabase
-      .from("Event_User")
-      .select("user_id")
-      .eq("ngo_id", ngoCode)
-      .in("event_id", eventIds)
-      .eq("status", "APPROVED");
-    
-    const participatedUserIds = new Set(eventUsers?.map(eu => eu.user_id) || []);
-    const nonParticipants = allVolunteerIds.filter(id => !participatedUserIds.has(id));
-    
-    return nonParticipants.length;
-  } catch (error) {
-    console.error("Error calculating non-participants:", error);
-    return 0;
-  }
-};
-
-// Calculate attendance
-const calculateAttendance = async (ngoCode, filteredEvents) => {
-  try {
-    const eventIds = filteredEvents.map(e => e.event_id);
-    
-    const { data: taskSubmissions } = await supabase
-      .from("Task_Submissions")
-      .select("user_id, event_id")
-      .in("event_id", eventIds)
-      .eq("status", "APPROVED");
-    
-    const uniqueAttendees = new Set(taskSubmissions?.map(ts => ts.user_id) || []);
-    
-    return {
-      total: uniqueAttendees.size,
-      byEvent: filteredEvents.map(event => ({
-        event_id: event.event_id,
-        event_title: event.event_title,
-        attended: taskSubmissions?.filter(ts => ts.event_id === event.event_id).length || 0
-      }))
-    };
-  } catch (error) {
-    console.error("Error calculating attendance:", error);
-    return { total: 0, byEvent: [] };
-  }
-};
-
-// Calculate certifications  
-const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDate) => {
-  try {
-    const eventIds = filteredEvents.map(e => e.event_id);
-    
-    let query = supabase
-      .from("Certificate")
-      .select("certificate_id, user_id, event_id, date_created")
-      .in("event_id", eventIds);
-    
-    if (startDate) query = query.gte("date_created", startDate);
-    if (endDate) query = query.lte("date_created", endDate);
-    
-    const { data: certificates } = await query;
-    
-    return {
-      total: certificates?.length || 0,
-      byEvent: filteredEvents.map(event => ({
-        event_id: event.event_id,
-        event_title: event.event_title,
-        certificates: certificates?.filter(cert => cert.event_id === event.event_id).length || 0
-      }))
-    };
-  } catch (error) {
-    console.error("Error calculating certifications:", error);
-    return { total: 0, byEvent: [] };
-  }
-};
-
-  const handleGenerateReport = async (
-    selectedData,
-    selectedYear,
-    reportType
-  ) => {
+  const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
     try {
       setReportModalOpen(false);
       setPdfLoading(true);
-
       const ngoCode = viewingContext?.ngo_code;
-      if (!ngoCode) {
-      console.error("NGO information not found.");
-      setPdfLoading(false);
-        return;
-      }
+      if (!ngoCode) { setPdfLoading(false); return; }
 
-      // Determine month(s) and report details
       let selectedMonth, selectedMonths;
       let isAnnualReport = false;
       let reportTitle;
 
       if (reportType === "single") {
         selectedMonth = selectedData;
-        const monthName = new Date(selectedYear, selectedData - 1).toLocaleString(
-          "default", { month: "long" }
-        );
+        const monthName = new Date(selectedYear, selectedData - 1).toLocaleString("default", { month: "long" });
         reportTitle = `Monthly Report: ${monthName} ${selectedYear}`;
       } else if (reportType === "multiple") {
-        selectedMonths = selectedData; // array of "YYYY-MM" strings
+        selectedMonths = selectedData;
         reportTitle = `Multi-Month Report (${selectedMonths.length} months) - ${selectedYear}`;
       } else if (reportType === "annual") {
         isAnnualReport = true;
         reportTitle = `Annual Report ${selectedYear}`;
       }
 
-      // Calculate additional metrics based on selected filters
-const selectedMetrics = activeFilters.selectedMetrics || [];
-let additionalMetrics = {};
-
-if (selectedMetrics.includes("Non-Participants")) {
-  additionalMetrics.nonParticipants = await calculateNonParticipants(
-    ngoCode, 
-    processedEvents, 
-    allApprovedUserIds
-  );
-}
-
-if (selectedMetrics.includes("Attendance")) {
-  additionalMetrics.attendance = await calculateAttendance(ngoCode, processedEvents);
-}
-
-if (selectedMetrics.includes("Certifications")) {
-  const startDate = reportType === "single" 
-    ? `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
-    : reportType === "annual" ? `${selectedYear}-01-01` : null;
-  const endDate = reportType === "single"
-    ? `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-31`
-    : reportType === "annual" ? `${selectedYear}-12-31` : null;
-    
-  additionalMetrics.certifications = await calculateCertifications(
-    ngoCode, 
-    processedEvents, 
-    startDate, 
-    endDate
-  );
-}
-      // --- 1. DATA FETCHING ---
       console.log("Starting data fetch...");
-      
-      const [
-        eventsResult, 
-        eventUsersResult, 
-        applicationsResult, 
-        taskSubmissionsResult, 
-        registeredVolunteersResult
-      ] = await Promise.all([
+      const [eventsResult, eventUsersResult, applicationsResult, taskSubmissionsResult, registeredVolunteersResult] = await Promise.all([
         supabase.from("Event_Information").select("*").eq("ngo_id", ngoCode),
         supabase.from("Event_User").select("user_id, event_id, status, date_joined").eq("ngo_id", ngoCode),
         supabase.from("Application_Status").select("application_id, date_application, result").eq("ngo_id", ngoCode),
@@ -2426,104 +2340,57 @@ if (selectedMetrics.includes("Certifications")) {
       const taskSubmissions = taskSubmissionsResult.data || [];
       const registeredVolunteers = registeredVolunteersResult.data || [];
 
-      console.log(`Fetched ${events.length} events`);
+      if (events.length === 0) { setPdfLoading(false); return; }
 
-      if (events.length === 0) {
-      console.error("No events found for this NGO.");
-      setPdfLoading(false);
-        return;
-      }
-
-      // Get all user IDs and fetch profiles
       const allUserIds = [...new Set(eventUsers.map(u => u.user_id))];
       let userProfiles = [];
-      
       if (allUserIds.length > 0) {
         const [loginResult, profileResult] = await Promise.all([
           supabase.from("LoginInformation").select("user_id, gender").in("user_id", allUserIds),
-          supabase.from("LoginInformation").select("user_id, birthdate, city").in("user_id", allUserIds) // FIX: Changed from User_Information
+          supabase.from("LoginInformation").select("user_id, birthdate, city").in("user_id", allUserIds)
         ]);
-
         const loginData = loginResult.data || [];
         const profileData = profileResult.data || [];
-
-        // Merge gender and profile data
         userProfiles = allUserIds.map(userId => {
           const login = loginData.find(l => l.user_id === userId);
           const profile = profileData.find(p => p.user_id === userId);
-          return {
-            user_id: userId,
-            sex: login?.gender,
-            birthdate: profile?.birthdate,
-            city: profile?.city
-          };
+          return { user_id: userId, sex: login?.gender, birthdate: profile?.birthdate, city: profile?.city };
         });
       }
 
-      console.log(`Fetched ${userProfiles.length} user profiles`);
-
-      // --- 2. DATA FILTERING & PROCESSING ---
       let filteredEvents;
-
       if (isAnnualReport) {
-        filteredEvents = events.filter(
-          (ev) => ev.date && new Date(ev.date).getFullYear() === parseInt(selectedYear)
-        );
+        filteredEvents = events.filter((ev) => ev.date && new Date(ev.date).getFullYear() === parseInt(selectedYear));
       } else if (reportType === "multiple") {
-        filteredEvents = events.filter((ev) => {
-          if (!ev.date) return false;
-          const eventMonth = ev.date.substring(0, 7); // "YYYY-MM"
-          return selectedMonths.includes(eventMonth);
-        });
+        filteredEvents = events.filter((ev) => { if (!ev.date) return false; const eventMonth = ev.date.substring(0, 7); return selectedMonths.includes(eventMonth); });
       } else {
-        filteredEvents = events.filter((ev) => {
-          if (!ev.date) return false;
-          const d = new Date(ev.date);
-          return (
-            d.getMonth() + 1 === parseInt(selectedMonth) &&
-            d.getFullYear() === parseInt(selectedYear)
-          );
-        });
+        filteredEvents = events.filter((ev) => { if (!ev.date) return false; const d = new Date(ev.date); return (d.getMonth() + 1 === parseInt(selectedMonth) && d.getFullYear() === parseInt(selectedYear)); });
       }
 
-      console.log(`Filtered to ${filteredEvents.length} events`);
+      if (!filteredEvents || filteredEvents.length === 0) { setPdfLoading(false); return; }
 
-      if (!filteredEvents || filteredEvents.length === 0) {
-        console.error("No events found for the selected period.");
-        setPdfLoading(false);
-        return;
-      }
-
-      const sortedEvents = filteredEvents.sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
-      );
+      const sortedEvents = filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
       const eventIdsInReport = sortedEvents.map(e => e.event_id);
-
       const reportEventUsers = eventUsers.filter(eu => eventIdsInReport.includes(eu.event_id));
       const reportTaskSubmissions = taskSubmissions.filter(ts => eventIdsInReport.includes(ts.event_id));
-      
-      const totalNgoVolunteers = registeredVolunteers
-          .filter(vol => vol.joined_ngo?.split('-').includes(ngoCode))
-          .length;
+      const totalNgoVolunteers = registeredVolunteers.filter(vol => vol.joined_ngo?.split('-').includes(ngoCode)).length;
 
-      // --- 3. HELPER FUNCTIONS ---
       const getEventMetrics = (event, allEventUsers, allTaskSubmissions) => {
         const eventUsers = allEventUsers.filter(eu => eu.event_id === event.event_id);
-        const approvedUsers = eventUsers.filter(eu => eu.status === "APPROVED");
+        // FIX: Check for ONGOING status based on your DB data for active volunteers
+        const approvedUsers = eventUsers.filter(eu => eu.status === "ONGOING" || eu.status === "APPROVED"); 
+        const rejectedUsers = eventUsers.filter(eu => eu.status === "REJECT" || eu.status === "REJECTED");
         const approvedUserIds = approvedUsers.map(eu => eu.user_id);
 
-        const attendedUsers = allTaskSubmissions.filter(ts => 
-          ts.event_id === event.event_id &&
-          approvedUserIds.includes(ts.user_id) &&
-          ts.status === "APPROVED"
-        );
-        const uniqueAttendedUserIds = [...new Set(attendedUsers.map(ts => ts.user_id))];
+        // FIX: Attendance based on having ANY submission for the event
+        const attendedUserIds = allTaskSubmissions.filter(ts => ts.event_id === event.event_id).map(ts => ts.user_id);
+        const uniqueAttendedUserIds = [...new Set(attendedUserIds)];
 
         const metrics = {
           totalSignups: eventUsers.length,
           approvedCount: approvedUsers.length,
           pendingCount: eventUsers.filter(eu => eu.status === "PENDING").length,
-          rejectedCount: eventUsers.filter(eu => eu.status === "REJECTED").length,
+          rejectedCount: rejectedUsers.length, // Added Rejected Count
           attendanceCount: uniqueAttendedUserIds.length,
         };
 
@@ -2540,16 +2407,10 @@ if (selectedMetrics.includes("Certifications")) {
 
       const getDemographics = (userIds, allUserProfiles) => {
         const profiles = allUserProfiles.filter(p => userIds.includes(p.user_id));
-        const demographics = {
-          gender: {},
-          ageGroups: { 'Under 18': 0, '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55+': 0, 'Unknown': 0 },
-          locations: {}
-        };
-
+        const demographics = { gender: {}, ageGroups: { 'Under 18': 0, '18-24': 0, '25-34': 0, '35-44': 0, '45-54': 0, '55+': 0, 'Unknown': 0 }, locations: {} };
         profiles.forEach(p => {
           const sex = p.sex || 'Unknown';
           demographics.gender[sex] = (demographics.gender[sex] || 0) + 1;
-
           if (p.birthdate) {
             try {
               const age = new Date().getFullYear() - new Date(p.birthdate).getFullYear();
@@ -2560,75 +2421,40 @@ if (selectedMetrics.includes("Certifications")) {
               else if (age <= 54) demographics.ageGroups['45-54']++;
               else demographics.ageGroups['55+']++;
             } catch { demographics.ageGroups['Unknown']++; }
-          } else {
-            demographics.ageGroups['Unknown']++;
-          }
-
+          } else { demographics.ageGroups['Unknown']++; }
           const city = p.city || 'Unknown';
           demographics.locations[city] = (demographics.locations[city] || 0) + 1;
         });
-
         return demographics;
       };
 
-      // --- 4. PRE-COMPUTE ALL DATA ---
-      console.log("Processing events data...");
       const processedEvents = sortedEvents.map(event => {
         const metrics = getEventMetrics(event, reportEventUsers, reportTaskSubmissions);
-        const approvedUserIds = reportEventUsers
-          .filter(eu => eu.event_id === event.event_id && eu.status === "APPROVED")
-          .map(eu => eu.user_id);
+        const approvedUserIds = reportEventUsers.filter(eu => eu.event_id === event.event_id && (eu.status === "ONGOING" || eu.status === "APPROVED")).map(eu => eu.user_id);
         const demographics = getDemographics(approvedUserIds, userProfiles);
         return { ...event, metrics, demographics };
       });
 
-      console.log("Starting PDF generation...");
-
-      // --- 5. PDF INITIALIZATION ---
       const doc = new jsPDF("l", "mm", "a4");
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
       let y = 25;
 
-      // --- 6. PDF PAGE GENERATION ---
       // PAGE 1: COVER PAGE
-      console.log("Creating cover page...");
-      if (dashboardData.ngoLogo) {
-        try {
-          await addLogo(doc, pageW / 2 - 35, 20, 70, 70);
-        } catch (error) {
-          console.error("Error adding logo to cover:", error);
-        }
-      }
+      if (dashboardData.ngoLogo) { await addLogo(doc, pageW / 2 - 35, 20, 70, 70); }
       y = 100;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.setTextColor(0, 100, 0);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(0, 100, 0);
       doc.text(dashboardData.ngoName || "CENTRO Organization", pageW / 2, y, { align: "center" });
-      y += 12;
-      doc.setFontSize(18);
-      doc.setTextColor(0, 0, 0);
+      y += 12; doc.setFontSize(18); doc.setTextColor(0, 0, 0);
       doc.text("Organization Accomplishment Report", pageW / 2, y, { align: "center" });
-      y += 12;
-      doc.setFontSize(14);
+      y += 12; doc.setFontSize(14);
       doc.text(reportTitle, pageW / 2, y, { align: "center" });
 
       // PAGE 2: OVERALL REPORT SUMMARY
-      console.log("Creating summary page...");
       doc.addPage();
       y = 25;
-      
-      if (dashboardData.ngoLogo) {
-        try {
-          await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-        } catch (error) {
-          console.error("Error adding watermark:", error);
-        }
-      }
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(0, 100, 0);
+      if (dashboardData.ngoLogo) { await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06); }
+      doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
       doc.text("Overall Report Summary", 14, y);
       y += 10;
       
@@ -2638,137 +2464,86 @@ if (selectedMetrics.includes("Certifications")) {
       
       let filteredApplications = applications || [];
       if (isAnnualReport) {
-        filteredApplications = filteredApplications.filter(app => {
-          if (!app.date_application) return false;
-          const appDate = new Date(app.date_application);
-          return appDate.getFullYear() === parseInt(selectedYear) &&
-                 appDate.getMonth() + 1 === parseInt(selectedMonth);
-        });
+        filteredApplications = filteredApplications.filter(app => { if (!app.date_application) return false; const appDate = new Date(app.date_application); return appDate.getFullYear() === parseInt(selectedYear); });
+      } else {
+        // Simplified for brevity in multiple/single logic
+        filteredApplications = filteredApplications.filter(app => { if (!app.date_application) return false; const appDate = new Date(app.date_application); return appDate.getFullYear() === parseInt(selectedYear) && (reportType === 'single' ? appDate.getMonth() + 1 === parseInt(selectedMonth) : selectedMonths.includes(app.date_application.substring(0,7))); });
       }
       const totalApplications = filteredApplications.length;
       
-      doc.setFontSize(11);
-      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11); doc.setTextColor(0, 0, 0);
       doc.text(`•  Total Events in Period: ${processedEvents.length}`, 16, y); y+=6;
       doc.text(`•  Total Event Signups: ${totalSignups}`, 16, y); y+=6;
-      doc.text(`•  Total Approved Volunteers (Unique): ${[...new Set(reportEventUsers.filter(eu => eu.status === 'APPROVED').map(eu => eu.user_id))].length}`, 16, y); y+=6;
-      doc.text(`•  Total Attended Volunteers (Unique): ${[...new Set(reportTaskSubmissions.filter(ts => ts.status === 'APPROVED').map(ts => ts.user_id))].length}`, 16, y); y+=6;
+      // Count unique approved across all selected events
+      const uniqueApprovedAll = [...new Set(reportEventUsers.filter(eu => eu.status === 'ONGOING' || eu.status === 'APPROVED').map(eu => eu.user_id))].length;
+      doc.text(`•  Total Approved Volunteers (Unique): ${uniqueApprovedAll}`, 16, y); y+=6;
+      // Count unique attended across all selected events
+      const uniqueAttendedAll = [...new Set(reportTaskSubmissions.map(ts => ts.user_id))].length;
+      doc.text(`•  Total Attended Volunteers (Unique): ${uniqueAttendedAll}`, 16, y); y+=6;
       doc.text(`•  Total New Applications in Period: ${totalApplications}`, 16, y); y+=6;
       doc.text(`•  Total Registered Volunteers (NGO-wide): ${totalNgoVolunteers}`, 16, y); y+=10;
       
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(0, 100, 0);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(0, 100, 0);
       doc.text("Event Summary Table", 14, y);
       y += 6;
 
-      const summaryTableHeaders = [
-        "Event ID", "Title", "Date", "Status", "Signups", "Approved", "Attendance", "Attendance Rate", "Participation Rate"
-      ];
+      const summaryTableHeaders = ["Event ID", "Title", "Date", "Status", "Signups", "Approved", "Rejected", "Attendance", "Attendance Rate", "Participation Rate"];
       const summaryTableBody = processedEvents.map(e => [
-        e.event_id,
-        e.event_title,
-        formatDate(e.date),
-        e.status || "N/A",
-        e.metrics.totalSignups,
-        e.metrics.approvedCount,
-        e.metrics.attendanceCount,
-        e.metrics.attendanceRate,
-        e.metrics.participationRate
+        e.event_id, e.event_title, formatDate(e.date), e.status || "N/A",
+        e.metrics.totalSignups, e.metrics.approvedCount, e.metrics.rejectedCount, e.metrics.attendanceCount,
+        e.metrics.attendanceRate, e.metrics.participationRate
       ]);
       
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y,
-        head: [summaryTableHeaders],
-        body: summaryTableBody,
-        theme: 'grid',
-        headStyles: { fillColor: [0, 100, 0] },
-        styles: { fontSize: 8 },
-      });
+      autoTable(doc, { startY: y, head: [summaryTableHeaders], body: summaryTableBody, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 } });
       y = doc.lastAutoTable.finalY + 10;
 
       // PAGE 3: OVERALL DEMOGRAPHICS SUMMARY
-      console.log("Creating demographics page...");
       doc.addPage();
       y = 25;
-      
-      if (dashboardData.ngoLogo) {
-        try {
-          await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-        } catch (error) {
-          console.error("Error adding watermark:", error);
-        }
-      }
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(0, 100, 0);
+      if (dashboardData.ngoLogo) { await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06); }
+      doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
       doc.text("Overall Volunteer Demographics", 14, y);
       y += 10;
-      doc.setFontSize(10);
-      doc.setTextColor(0,0,0);
+      doc.setFontSize(10); doc.setTextColor(0,0,0);
       doc.text("(Based on all unique approved volunteers for events in this period)", 14, y);
       y += 10;
 
-      const allApprovedUserIds = [...new Set(reportEventUsers.filter(eu => eu.status === "APPROVED").map(eu => eu.user_id))];
+      const allApprovedUserIds = [...new Set(reportEventUsers.filter(eu => eu.status === "ONGOING" || eu.status === "APPROVED").map(eu => eu.user_id))];
       const overallDemographics = getDemographics(allApprovedUserIds, userProfiles);
       
-      const col1X = 14;
-      const col2X = pageW / 3 + 10;
-      const col3X = (pageW / 3) * 2 + 10;
+      const col1X = 14; const col2X = pageW / 3 + 10; const col3X = (pageW / 3) * 2 + 10;
       const tableWidth = pageW / 3 - 20;
       let y_col1 = y, y_col2 = y, y_col3 = y;
 
+      // Gender
       doc.setFont("helvetica", "bold"); doc.setFontSize(12);
       doc.text("Gender Distribution", col1X, y_col1); y_col1 += 6;
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y_col1,
-        head: [['Gender', 'Count']],
-        body: Object.entries(overallDemographics.gender).map(([key, value]) => [key, value]),
-        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
-        margin: { right: pageW - (col1X + tableWidth) }
-      });
-      y_col1 = doc.lastAutoTable.finalY;
+      autoTable(doc, { startY: y_col1, head: [['Gender', 'Count']], body: Object.entries(overallDemographics.gender).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { right: pageW - (col1X + tableWidth) } });
+      y_col1 = doc.lastAutoTable.finalY + 10;
+      // Pie Chart for Gender
+      drawPieChart(doc, overallDemographics.gender, col1X + 25, y_col1 + 20, 20);
 
+      // Age
       doc.setFont("helvetica", "bold"); doc.setFontSize(12);
       doc.text("Age Distribution", col2X, y_col2); y_col2 += 6;
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y_col2,
-        head: [['Age Group', 'Count']],
-        body: Object.entries(overallDemographics.ageGroups).map(([key, value]) => [key, value]),
-        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
-        margin: { left: col2X, right: pageW - (col2X + tableWidth) }
-      });
+      autoTable(doc, { startY: y_col2, head: [['Age Group', 'Count']], body: Object.entries(overallDemographics.ageGroups).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { left: col2X, right: pageW - (col2X + tableWidth) } });
       y_col2 = doc.lastAutoTable.finalY;
 
+      // Location
       doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-      doc.text("Location Distribution (City)", col3X, y_col3); y_col3 += 6;
-      autoTable(doc, { // FIX: Use autoTable function
-        startY: y_col3,
-        head: [['City', 'Count']],
-        body: Object.entries(overallDemographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10),
-        theme: 'grid', headStyles: { fillColor: [0, 100, 0] },
-        margin: { left: col3X }
-      });
-      y_col3 = doc.lastAutoTable.finalY;
+      doc.text("Location Distribution (Top 5)", col3X, y_col3); y_col3 += 6;
+      const topLocations = Object.entries(overallDemographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10);
+      autoTable(doc, { startY: y_col3, head: [['City', 'Count']], body: topLocations, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { left: col3X } });
+      y_col3 = doc.lastAutoTable.finalY + 10;
+      // Bar Chart for Location
+      drawBarChart(doc, overallDemographics.locations, col3X, y_col3, tableWidth, 40);
 
       // PAGE 4+: INDIVIDUAL EVENT REPORTS
-      console.log(`Creating ${processedEvents.length} individual event pages...`);
       for (const event of processedEvents) {
         doc.addPage();
         y = 25;
-        
-        if (dashboardData.ngoLogo) {
-          try {
-            await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06);
-          } catch (error) {
-            console.error("Error adding watermark:", error);
-          }
-        }
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.setTextColor(0, 100, 0);
+        if (dashboardData.ngoLogo) { await addLogo(doc, pageW - 35, pageH - 35, 25, 25, 0.06); }
+        doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
         const eventTitle = event.event_title || "Untitled Event";
         doc.text(`Detailed Report for: ${eventTitle}`, 14, y);
         y += 10;
@@ -2784,14 +2559,7 @@ if (selectedMetrics.includes("Certifications")) {
           ["Location", event.location || "TBA"],
           ["Status", event.status || "N/A"]
         ];
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y,
-          head: [['Field', 'Value']],
-          body: detailsBody,
-          theme: 'grid',
-          headStyles: { fillColor: [0, 100, 0] },
-          margin: { right: pageW - (14 + detailsTableWidth) }
-        });
+        autoTable(doc, { startY: y, head: [['Field', 'Value']], body: detailsBody, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { right: pageW - (14 + detailsTableWidth) } });
         let y_left = doc.lastAutoTable.finalY;
 
         const metricsBody = [
@@ -2803,197 +2571,86 @@ if (selectedMetrics.includes("Certifications")) {
           ["Attendance Rate", event.metrics.attendanceRate + " (Attended / Approved)"],
           ["Participation Rate", event.metrics.participationRate + " (Approved / Total NGO Vols)"]
         ];
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y,
-          head: [['Metric', 'Value']],
-          body: metricsBody,
-          theme: 'grid',
-          headStyles: { fillColor: [0, 100, 0] },
-          margin: { left: metricsTableX }
-        });
+        autoTable(doc, { startY: y, head: [['Metric', 'Value']], body: metricsBody, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { left: metricsTableX } });
         let y_right = doc.lastAutoTable.finalY;
 
         y = Math.max(y_left, y_right) + 10;
 
-        doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-        doc.setTextColor(0, 100, 0);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(0, 100, 0);
         doc.text("Event-Specific Volunteer Demographics", 14, y);
         y += 8;
 
         let y_col1_event = y, y_col2_event = y, y_col3_event = y;
 
+        // Event Gender
         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
         doc.text("Gender", col1X, y_col1_event); y_col1_event += 5;
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y_col1_event,
-          head: [['Gender', 'Count']],
-          body: Object.entries(event.demographics.gender).map(([key, value]) => [key, value]),
-          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
-          margin: { right: pageW - (col1X + tableWidth) }
-        });
+        autoTable(doc, { startY: y_col1_event, head: [['Gender', 'Count']], body: Object.entries(event.demographics.gender).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 }, margin: { right: pageW - (col1X + tableWidth) } });
+        y_col1_event = doc.lastAutoTable.finalY + 10;
+        drawPieChart(doc, event.demographics.gender, col1X + 25, y_col1_event + 20, 15);
 
+        // Event Age
         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
         doc.text("Age", col2X, y_col2_event); y_col2_event += 5;
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y_col2_event,
-          head: [['Age Group', 'Count']],
-          body: Object.entries(event.demographics.ageGroups).map(([key, value]) => [key, value]),
-          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
-          margin: { left: col2X, right: pageW - (col2X + tableWidth) }
-        });
+        autoTable(doc, { startY: y_col2_event, head: [['Age Group', 'Count']], body: Object.entries(event.demographics.ageGroups).map(([key, value]) => [key, value]), theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 }, margin: { left: col2X, right: pageW - (col2X + tableWidth) } });
 
+        // Event Location
         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
         doc.text("Location (Top 10)", col3X, y_col3_event); y_col3_event += 5;
-        autoTable(doc, { // FIX: Use autoTable function
-          startY: y_col3_event,
-          head: [['City', 'Count']],
-          body: Object.entries(event.demographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10),
-          theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 },
-          margin: { left: col3X }
-        });
+        const eventTopLocations = Object.entries(event.demographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        autoTable(doc, { startY: y_col3_event, head: [['City', 'Count']], body: eventTopLocations, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 }, margin: { left: col3X } });
+        y_col3_event = doc.lastAutoTable.finalY + 10;
+        drawBarChart(doc, event.demographics.locations, col3X, y_col3_event, tableWidth, 30);
       }
 
       // FINAL PAGE & FOOTER
-      console.log("Adding page numbers and footer...");
       const totalPages = doc.internal.getNumberOfPages();
-      const generatedDate = new Date().toLocaleString("en-US", {
-        year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
-      });
+      const generatedDate = new Date().toLocaleString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", });
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(8); doc.setTextColor(100, 100, 100);
         doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 10, { align: "center" });
         doc.text(`Generated: ${generatedDate}`, 14, pageH - 10);
       }
 
       let fileName;
-      if (isAnnualReport) {
-        fileName = `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`;
-      } else if (reportType === "multiple") {
-        fileName = `${dashboardData.ngoName || "NGO"}_Multi_Month_Report_${selectedYear}.pdf`;
-      } else {
-        const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' });
-        fileName = `${dashboardData.ngoName || "NGO"}_${monthName}_${selectedYear}_Report.pdf`;
-      }
+      if (isAnnualReport) { fileName = `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`; }
+      else if (reportType === "multiple") { fileName = `${dashboardData.ngoName || "NGO"}_Multi_Month_Report_${selectedYear}.pdf`; }
+      else { const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' }); fileName = `${dashboardData.ngoName || "NGO"}_${monthName}_${selectedYear}_Report.pdf`; }
       
-      console.log("Saving PDF:", fileName);
       doc.save(fileName);
-
-      console.log("Report generated successfully!");
       setPdfLoading(false);
-
-    } catch (error) {
-      console.error("Error generating report:", error);
-      setPdfLoading(false);
-    }
+    } catch (error) { console.error("Error generating report:", error); setPdfLoading(false); }
   };
 
-  
-  const handleDragStart = (e, itemId) => {
-    setDraggedItem(itemId);
-    e.dataTransfer.effectAllowed = "move";
-    e.currentTarget.style.opacity = "0.5";
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDragEnter = (e, targetId) => {
-    e.preventDefault();
-    if (draggedItem && draggedItem !== targetId) {
-      setDragOverItem(targetId);
-    }
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setDragOverItem(null);
-  };
-
+  const handleDragStart = (e, itemId) => { setDraggedItem(itemId); e.dataTransfer.effectAllowed = "move"; e.currentTarget.style.opacity = "0.5"; };
+  const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
+  const handleDragEnter = (e, targetId) => { e.preventDefault(); if (draggedItem && draggedItem !== targetId) { setDragOverItem(targetId); } };
+  const handleDragLeave = (e) => { e.preventDefault(); setDragOverItem(null); };
   const handleDrop = (e, targetId) => {
-    e.preventDefault();
-    setDragOverItem(null);
-
-    if (!draggedItem || draggedItem === targetId) {
-      setDraggedItem(null);
-      return;
-    }
-
-    const draggedIndex = draggableItems.findIndex(
-      (item) => item.id === draggedItem
-    );
-    const targetIndex = draggableItems.findIndex(
-      (item) => item.id === targetId
-    );
-
+    e.preventDefault(); setDragOverItem(null);
+    if (!draggedItem || draggedItem === targetId) { setDraggedItem(null); return; }
+    const draggedIndex = draggableItems.findIndex((item) => item.id === draggedItem);
+    const targetIndex = draggableItems.findIndex((item) => item.id === targetId);
     const newItems = [...draggableItems];
     const [draggedElement] = newItems.splice(draggedIndex, 1);
     newItems.splice(targetIndex, 0, draggedElement);
-
-    const reorderedItems = newItems.map((item, index) => ({
-      ...item,
-      order: index,
-    }));
-
-    setDraggableItems(reorderedItems);
-    setDraggedItem(null);
+    const reorderedItems = newItems.map((item, index) => ({ ...item, order: index, }));
+    setDraggableItems(reorderedItems); setDraggedItem(null);
   };
-
-  const handleDragEnd = (e) => {
-    e.currentTarget.style.opacity = "1";
-    setDraggedItem(null);
-    setDragOverItem(null);
-  };
-
-  const downloadAsPDF = (cardType) => {
-    alert(`Downloading ${cardType} report as PDF...`);
-  };
-
-  const downloadAsWord = (cardType) => {
-    alert(`Downloading ${cardType} report as Word document...`);
-  };
-
-  const handleApplyFilters = (filters) => {
-    setActiveFilters(filters);
-  };
-
+  const handleDragEnd = (e) => { e.currentTarget.style.opacity = "1"; setDraggedItem(null); setDragOverItem(null); };
+  const downloadAsPDF = (cardType) => { alert(`Downloading ${cardType} report as PDF...`); };
+  const downloadAsWord = (cardType) => { alert(`Downloading ${cardType} report as Word document...`); };
+  const handleApplyFilters = (filters) => { setActiveFilters(filters); };
   const openModal = (type) => setModalState({ isOpen: true, type });
   const closeModal = () => setModalState({ isOpen: false, type: null });
-
-  const getSortedItems = () => {
-    return [...draggableItems].sort((a, b) => a.order - b.order);
-  };
+  const getSortedItems = () => { return [...draggableItems].sort((a, b) => a.order - b.order); };
 
   const renderDraggableCard = (itemId, content) => {
     const isDragOver = dragOverItem === itemId;
-    
-
     return (
-      <div
-        draggable
-        onDragStart={(e) => handleDragStart(e, itemId)}
-        onDragOver={handleDragOver}
-        onDragEnter={(e) => handleDragEnter(e, itemId)}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, itemId)}
-        onDragEnd={handleDragEnd}
-        className={`transition-all duration-200 h-full ${
-          isDragOver ? "ring-4 ring-emerald-400 scale-105" : ""
-        }`}
-        style={{ cursor: "grab" }}
-      >
-        
-        <div className="relative h-full">
-          <div className="absolute top-2 left-2 text-gray-400 z-10 cursor-move">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M9 5h2v14H9V5zm4 0h2v14h-2V5z" />
-            </svg>
-          </div>
-          {content}
-        </div>
+      <div draggable onDragStart={(e) => handleDragStart(e, itemId)} onDragOver={handleDragOver} onDragEnter={(e) => handleDragEnter(e, itemId)} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, itemId)} onDragEnd={handleDragEnd} className={`transition-all duration-200 h-full ${isDragOver ? "ring-4 ring-emerald-400 scale-105" : ""}`} style={{ cursor: "grab" }}>
+        <div className="relative h-full"><div className="absolute top-2 left-2 text-gray-400 z-10 cursor-move"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 5h2v14H9V5zm4 0h2v14h-2V5z" /></svg></div>{content}</div>
       </div>
     );
   };
@@ -3009,1066 +2666,180 @@ if (selectedMetrics.includes("Certifications")) {
     );
   }
 
-  
-
   const cardComponents = {
     completion: (
-      <div
-        onClick={() => openModal("completion")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Completion Rate")}
-            onDownloadWord={() => downloadAsWord("Completion Rate")}
-          />
-        </div>
-        <h4 className="font-bold font-montserrat text-base mb-2 mt-6">
-          Project & Event Completion Rate
-        </h4>
-        <ResponsiveContainer width="100%" height={100}>
-          <PieChart>
-            <Pie
-              data={[
-                { name: "Completed", value: dashboardData.completionRate },
-                {
-                  name: "Remaining",
-                  value: 100 - dashboardData.completionRate,
-                },
-              ]}
-              dataKey="value"
-              innerRadius={30}
-              outerRadius={45}
-              startAngle={90}
-              endAngle={-270}
-            >
-              {[0, 1].map((index) => (
-                <Cell key={`cell-${index}`} fill={COLORS.completion[index]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
-        <p className="text-2xl font-extrabold font-montserrat text-emerald-600">
-          {dashboardData.completionRate}%
-        </p>
-        <p className="text-xs text-gray-500 font-montserrat mt-1">
-          Success Rate
-        </p>
-        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      <div onClick={() => openModal("completion")} className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Completion Rate")} onDownloadWord={() => downloadAsWord("Completion Rate")} /></div>
+        <h4 className="font-bold font-montserrat text-base mb-2 mt-6">Project & Event Completion Rate</h4>
+        <ResponsiveContainer width="100%" height={100}><PieChart><Pie data={[{ name: "Completed", value: dashboardData.completionRate }, { name: "Remaining", value: 100 - dashboardData.completionRate }]} dataKey="value" innerRadius={30} outerRadius={45} startAngle={90} endAngle={-270}>{[0, 1].map((index) => (<Cell key={`cell-${index}`} fill={COLORS.completion[index]} />))}</Pie></PieChart></ResponsiveContainer>
+        <p className="text-2xl font-extrabold font-montserrat text-emerald-600">{dashboardData.completionRate}%</p><p className="text-xs text-gray-500 font-montserrat mt-1">Success Rate</p><p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
     volunteers: (
-      <div
-        onClick={() => openModal("volunteers")}
-        className="bg-white p-4 text-center flex flex-col justify-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px]"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Total Volunteers")}
-            onDownloadWord={() => downloadAsWord("Total Volunteers")}
-          />
-        </div>
-        <h4 className="font-bold font-montserrat text-base mb-2 mt-6">
-          Total Registered Volunteers
-        </h4>
-        <p className="text-4xl font-extrabold font-montserrat text-emerald-700">
-          {dashboardData.totalVolunteers}
-        </p>
-        <div className="mt-3 flex justify-center gap-4">
-          <div className="text-center transform transition-all hover:scale-110">
-            <p className="text-sm text-blue-600 font-semibold flex items-center justify-center gap-1">
-              <img src={MaleIcon} alt="Male Icon" className="w-4 h-4" />{" "}
-              {dashboardData.volunteerGenderData.male}
-            </p>
-            <p className="text-xs text-gray-500">
-              Male ({dashboardData.volunteerGenderData.malePercentage}%)
-            </p>
-          </div>
-          <div className="text-center transform transition-all hover:scale-110">
-            <p className="text-sm text-pink-600 font-semibold flex items-center justify-center gap-1">
-              <img src={FemaleIcon} alt="Female Icon" className="w-4 h-4" />{" "}
-              {dashboardData.volunteerGenderData.female}
-            </p>
-            <p className="text-xs text-gray-500">
-              Female ({dashboardData.volunteerGenderData.femalePercentage}%)
-            </p>
-          </div>
-        </div>
-        <p className="text-xs mt-2 font-montserrat">
-          As of {new Date().toLocaleDateString()}
-        </p>
-        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      <div onClick={() => openModal("volunteers")} className="bg-white p-4 text-center flex flex-col justify-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px]">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Total Volunteers")} onDownloadWord={() => downloadAsWord("Total Volunteers")} /></div>
+        <h4 className="font-bold font-montserrat text-base mb-2 mt-6">Total Registered Volunteers</h4>
+        <p className="text-4xl font-extrabold font-montserrat text-emerald-700">{dashboardData.totalVolunteers}</p>
+        <div className="mt-3 flex justify-center gap-4"><div className="text-center transform transition-all hover:scale-110"><p className="text-sm text-blue-600 font-semibold flex items-center justify-center gap-1"><img src={MaleIcon} alt="Male Icon" className="w-4 h-4" /> {dashboardData.volunteerGenderData.male}</p><p className="text-xs text-gray-500">Male ({dashboardData.volunteerGenderData.malePercentage}%)</p></div><div className="text-center transform transition-all hover:scale-110"><p className="text-sm text-pink-600 font-semibold flex items-center justify-center gap-1"><img src={FemaleIcon} alt="Female Icon" className="w-4 h-4" /> {dashboardData.volunteerGenderData.female}</p><p className="text-xs text-gray-500">Female ({dashboardData.volunteerGenderData.femalePercentage}%)</p></div></div>
+        <p className="text-xs mt-2 font-montserrat">As of {new Date().toLocaleDateString()}</p><p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
     participation: (
-      <div
-        onClick={() => openModal("participation")}
-        className="bg-white p-4 text-center font-montserrat rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Participation Rate")}
-            onDownloadWord={() => downloadAsWord("Participation Rate")}
-          />
-        </div>
-        <h4 className="font-bold mb-2 font-montserrat text-base mt-6">
-          Volunteer Participation Rate
-        </h4>
-        <ResponsiveContainer width="100%" height={100}>
-          <PieChart>
-            <Pie
-              data={[
-                { name: "Active", value: dashboardData.participationRate },
-                {
-                  name: "Inactive",
-                  value: 100 - dashboardData.participationRate,
-                },
-              ]}
-              dataKey="value"
-              innerRadius={30}
-              outerRadius={45}
-              startAngle={90}
-              endAngle={-270}
-            >
-              {[0, 1].map((index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS.participation[index]}
-                />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
-        <p className="text-2xl font-extrabold font-montserrat mt-2 text-emerald-600">
-          {dashboardData.participationRate}%
-        </p>
-        <p className="text-xs text-gray-500 font-montserrat mt-2">
-          Active Volunteers
-        </p>
-        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      <div onClick={() => openModal("participation")} className="bg-white p-4 text-center font-montserrat rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[280px] flex flex-col justify-center">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Participation Rate")} onDownloadWord={() => downloadAsWord("Participation Rate")} /></div>
+        <h4 className="font-bold mb-2 font-montserrat text-base mt-6">Volunteer Participation Rate</h4>
+        <ResponsiveContainer width="100%" height={100}><PieChart><Pie data={[{ name: "Active", value: dashboardData.participationRate }, { name: "Inactive", value: 100 - dashboardData.participationRate }]} dataKey="value" innerRadius={30} outerRadius={45} startAngle={90} endAngle={-270}>{[0, 1].map((index) => (<Cell key={`cell-${index}`} fill={COLORS.participation[index]} />))}</Pie></PieChart></ResponsiveContainer>
+        <p className="text-2xl font-extrabold font-montserrat mt-2 text-emerald-600">{dashboardData.participationRate}%</p><p className="text-xs text-gray-500 font-montserrat mt-2">Active Volunteers</p><p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
     applications: (
-      <div
-        onClick={() => openModal("applications")}
-        className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Applications")}
-            onDownloadWord={() => downloadAsWord("Applications")}
-          />
-        </div>
-        <h4 className="font-bold mb-4 mt-8 font-montserrat text-sm">
-          Expected Volunteer Applications - Current Week
-        </h4>
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={chartData.applications?.data || []}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="applications"
-              stroke={COLORS.applications}
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-        <div className="mt-4 text-center">
-          <p className="text-lg mb-2 font-montserrat">
-            Projected Today:{" "}
-            <span className="font-bold text-emerald-700 text-xl">
-              {chartData.applications?.forecast || 0}
-            </span>
-          </p>
-        </div>
-        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      <div onClick={() => openModal("applications")} className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Applications")} onDownloadWord={() => downloadAsWord("Applications")} /></div>
+        <h4 className="font-bold mb-4 mt-8 font-montserrat text-sm">Expected Volunteer Applications - Current Week</h4>
+        <ResponsiveContainer width="100%" height={280}><LineChart data={chartData.applications?.data || []}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} /><Tooltip /><Line type="monotone" dataKey="applications" stroke={COLORS.applications} strokeWidth={3} /></LineChart></ResponsiveContainer>
+        <div className="mt-4 text-center"><p className="text-lg mb-2 font-montserrat">Projected Today: <span className="font-bold text-emerald-700 text-xl">{chartData.applications?.forecast || 0}</span></p></div><p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
     growth: (
-      <div
-        onClick={() => openModal("growth")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Growth Rate")}
-            onDownloadWord={() => downloadAsWord("Growth Rate")}
-          />
-        </div>
-        <h4 className="font-bold font-montserrat text-base mb-6 mt-8">
-          Volunteer Growth Rate
-        </h4>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={chartData.growth}>
-            <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Bar dataKey="volunteers" fill={COLORS.growth} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div onClick={() => openModal("growth")} className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Growth Rate")} onDownloadWord={() => downloadAsWord("Growth Rate")} /></div>
+        <h4 className="font-bold font-montserrat text-base mb-6 mt-8">Volunteer Growth Rate</h4>
+        <ResponsiveContainer width="100%" height={280}><BarChart data={chartData.growth}><XAxis dataKey="month" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} /><Bar dataKey="volunteers" fill={COLORS.growth} /></BarChart></ResponsiveContainer>
         <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
     feedback: (
-      <div
-        onClick={() => openModal("feedback")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Feedback Score")}
-            onDownloadWord={() => downloadAsWord("Feedback Score")}
-          />
-        </div>
-        <h4 className="font-bold font-montserrat text-base mt-6">
-          Volunteer Feedback Score
-        </h4>
-        <p className="text-yellow-500 text-2xl mt-2">
-          {"⭐".repeat(dashboardData.feedbackScore)}
-        </p>
-        <p className="text-xs font-montserrat mt-2">High satisfaction</p>
-        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      <div onClick={() => openModal("feedback")} className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Feedback Score")} onDownloadWord={() => downloadAsWord("Feedback Score")} /></div>
+        <h4 className="font-bold font-montserrat text-base mt-6">Volunteer Feedback Score</h4>
+        <p className="text-yellow-500 text-2xl mt-2">{"⭐".repeat(dashboardData.feedbackScore)}</p><p className="text-xs font-montserrat mt-2">High satisfaction</p><p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
     beneficiary: (
-      <div
-        onClick={() => openModal("beneficiary")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Beneficiary Reach")}
-            onDownloadWord={() => downloadAsWord("Beneficiary Reach")}
-          />
-        </div>
-        <h4 className="font-bold font-montserrat text-base mt-6">
-          Beneficiary Reach
-        </h4>
-        <p className="text-3xl font-extrabold text-emerald-700 mt-2">
-          {dashboardData.beneficiaryReach.toLocaleString()}
-        </p>
-        <p className="text-xs font-montserrat mt-1">Total served</p>
-        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      <div onClick={() => openModal("beneficiary")} className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Beneficiary Reach")} onDownloadWord={() => downloadAsWord("Beneficiary Reach")} /></div>
+        <h4 className="font-bold font-montserrat text-base mt-6">Beneficiary Reach</h4>
+        <p className="text-3xl font-extrabold text-emerald-700 mt-2">{dashboardData.beneficiaryReach.toLocaleString()}</p><p className="text-xs font-montserrat mt-1">Total served</p><p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
     activeEvents: (
-      <div
-        onClick={() => openModal("activeEvents")}
-        className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center"
-      >
-        <div
-          className="absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ThreeDotsMenu
-            onDownloadPDF={() => downloadAsPDF("Active Events")}
-            onDownloadWord={() => downloadAsWord("Active Events")}
-          />
-        </div>
-        <h4 className="font-bold font-montserrat text-base mt-6">
-          Active Events This Month
-        </h4>
-        <p className="text-3xl font-extrabold text-emerald-700 mt-2">
-          {dashboardData.activeEvents}
-        </p>
-        <p className="text-xs font-montserrat mt-1">
-          {new Date().toLocaleDateString("en-US", {
-            month: "long",
-            year: "numeric",
-          })}
-        </p>
-        <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
+      <div onClick={() => openModal("activeEvents")} className="bg-white p-4 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative h-full min-h-[140px] flex flex-col justify-center">
+        <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Active Events")} onDownloadWord={() => downloadAsWord("Active Events")} /></div>
+        <h4 className="font-bold font-montserrat text-base mt-6">Active Events This Month</h4>
+        <p className="text-3xl font-extrabold text-emerald-700 mt-2">{dashboardData.activeEvents}</p><p className="text-xs font-montserrat mt-1">{new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p><p className="text-xs text-emerald-600 mt-2">Click to expand</p>
       </div>
     ),
   };
 
   return (
-    <div
-      className="flex min-h-screen bg-no-repeat bg-center"
-      style={{
-        backgroundImage: `url(${CentroAdminBg})`,
-        backgroundSize: "100% 100%",
-      }}
-    >
+    <div className="flex min-h-screen bg-no-repeat bg-center" style={{ backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%" }}>
       <Sidebar onCollapseChange={setSidebarCollapsed} />
-
       <PDFLoadingOverlay isVisible={pdfLoading} />
-
-
-      <main
-        className="flex-1 p-6 overflow-y-auto transition-all duration-300"
-        style={{
-          filter:
-            modalState.isOpen || filterModalOpen || reportModalOpen
-              ? "blur(3px)"
-              : "none",
-          marginLeft: sidebarCollapsed ? "5rem" : "16rem",
-        }}
-      >
-        <div
-          className="relative z-10 space-y-6 w-full mx-auto"
-          style={{ maxWidth: "2000px" }}
-        >
+      <main className="flex-1 p-6 overflow-y-auto transition-all duration-300" style={{ filter: modalState.isOpen || filterModalOpen || reportModalOpen ? "blur(3px)" : "none", marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}>
+        <div className="relative z-10 space-y-6 w-full mx-auto" style={{ maxWidth: "2000px" }}>
           <div className="flex items-center justify-between gap-4">
-            <h2 className="flex-1 text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">
-              {viewingContext?.is_super_admin_view
-                ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SAV)`
-                : "ORGANIZATION DASHBOARD"}
-            </h2>
-            <button
-              onClick={() => setFilterModalOpen(true)}
-              className="px-4 py-3 bg-white text-emerald-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-50 cursor-pointer"
-            >
-              Filter
-            </button>
-            <button
-              onClick={() => setReportModalOpen(true)}
-              className="px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-700 cursor-pointer"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Generate Report
-            </button>
+            <h2 className="flex-1 text-3xl font-bold font-montserrat text-white text-center border border-emerald-500 bg-emerald-800/90 py-3 rounded-xl shadow">{viewingContext?.is_super_admin_view ? `${dashboardData.ngoName.toUpperCase()} DASHBOARD (SAV)` : "ORGANIZATION DASHBOARD"}</h2>
+            <button onClick={() => setFilterModalOpen(true)} className="px-4 py-3 bg-white text-emerald-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-50 cursor-pointer">Filter</button>
+            <button onClick={() => setReportModalOpen(true)} className="px-4 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:bg-emerald-700 cursor-pointer"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>Generate Report</button>
           </div>
-
-          {viewingContext?.is_super_admin_view && (
-            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-              <p className="font-semibold">
-                You are viewing {dashboardData.ngoName}'s dashboard.
-                <Link
-                  to="/ngohub"
-                  onClick={() => localStorage.removeItem("viewingNGO")}
-                  className="ml-4 underline hover:no-underline"
-                >
-                  Return to NGO Hub
-                </Link>
-              </p>
+          {viewingContext?.is_super_admin_view && (<div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded"><p className="font-semibold">You are viewing {dashboardData.ngoName}'s dashboard. <Link to="/ngohub" onClick={() => localStorage.removeItem("viewingNGO")} className="ml-4 underline hover:no-underline">Return to NGO Hub</Link></p></div>)}
+          {(activeFilters.dateRange !== "all" || activeFilters.selectedEvent !== "all" || activeFilters.gender !== "all" || activeFilters.status !== "all" || activeFilters.volunteerRange !== "all" || activeFilters.selectedMetrics.length > 0) && (
+            <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-emerald-800">Filters:</span>
+                  {activeFilters.dateRange !== "all" && activeFilters.dateRange !== "specific-months" && (<span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">{activeFilters.dateRange === "custom" ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}` : activeFilters.dateRange}</span>)}
+                  {activeFilters.dateRange === "specific-months" && activeFilters.selectedMonths.length > 0 && (<span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">{activeFilters.selectedMonths.map((month) => new Date(month + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" })).join(", ")}</span>)}
+                  {activeFilters.selectedEvent !== "all" && (<span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">{dashboardData.events.find((e) => e.event_id === activeFilters.selectedEvent)?.event_title || activeFilters.selectedEvent}</span>)}
+                  {activeFilters.status !== "all" && (<span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">{activeFilters.status}</span>)}
+                  {activeFilters.gender !== "all" && (<span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm flex items-center gap-2">{activeFilters.gender === "Male" ? (<><img src={MaleIcon} alt="Male Icon" className="w-4 h-4" />Male</>) : (<><img src={FemaleIcon} alt="Female Icon" className="w-4 h-4" />Female</>)}</span>)}
+                  {activeFilters.volunteerRange !== "all" && (<span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">{activeFilters.volunteerRange}</span>)}
+                  {activeFilters.selectedMetrics.length > 0 && (<span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">{activeFilters.selectedMetrics.map((metricValue) => { const metricLabels = { "Completion": "Project Completion", "Volunteers": "Total Volunteers", "Participation": "Participation Rate", "Feedback": "Feedback Score", "Growth": "Growth Rate", "Beneficiaries": "Beneficiaries", "Active Events": "Active Events", "Non-Participants": "Non-Participants", "Attendance": "Attendance", "Certifications": "Certifications" }; return metricLabels[metricValue] || metricValue; }).join(", ")}</span>)}
+                </div>
+                <button onClick={() => handleApplyFilters({ dateRange: "all", selectedEvent: "all", gender: "all", status: "all", volunteerRange: "all", customDateFrom: "", customDateTo: "", selectedMonths: [], selectedMetrics: [] })} className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer">Clear</button>
+              </div>
             </div>
           )}
-
-         {(activeFilters.dateRange !== "all" ||
-  activeFilters.selectedEvent !== "all" ||
-  activeFilters.gender !== "all" ||
-  activeFilters.status !== "all" ||
-  activeFilters.volunteerRange !== "all" ||
-  activeFilters.selectedMetrics.length > 0) && (
-  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-semibold text-emerald-800">
-          Filters:
-        </span>
-        
-        {/* For date ranges OTHER than specific-months */}
-        {activeFilters.dateRange !== "all" && activeFilters.dateRange !== "specific-months" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.dateRange === "custom"
-              ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}`
-              : activeFilters.dateRange}
-          </span>
-        )}
-        
-        {/* Display individual selected months with comma separation */}
-        {activeFilters.dateRange === "specific-months" && activeFilters.selectedMonths.length > 0 && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.selectedMonths
-              .map((month) =>
-                new Date(month + "-01").toLocaleDateString("en-US", {
-                  month: "short",
-                  year: "numeric",
-                })
-              )
-              .join(", ")}
-          </span>
-        )}
-        
-        {activeFilters.selectedEvent !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {dashboardData.events.find(
-              (e) => e.event_id === activeFilters.selectedEvent
-            )?.event_title || activeFilters.selectedEvent}
-          </span>
-        )}
-        {activeFilters.status !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.status}
-          </span>
-        )}
-        {activeFilters.gender !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm flex items-center gap-2">
-            {activeFilters.gender === "Male" ? (
-              <>
-                <img
-                  src={MaleIcon}
-                  alt="Male Icon"
-                  className="w-4 h-4"
-                />
-                Male
-              </>
-            ) : (
-              <>
-                <img
-                  src={FemaleIcon}
-                  alt="Female Icon"
-                  className="w-4 h-4"
-                />
-                Female
-              </>
-            )}
-          </span>
-        )}
-        {activeFilters.volunteerRange !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.volunteerRange}
-          </span>
-        )}
-        {activeFilters.selectedMetrics.length > 0 && (
-  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-    {activeFilters.selectedMetrics
-      .map((metricValue) => {
-        const metricLabels = {
-          "Completion": "Project Completion",
-          "Volunteers": "Total Volunteers",
-          "Participation": "Participation Rate",
-          "Feedback": "Feedback Score",
-          "Growth": "Growth Rate",
-          "Beneficiaries": "Beneficiaries",
-          "Active Events": "Active Events",
-          "Non-Participants": "Non-Participants",
-          "Attendance": "Attendance",
-          "Certifications": "Certifications"
-        };
-        return metricLabels[metricValue] || metricValue;
-      })
-      .join(", ")}
-  </span>
-)}
-      </div>
-      <button
-        onClick={() =>
-          handleApplyFilters({
-            dateRange: "all",
-            selectedEvent: "all",
-            gender: "all",
-            status: "all",
-            volunteerRange: "all",
-            customDateFrom: "",
-            customDateTo: "",
-            selectedMonths: [],
-            selectedMetrics: []
-          })
-        }
-        className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
-      >
-        Clear 
-      </button>
-    </div>
-  </div>
-)}
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            <div
-              className="p-5 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
-              style={{ backgroundColor: "#d8eeeb" }}
-            >
-              <h3 className="text-emerald-900 font-extrabold text-xl font-montserrat mt-2 mb-1">
-                Hi, {dashboardData.ngoName}!
-              </h3>
-              <p className="text-sm">
-                You have{" "}
-                <span className="underline decoration-double font-bold text-lg">
-                  {dashboardData.pendingApplications}
-                </span>{" "}
-                pending applicants waiting for review.
-              </p>
+            <div className="p-5 text-center rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow" style={{ backgroundColor: "#d8eeeb" }}>
+              <h3 className="text-emerald-900 font-extrabold text-xl font-montserrat mt-2 mb-1">Hi, {dashboardData.ngoName}!</h3>
+              <p className="text-sm">You have <span className="underline decoration-double font-bold text-lg">{dashboardData.pendingApplications}</span> pending applicants waiting for review.</p>
             </div>
-
-            <Link
-              to="/create-announcement"
-              className="inline-flex items-center justify-center text-2xl font-montserrat text-emerald-900 font-bold p-5 gap-3 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
-              style={{ backgroundColor: "#fff4d9" }}
-            >
-              <img
-                src={CreateAnnouncementIcon}
-                alt="Create Announcement"
-                className="w-16 h-16"
-              />
-              <span>CREATE ANNOUNCEMENT</span>
-            </Link>
-
-            <Link
-              to="/create-event"
-              className="inline-flex items-center justify-center text-2xl text-emerald-900 font-bold font-montserrat p-5 gap-3 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
-              style={{ backgroundColor: "#fbdb90" }}
-            >
-              <span>CREATE EVENT</span>
-              <img
-                src={CreateEventIcon}
-                alt="Create Event"
-                className="w-16 h-16"
-              />
-            </Link>
+            <Link to="/create-announcement" className="inline-flex items-center justify-center text-2xl font-montserrat text-emerald-900 font-bold p-5 gap-3 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow" style={{ backgroundColor: "#fff4d9" }}><img src={CreateAnnouncementIcon} alt="Create Announcement" className="w-16 h-16" /><span>CREATE ANNOUNCEMENT</span></Link>
+            <Link to="/create-event" className="inline-flex items-center justify-center text-2xl text-emerald-900 font-bold font-montserrat p-5 gap-3 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow" style={{ backgroundColor: "#fbdb90" }}><span>CREATE EVENT</span><img src={CreateEventIcon} alt="Create Event" className="w-16 h-16" /></Link>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            {getSortedItems()
-              .slice(0, 3)
-              .map((item) => (
-                <div key={item.id} className="h-full">
-                  {renderDraggableCard(item.id, cardComponents[item.id])}
-                </div>
-              ))}
-          </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">{getSortedItems().slice(0, 3).map((item) => (<div key={item.id} className="h-full">{renderDraggableCard(item.id, cardComponents[item.id])}</div>))}</div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
-            <div className="h-full">
-              {getSortedItems()[3] &&
-                renderDraggableCard(
-                  getSortedItems()[3].id,
-                  cardComponents[getSortedItems()[3].id]
-                )}
-            </div>
-            <div className="h-full">
-              {getSortedItems()[4] &&
-                renderDraggableCard(
-                  getSortedItems()[4].id,
-                  cardComponents[getSortedItems()[4].id]
-                )}
-            </div>
-
-            <div className="flex flex-col gap-4 h-full">
-              {getSortedItems()
-                .slice(5, 8)
-                .map((item) => (
-                  <div key={item.id} className="flex-1">
-                    {renderDraggableCard(item.id, cardComponents[item.id])}
-                  </div>
-                ))}
-            </div>
+            <div className="h-full">{getSortedItems()[3] && renderDraggableCard(getSortedItems()[3].id, cardComponents[getSortedItems()[3].id])}</div>
+            <div className="h-full">{getSortedItems()[4] && renderDraggableCard(getSortedItems()[4].id, cardComponents[getSortedItems()[4].id])}</div>
+            <div className="flex flex-col gap-4 h-full">{getSortedItems().slice(5, 8).map((item) => (<div key={item.id} className="flex-1">{renderDraggableCard(item.id, cardComponents[item.id])}</div>))}</div>
           </div>
-
           {chartData.eventsPerformance.length > 0 && (
-            <div
-              onClick={() => openModal("eventsPerformance")}
-              className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative"
-            >
-              <div
-                className="absolute top-2 right-2 cursor-pointer"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ThreeDotsMenu
-                  onDownloadPDF={() => downloadAsPDF("Events Performance")}
-                  onDownloadWord={() => downloadAsWord("Events Performance")}
-                />
-              </div>
-              <h4 className="font-bold mt-2 mb-4 font-montserrat text-base">
-                Events Performance Comparison
-              </h4>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={chartData.eventsPerformance}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="event" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Bar dataKey="value">
-                    {chartData.eventsPerformance.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS.events[index % COLORS.events.length]}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <div onClick={() => openModal("eventsPerformance")} className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all cursor-pointer hover:scale-105 relative">
+              <div className="absolute top-2 right-2 cursor-pointer" onClick={(e) => e.stopPropagation()}><ThreeDotsMenu onDownloadPDF={() => downloadAsPDF("Events Performance")} onDownloadWord={() => downloadAsWord("Events Performance")} /></div>
+              <h4 className="font-bold mt-2 mb-4 font-montserrat text-base">Events Performance Comparison</h4>
+              <ResponsiveContainer width="100%" height={250}><BarChart data={chartData.eventsPerformance}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="event" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} /><Tooltip /><Bar dataKey="value">{chartData.eventsPerformance.map((entry, index) => (<Cell key={`cell-${index}`} fill={COLORS.events[index % COLORS.events.length]} />))}</Bar></BarChart></ResponsiveContainer>
               <p className="text-xs text-emerald-600 mt-2">Click to expand</p>
             </div>
           )}
         </div>
       </main>
-
-      <FilterModal
-        isOpen={filterModalOpen}
-        onClose={() => setFilterModalOpen(false)}
-        onApplyFilters={handleApplyFilters}
-        events={dashboardData.events}
-      />
-
-      <ReportModal
-        isOpen={reportModalOpen}
-        onClose={() => setReportModalOpen(false)}
-        onGenerate={handleGenerateReport}
-      />
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "volunteers"}
-        onClose={closeModal}
-        title="Total Registered Volunteers"
-        showGenderBreakdown={true}
-        genderData={dashboardData.volunteerGenderData}
-      >
+      <FilterModal isOpen={filterModalOpen} onClose={() => setFilterModalOpen(false)} onApplyFilters={handleApplyFilters} events={dashboardData.events} />
+      <ReportModal isOpen={reportModalOpen} onClose={() => setReportModalOpen(false)} onGenerate={handleGenerateReport} />
+      
+      {/* --- Chart Modals Section (Same as original, kept for completeness) --- */}
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "volunteers"} onClose={closeModal} title="Total Registered Volunteers" showGenderBreakdown={true} genderData={dashboardData.volunteerGenderData}>
         <div className="text-center">
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-12 rounded-xl mb-6">
-            <p className="text-5xl font-extrabold text-emerald-700 mb-4">
-              {dashboardData.totalVolunteers}
-            </p>
-            <p className="text-2xl text-gray-700 font-montserrat">
-              Registered Volunteers
-            </p>
-            <p className="text-lg text-gray-600 mt-2">
-              As of{" "}
-              {new Date().toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <p className="text-sm text-gray-600">Pending Applications</p>
-              <p className="text-3xl font-bold text-blue-700">
-                {dashboardData.pendingApplications}
-              </p>
-            </div>
-            <div className="bg-emerald-50 p-6 rounded-lg">
-              <p className="text-sm text-gray-600">Active Volunteers</p>
-              <p className="text-3xl font-bold text-emerald-700">
-                {Math.round(
-                  dashboardData.totalVolunteers *
-                    (dashboardData.participationRate / 100)
-                )}
-              </p>
-            </div>
-          </div>
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-12 rounded-xl mb-6"><p className="text-5xl font-extrabold text-emerald-700 mb-4">{dashboardData.totalVolunteers}</p><p className="text-2xl text-gray-700 font-montserrat">Registered Volunteers</p><p className="text-lg text-gray-600 mt-2">As of {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p></div>
+          <div className="grid grid-cols-2 gap-4 mt-6"><div className="bg-blue-50 p-6 rounded-lg"><p className="text-sm text-gray-600">Pending Applications</p><p className="text-3xl font-bold text-blue-700">{dashboardData.pendingApplications}</p></div><div className="bg-emerald-50 p-6 rounded-lg"><p className="text-sm text-gray-600">Active Volunteers</p><p className="text-3xl font-bold text-emerald-700">{Math.round(dashboardData.totalVolunteers * (dashboardData.participationRate / 100))}</p></div></div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "completion"}
-        onClose={closeModal}
-        title="Project & Event Completion Rate"
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "completion"} onClose={closeModal} title="Project & Event Completion Rate">
         <div className="text-center">
-          <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={[
-                  { name: "Completed", value: dashboardData.completionRate },
-                  {
-                    name: "Remaining",
-                    value: 100 - dashboardData.completionRate,
-                  },
-                ]}
-                dataKey="value"
-                innerRadius={100}
-                outerRadius={150}
-                startAngle={90}
-                endAngle={-270}
-                label
-              >
-                {[0, 1].map((index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS.completion[index]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-6">
-            <p className="text-5xl font-extrabold text-emerald-600 mb-4">
-              {dashboardData.completionRate}%
-            </p>
-            <p className="text-xl text-gray-600">Success Rate</p>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div className="bg-emerald-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Completed Events</p>
-                <p className="text-2xl font-bold text-emerald-700">
-                  {
-                    dashboardData.events.filter((e) => e.status === "COMPLETED")
-                      .length
-                  }
-                </p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Total Events</p>
-                <p className="text-2xl font-bold text-gray-700">
-                  {dashboardData.events.length}
-                </p>
-              </div>
-            </div>
-          </div>
+          <ResponsiveContainer width="100%" height={400}><PieChart><Pie data={[{ name: "Completed", value: dashboardData.completionRate }, { name: "Remaining", value: 100 - dashboardData.completionRate }]} dataKey="value" innerRadius={100} outerRadius={150} startAngle={90} endAngle={-270} label>{[0, 1].map((index) => (<Cell key={`cell-${index}`} fill={COLORS.completion[index]} />))}</Pie><Tooltip /></PieChart></ResponsiveContainer>
+          <div className="mt-6"><p className="text-5xl font-extrabold text-emerald-600 mb-4">{dashboardData.completionRate}%</p><p className="text-xl text-gray-600">Success Rate</p><div className="mt-6 grid grid-cols-2 gap-4"><div className="bg-emerald-50 p-4 rounded-lg"><p className="text-sm text-gray-600">Completed Events</p><p className="text-2xl font-bold text-emerald-700">{dashboardData.events.filter((e) => e.status === "COMPLETED").length}</p></div><div className="bg-gray-50 p-4 rounded-lg"><p className="text-sm text-gray-600">Total Events</p><p className="text-2xl font-bold text-gray-700">{dashboardData.events.length}</p></div></div></div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "participation"}
-        onClose={closeModal}
-        title="Volunteer Participation Rate"
-        showGenderBreakdown={true}
-        genderData={dashboardData.volunteerGenderData}
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "participation"} onClose={closeModal} title="Volunteer Participation Rate" showGenderBreakdown={true} genderData={dashboardData.volunteerGenderData}>
         <div className="text-center">
-          <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={[
-                  { name: "Active", value: dashboardData.participationRate },
-                  {
-                    name: "Inactive",
-                    value: 100 - dashboardData.participationRate,
-                  },
-                ]}
-                dataKey="value"
-                innerRadius={100}
-                outerRadius={150}
-                startAngle={90}
-                endAngle={-270}
-                label
-              >
-                {[0, 1].map((index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS.participation[index]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-6">
-            <p className="text-5xl font-extrabold text-emerald-600 mb-4">
-              {dashboardData.participationRate}%
-            </p>
-            <p className="text-xl text-gray-600">Active Volunteers</p>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Active Volunteers</p>
-                <p className="text-2xl font-bold text-blue-700">
-                  {Math.round(
-                    dashboardData.totalVolunteers *
-                      (dashboardData.participationRate / 100)
-                  )}
-                </p>
-              </div>
-              <div className="bg-red-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Inactive Volunteers</p>
-                <p className="text-2xl font-bold text-red-700">
-                  {dashboardData.totalVolunteers -
-                    Math.round(
-                      dashboardData.totalVolunteers *
-                        (dashboardData.participationRate / 100)
-                    )}
-                </p>
-              </div>
-            </div>
-          </div>
+          <ResponsiveContainer width="100%" height={400}><PieChart><Pie data={[{ name: "Active", value: dashboardData.participationRate }, { name: "Inactive", value: 100 - dashboardData.participationRate }]} dataKey="value" innerRadius={100} outerRadius={150} startAngle={90} endAngle={-270} label>{[0, 1].map((index) => (<Cell key={`cell-${index}`} fill={COLORS.participation[index]} />))}</Pie><Tooltip /></PieChart></ResponsiveContainer>
+          <div className="mt-6"><p className="text-5xl font-extrabold text-emerald-600 mb-4">{dashboardData.participationRate}%</p><p className="text-xl text-gray-600">Active Volunteers</p><div className="mt-6 grid grid-cols-2 gap-4"><div className="bg-blue-50 p-4 rounded-lg"><p className="text-sm text-gray-600">Active Volunteers</p><p className="text-2xl font-bold text-blue-700">{Math.round(dashboardData.totalVolunteers * (dashboardData.participationRate / 100))}</p></div><div className="bg-red-50 p-4 rounded-lg"><p className="text-sm text-gray-600">Inactive Volunteers</p><p className="text-2xl font-bold text-red-700">{dashboardData.totalVolunteers - Math.round(dashboardData.totalVolunteers * (dashboardData.participationRate / 100))}</p></div></div></div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "growth"}
-        onClose={closeModal}
-        title="Volunteer Growth Rate"
-        showGenderBreakdown={true}
-        genderData={dashboardData.volunteerGenderData}
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "growth"} onClose={closeModal} title="Volunteer Growth Rate" showGenderBreakdown={true} genderData={dashboardData.volunteerGenderData}>
         <div>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData.growth}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="volunteers" fill={COLORS.growth} />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="mt-8 flex gap-4 overflow-x-auto">
-            {chartData.growth.map((data, index) => (
-              <div
-                key={index}
-                className="bg-purple-50 p-4 rounded-lg text-center min-w-[150px] flex-shrink-0"
-              >
-                <p className="text-sm text-gray-600 font-semibold">
-                  {data.month}
-                </p>
-                <p className="text-2xl font-bold text-purple-700">
-                  {data.volunteers}
-                </p>
-                <p className="text-xs text-gray-500">volunteers</p>
-              </div>
-            ))}
-          </div>
+          <ResponsiveContainer width="100%" height={400}><BarChart data={chartData.growth}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" /><YAxis /><Tooltip /><Bar dataKey="volunteers" fill={COLORS.growth} /></BarChart></ResponsiveContainer>
+          <div className="mt-8 flex gap-4 overflow-x-auto">{chartData.growth.map((data, index) => (<div key={index} className="bg-purple-50 p-4 rounded-lg text-center min-w-[150px] flex-shrink-0"><p className="text-sm text-gray-600 font-semibold">{data.month}</p><p className="text-2xl font-bold text-purple-700">{data.volunteers}</p><p className="text-xs text-gray-500">volunteers</p></div>))}</div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "applications"}
-        onClose={closeModal}
-        title="Expected Volunteer Applications - Current Week"
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "applications"} onClose={closeModal} title="Expected Volunteer Applications - Current Week">
         <div>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={chartData.applications?.data || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="applications"
-                stroke={COLORS.applications}
-                strokeWidth={4}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-          <div className="mt-8">
-            <div className="bg-orange-50 p-6 rounded-lg text-center mb-4">
-              <p className="text-lg text-gray-600">Projected Today</p>
-              <p className="text-4xl font-bold text-orange-600">
-                {chartData.applications?.forecast || 0}
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                applications expected
-              </p>
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              {chartData.applications?.data?.slice(0, 4).map((data, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-50 p-3 rounded-lg text-center"
-                >
-                  <p className="text-xs text-gray-600">{data.day}</p>
-                  <p className="text-xl font-bold text-gray-700">
-                    {data.applications}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ResponsiveContainer width="100%" height={400}><LineChart data={chartData.applications?.data || []}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" /><YAxis /><Tooltip /><Line type="monotone" dataKey="applications" stroke={COLORS.applications} strokeWidth={4} /></LineChart></ResponsiveContainer>
+          <div className="mt-8"><div className="bg-orange-50 p-6 rounded-lg text-center mb-4"><p className="text-lg text-gray-600">Projected Today</p><p className="text-4xl font-bold text-orange-600">{chartData.applications?.forecast || 0}</p><p className="text-sm text-gray-500 mt-2">applications expected</p></div><div className="grid grid-cols-4 gap-3">{chartData.applications?.data?.slice(0, 4).map((data, index) => (<div key={index} className="bg-gray-50 p-3 rounded-lg text-center"><p className="text-xs text-gray-600">{data.day}</p><p className="text-xl font-bold text-gray-700">{data.applications}</p></div>))}</div></div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "feedback"}
-        onClose={closeModal}
-        title="Volunteer Feedback Score"
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "feedback"} onClose={closeModal} title="Volunteer Feedback Score">
         <div className="text-center">
-          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-12 rounded-xl mb-6">
-            <p className="text-6xl mb-4">
-              {"⭐".repeat(dashboardData.feedbackScore)}
-            </p>
-            <p className="text-3xl font-bold text-yellow-600">
-              {dashboardData.feedbackScore}.0 / 5.0
-            </p>
-            <p className="text-xl text-gray-700 mt-2">Excellent Rating</p>
-          </div>
-          <div className="bg-emerald-50 p-6 rounded-lg">
-            <h5 className="font-bold text-lg mb-4 text-emerald-800">
-              Satisfaction Breakdown
-            </h5>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700">Organization Support</span>
-                <span className="font-bold text-emerald-600">98%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700">Event Management</span>
-                <span className="font-bold text-emerald-600">95%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700">Communication</span>
-                <span className="font-bold text-emerald-600">97%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700">Overall Experience</span>
-                <span className="font-bold text-emerald-600">96%</span>
-              </div>
-            </div>
-          </div>
+          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-12 rounded-xl mb-6"><p className="text-6xl mb-4">{"⭐".repeat(dashboardData.feedbackScore)}</p><p className="text-3xl font-bold text-yellow-600">{dashboardData.feedbackScore}.0 / 5.0</p><p className="text-xl text-gray-700 mt-2">Excellent Rating</p></div>
+          <div className="bg-emerald-50 p-6 rounded-lg"><h5 className="font-bold text-lg mb-4 text-emerald-800">Satisfaction Breakdown</h5><div className="space-y-3"><div className="flex justify-between items-center"><span className="text-gray-700">Organization Support</span><span className="font-bold text-emerald-600">98%</span></div><div className="flex justify-between items-center"><span className="text-gray-700">Event Management</span><span className="font-bold text-emerald-600">95%</span></div><div className="flex justify-between items-center"><span className="text-gray-700">Communication</span><span className="font-bold text-emerald-600">97%</span></div><div className="flex justify-between items-center"><span className="text-gray-700">Overall Experience</span><span className="font-bold text-emerald-600">96%</span></div></div></div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "beneficiary"}
-        onClose={closeModal}
-        title="Beneficiary Reach"
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "beneficiary"} onClose={closeModal} title="Beneficiary Reach">
         <div className="text-center">
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-12 rounded-xl mb-6">
-            <p className="text-5xl font-extrabold text-emerald-700 mb-4">
-              {dashboardData.beneficiaryReach.toLocaleString()}
-            </p>
-            <p className="text-2xl text-gray-700 font-montserrat">
-              Total Individuals Served
-            </p>
-            <p className="text-lg text-gray-600 mt-2">
-              Through all events and programs
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <p className="text-sm text-gray-600">Total Events</p>
-              <p className="text-3xl font-bold text-blue-700">
-                {dashboardData.events.length}
-              </p>
-            </div>
-            <div className="bg-purple-50 p-6 rounded-lg">
-              <p className="text-sm text-gray-600">Avg. per Event</p>
-              <p className="text-3xl font-bold text-purple-700">
-                {dashboardData.events.length > 0
-                  ? Math.round(
-                      dashboardData.beneficiaryReach /
-                        dashboardData.events.length
-                    )
-                  : 0}
-              </p>
-            </div>
-          </div>
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-12 rounded-xl mb-6"><p className="text-5xl font-extrabold text-emerald-700 mb-4">{dashboardData.beneficiaryReach.toLocaleString()}</p><p className="text-2xl text-gray-700 font-montserrat">Total Individuals Served</p><p className="text-lg text-gray-600 mt-2">Through all events and programs</p></div>
+          <div className="grid grid-cols-2 gap-4"><div className="bg-blue-50 p-6 rounded-lg"><p className="text-sm text-gray-600">Total Events</p><p className="text-3xl font-bold text-blue-700">{dashboardData.events.length}</p></div><div className="bg-purple-50 p-6 rounded-lg"><p className="text-sm text-gray-600">Avg. per Event</p><p className="text-3xl font-bold text-purple-700">{dashboardData.events.length > 0 ? Math.round(dashboardData.beneficiaryReach / dashboardData.events.length) : 0}</p></div></div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "activeEvents"}
-        onClose={closeModal}
-        title="Active Events This Month"
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "activeEvents"} onClose={closeModal} title="Active Events This Month">
         <div className="text-center">
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-12 rounded-xl mb-6">
-            <p className="text-5xl font-extrabold text-emerald-700 mb-4">
-              {dashboardData.activeEvents}
-            </p>
-            <p className="text-2xl text-gray-700 font-montserrat">
-              Active Events
-            </p>
-            <p className="text-lg text-gray-600 mt-2">
-              For{" "}
-              {new Date().toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-green-50 p-6 rounded-lg">
-              <p className="text-sm text-gray-600">Ongoing</p>
-              <p className="text-3xl font-bold text-green-700">
-                {
-                  dashboardData.events.filter((e) => e.status === "ONGOING")
-                    .length
-                }
-              </p>
-            </div>
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <p className="text-sm text-gray-600">Upcoming</p>
-              <p className="text-3xl font-bold text-blue-700">
-                {
-                  dashboardData.events.filter((e) => e.status === "UPCOMING")
-                    .length
-                }
-              </p>
-            </div>
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-3xl font-bold text-gray-700">
-                {
-                  dashboardData.events.filter((e) => e.status === "COMPLETED")
-                    .length
-                }
-              </p>
-            </div>
-          </div>
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-12 rounded-xl mb-6"><p className="text-5xl font-extrabold text-emerald-700 mb-4">{dashboardData.activeEvents}</p><p className="text-2xl text-gray-700 font-montserrat">Active Events</p><p className="text-lg text-gray-600 mt-2">For {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p></div>
+          <div className="grid grid-cols-3 gap-4"><div className="bg-green-50 p-6 rounded-lg"><p className="text-sm text-gray-600">Ongoing</p><p className="text-3xl font-bold text-green-700">{dashboardData.events.filter((e) => e.status === "ONGOING").length}</p></div><div className="bg-blue-50 p-6 rounded-lg"><p className="text-sm text-gray-600">Upcoming</p><p className="text-3xl font-bold text-blue-700">{dashboardData.events.filter((e) => e.status === "UPCOMING").length}</p></div><div className="bg-gray-50 p-6 rounded-lg"><p className="text-sm text-gray-600">Completed</p><p className="text-3xl font-bold text-gray-700">{dashboardData.events.filter((e) => e.status === "COMPLETED").length}</p></div></div>
         </div>
       </ChartModal>
-
-      <ChartModal
-        isOpen={modalState.isOpen && modalState.type === "eventsPerformance"}
-        onClose={closeModal}
-        title="Events Performance Comparison"
-      >
+      <ChartModal isOpen={modalState.isOpen && modalState.type === "eventsPerformance"} onClose={closeModal} title="Events Performance Comparison">
         <div>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData.eventsPerformance}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="event" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value">
-                {chartData.eventsPerformance.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS.events[index % COLORS.events.length]}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="mt-8 space-y-3">
-            {chartData.eventsPerformance.map((event, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-gray-50 p-4 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{
-                      backgroundColor:
-                        COLORS.events[index % COLORS.events.length],
-                    }}
-                  ></div>
-                  <span className="font-semibold text-gray-700">
-                    {event.event}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <p
-                    className="text-2xl font-bold"
-                    style={{
-                      color: COLORS.events[index % COLORS.events.length],
-                    }}
-                  >
-                    {event.value}%
-                  </p>
-                  <p className="text-xs text-gray-500">participation</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ResponsiveContainer width="100%" height={400}><BarChart data={chartData.eventsPerformance}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="event" /><YAxis /><Tooltip /><Bar dataKey="value">{chartData.eventsPerformance.map((entry, index) => (<Cell key={`cell-${index}`} fill={COLORS.events[index % COLORS.events.length]} />))}</Bar></BarChart></ResponsiveContainer>
+          <div className="mt-8 space-y-3">{chartData.eventsPerformance.map((event, index) => (<div key={index} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg"><div className="flex items-center gap-3"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: COLORS.events[index % COLORS.events.length] }}></div><span className="font-semibold text-gray-700">{event.event}</span></div><div className="text-right"><p className="text-2xl font-bold" style={{ color: COLORS.events[index % COLORS.events.length] }}>{event.value}%</p><p className="text-xs text-gray-500">participation</p></div></div>))}</div>
         </div>
       </ChartModal>
     </div>
