@@ -1543,27 +1543,60 @@ const drawPieChart = (doc, data, startX, startY, radius) => {
   if (total === 0) return;
 
   let startAngle = 0;
-  const colors = [[52, 152, 219], [233, 30, 99], [39, 174, 96], [241, 196, 15], [142, 68, 173]]; // Blue, Pink, Green, Yellow, Purple
-  
+  const colors = [
+    [52, 152, 219],   // Blue
+    [233, 30, 99],    // Pink
+    [39, 174, 96],    // Green
+    [241, 196, 15],   // Yellow
+    [142, 68, 173]    // Purple
+  ];
+
   let i = 0;
   for (const [key, value] of Object.entries(data)) {
     if (value === 0) continue;
-    
-    const sliceAngle = (value / total) * 360;
+
+    const sliceAngle = (value / total) * Math.PI * 2;
     const endAngle = startAngle + sliceAngle;
-    
+
+    // Colors
     doc.setFillColor(...colors[i % colors.length]);
-    doc.setDrawColor(255, 255, 255); // White borders
-    
-    // Draw pie slice
-    doc.sector(startX, startY, radius, startAngle, endAngle);
-    
-    // Legend
-    doc.rect(startX + radius + 10, startY - radius + (i * 10), 5, 5, 'F');
+    doc.setDrawColor(255, 255, 255); // white borders
+
+    // Wedge endpoints
+    const x1 = startX + radius * Math.cos(startAngle);
+    const y1 = startY + radius * Math.sin(startAngle);
+    const x2 = startX + radius * Math.cos(endAngle);
+    const y2 = startY + radius * Math.sin(endAngle);
+
+    // Draw slice (triangle approximation)
+    doc.lines(
+      [
+        [x1 - startX, y1 - startY],
+        [x2 - x1, y2 - y1],
+        [startX - x2, startY - y2],
+      ],
+      startX,
+      startY,
+      [1, 1],
+      "F"
+    );
+
+    // Draw arc outline
+    doc.circle(startX, startY, radius);
+
+    // Draw legend
+    const legendY = startY - radius + (i * 10);
+    doc.setFillColor(...colors[i % colors.length]);
+    doc.rect(startX + radius + 10, legendY, 5, 5, "F");
+
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    doc.text(`${key} (${Math.round(value/total*100)}%)`, startX + radius + 20, startY - radius + (i * 10) + 4);
-    
+    doc.text(
+      `${key} (${Math.round((value / total) * 100)}%)`,
+      startX + radius + 20,
+      legendY + 4
+    );
+
     startAngle = endAngle;
     i++;
   }
