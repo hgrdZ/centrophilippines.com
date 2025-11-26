@@ -88,7 +88,7 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
         setIsOpen(false);
       }
     }
-    
+
     function handleEscKey(e) {
       if (e.key === 'Escape') {
         setIsOpen(false);
@@ -96,11 +96,11 @@ function ThreeDotsMenu({ onDownloadPDF, onDownloadWord }) {
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscKey);  
-    
+    document.addEventListener("keydown", handleEscKey);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscKey);  
+      document.removeEventListener("keydown", handleEscKey);
     };
   }, []);
 
@@ -199,7 +199,7 @@ function CustomCalendar({ onClose, onApply, startDate, endDate }) {
 
   const handleDateClick = (day) => {
     const clickedDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    
+
     if (isSelectingStart) {
       setSelectedStart(clickedDate);
       setSelectedEnd(null);
@@ -239,11 +239,11 @@ function CustomCalendar({ onClose, onApply, startDate, endDate }) {
 
   const { firstDay, daysInMonth } = getDaysInMonth(currentMonth);
   const calendarDays = [];
-  
+
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(null);
   }
-  
+
   for (let day = 1; day <= daysInMonth; day++) {
     calendarDays.push(day);
   }
@@ -331,13 +331,12 @@ function CustomCalendar({ onClose, onApply, startDate, endDate }) {
                 <button
                   key={index}
                   onClick={() => handleDateClick(day)}
-                  className={`p-2 text-sm rounded-lg font-medium transition-all ${
-                    isSelected
+                  className={`p-2 text-sm rounded-lg font-medium transition-all ${isSelected
                       ? "bg-emerald-600 text-white font-bold shadow-lg scale-110"
                       : isInRange
-                      ? "bg-emerald-100 text-emerald-900"
-                      : "hover:bg-emerald-50 text-gray-700"
-                  }`}
+                        ? "bg-emerald-100 text-emerald-900"
+                        : "hover:bg-emerald-50 text-gray-700"
+                    }`}
                 >
                   {day}
                 </button>
@@ -451,11 +450,10 @@ function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
                 <button
                   key={index}
                   onClick={() => handleMonthClick(index)}
-                  className={`p-4 rounded-xl text-sm font-bold transition-all shadow-sm ${
-                    isSelected
+                  className={`p-4 rounded-xl text-sm font-bold transition-all shadow-sm ${isSelected
                       ? "bg-emerald-600 text-white shadow-lg scale-105"
                       : "bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700"
-                  }`}
+                    }`}
                 >
                   {month.substring(0, 3)}
                 </button>
@@ -469,7 +467,7 @@ function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
               onClick={() => setLocalSelectedMonths([])}
               className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
             >
-              Clear 
+              Clear
             </button>
             <button
               onClick={handleApply}
@@ -501,11 +499,11 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
 
   const categories = [
     { id: "timePeriod", label: "Time Period" },
-    { id: "event", label: "Event"},
-    { id: "eventStatus", label: "Event Status"},
-    { id: "gender", label: "Gender"},
-    { id: "volunteers", label: "Volunteers"},
-    { id: "reportOptions", label: "Report Options"} // NEW
+    { id: "event", label: "Event" },
+    { id: "eventStatus", label: "Event Status" },
+    { id: "gender", label: "Gender" },
+    { id: "volunteers", label: "Volunteers" },
+    { id: "reportOptions", label: "Report Options" } // NEW
   ];
 
   useEffect(() => {
@@ -536,7 +534,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
       customDateFrom,
       customDateTo,
       selectedMonths,
-      selectedMetrics, 
+      selectedMetrics,
     });
     onClose();
   };
@@ -554,12 +552,12 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   };
 
   const handleMetricToggle = (metricValue) => {
-  if (selectedMetrics.includes(metricValue)) {
-    setSelectedMetrics(selectedMetrics.filter(m => m !== metricValue));
-  } else {
-    setSelectedMetrics([...selectedMetrics, metricValue]);
-  }
-};
+    if (selectedMetrics.includes(metricValue)) {
+      setSelectedMetrics(selectedMetrics.filter(m => m !== metricValue));
+    } else {
+      setSelectedMetrics([...selectedMetrics, metricValue]);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -567,7 +565,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
     <>
       <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full flex overflow-hidden" style={{ height: "650px" }} onClick={(e) => e.stopPropagation()}>
-          
+
           {/* Left Sidebar */}
           <div className="w-1/3 border-r bg-white overflow-y-auto">
             <div className="p-4 bg-emerald-900 text-white">
@@ -577,11 +575,10 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`w-full px-6 py-4 text-left hover:bg-emerald-50 transition-all cursor-pointer ${
-                  selectedCategory === category.id
+                className={`w-full px-6 py-4 text-left hover:bg-emerald-50 transition-all cursor-pointer ${selectedCategory === category.id
                     ? "bg-emerald-100 border-l-4 border-emerald-600 font-bold text-emerald-900 shadow-sm"
                     : "border-l-4 border-transparent text-gray-700"
-                }`}
+                  }`}
               >
                 {category.label}
               </button>
@@ -605,99 +602,97 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
               {/* Existing categories remain the same... */}
               {selectedCategory === "timePeriod" && (
-  <div className="space-y-2">
-    {[
-      { value: "all", label: "All Time", desc: "No date restrictions" },
-      { value: "today", label: "Today so far", desc: "Current day only" },
-      { value: "yesterday", label: "Yesterday", desc: "Previous day" },
-      { value: "1week", label: "Last 7 days", desc: "Past week" },
-      { value: "1month", label: "Last 30 days", desc: "Past month" },
-      { value: "thisMonth", label: "This month so far", desc: "Current month" },
-      { value: "lastMonth", label: "Last month", desc: "Previous month" },
-      { value: "specific-months", label: "Select Specific Months", desc: "Choose multiple months" },
-      { value: "custom", label: "Custom Range", desc: "Pick start and end dates" }
-    ].map((option) => (
-      <label
-        key={option.value}
-        className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
-          dateRange === option.value 
-            ? "bg-emerald-50 border-emerald-500 shadow-md" 
-            : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-        }`}
-      >
-        <input
-          type="radio"
-          name="dateRange"
-          value={option.value}
-          checked={dateRange === option.value}
-          onChange={(e) => {
-            setDateRange(e.target.value);
-            if (e.target.value === "custom") {
-              setShowCustomCalendar(true);
-            } else if (e.target.value === "specific-months") {
-              setShowMonthCalendar(true);
-            }
-          }}
-          className="mt-1 w-4 h-4 text-emerald-600"
-        />
-        <div className="ml-3 flex-1">
-          <div className="font-semibold text-gray-800">{option.label}</div>
-          <div className="text-xs text-gray-500 mt-0.5">{option.desc}</div>
-        </div>
-      </label>
-    ))}
+                <div className="space-y-2">
+                  {[
+                    { value: "all", label: "All Time", desc: "No date restrictions" },
+                    { value: "today", label: "Today so far", desc: "Current day only" },
+                    { value: "yesterday", label: "Yesterday", desc: "Previous day" },
+                    { value: "1week", label: "Last 7 days", desc: "Past week" },
+                    { value: "1month", label: "Last 30 days", desc: "Past month" },
+                    { value: "thisMonth", label: "This month so far", desc: "Current month" },
+                    { value: "lastMonth", label: "Last month", desc: "Previous month" },
+                    { value: "specific-months", label: "Select Specific Months", desc: "Choose multiple months" },
+                    { value: "custom", label: "Custom Range", desc: "Pick start and end dates" }
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${dateRange === option.value
+                          ? "bg-emerald-50 border-emerald-500 shadow-md"
+                          : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                        }`}
+                    >
+                      <input
+                        type="radio"
+                        name="dateRange"
+                        value={option.value}
+                        checked={dateRange === option.value}
+                        onChange={(e) => {
+                          setDateRange(e.target.value);
+                          if (e.target.value === "custom") {
+                            setShowCustomCalendar(true);
+                          } else if (e.target.value === "specific-months") {
+                            setShowMonthCalendar(true);
+                          }
+                        }}
+                        className="mt-1 w-4 h-4 text-emerald-600"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="font-semibold text-gray-800">{option.label}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{option.desc}</div>
+                      </div>
+                    </label>
+                  ))}
 
-    {dateRange === "custom" && customDateFrom && customDateTo && (
-      <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
-        <p className="text-sm font-bold text-emerald-900 mb-1">Selected Range:</p>
-        <p className="text-sm text-emerald-700 font-medium">{customDateFrom} → {customDateTo}</p>
-        <button
-          onClick={() => setShowCustomCalendar(true)}
-          className="mt-2 text-xs text-emerald-600 hover:text-emerald-800 underline"
-        >
-          Change
-        </button>
-      </div>
-    )}
+                  {dateRange === "custom" && customDateFrom && customDateTo && (
+                    <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                      <p className="text-sm font-bold text-emerald-900 mb-1">Selected Range:</p>
+                      <p className="text-sm text-emerald-700 font-medium">{customDateFrom} → {customDateTo}</p>
+                      <button
+                        onClick={() => setShowCustomCalendar(true)}
+                        className="mt-2 text-xs text-emerald-600 hover:text-emerald-800 underline"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
 
-    {dateRange === "specific-months" && selectedMonths.length > 0 && (
-      <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
-        <p className="text-sm font-bold text-emerald-900 mb-2">Selected Months:</p>
-        <div className="flex flex-wrap gap-2">
-          {selectedMonths.map((month) => (
-            <span
-              key={month}
-              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
-            >
-              {new Date(month + "-01").toLocaleDateString("en-US", {
-                month: "short",
-                year: "numeric",
-              })}
-              <button
-                onClick={() => setSelectedMonths(selectedMonths.filter((m) => m !== month))}
-                className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-        <button
-          onClick={() => setShowMonthCalendar(true)}
-          className="mt-2 text-xs text-emerald-600 hover:text-emerald-800 underline"
-        >
-          Change 
-        </button>
-      </div>
-    )}
-  </div>
-)}
+                  {dateRange === "specific-months" && selectedMonths.length > 0 && (
+                    <div className="mt-4 p-4 bg-emerald-100 border-2 border-emerald-500 rounded-xl">
+                      <p className="text-sm font-bold text-emerald-900 mb-2">Selected Months:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMonths.map((month) => (
+                          <span
+                            key={month}
+                            className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm flex items-center gap-2 font-medium shadow-sm"
+                          >
+                            {new Date(month + "-01").toLocaleDateString("en-US", {
+                              month: "short",
+                              year: "numeric",
+                            })}
+                            <button
+                              onClick={() => setSelectedMonths(selectedMonths.filter((m) => m !== month))}
+                              className="hover:bg-emerald-700 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setShowMonthCalendar(true)}
+                        className="mt-2 text-xs text-emerald-600 hover:text-emerald-800 underline"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {selectedCategory === "event" && (
                 <div className="space-y-2">
-                  <label className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                    selectedEvent === "all" ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
-                  }`}>
+                  <label className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${selectedEvent === "all" ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                    }`}>
                     <input
                       type="radio"
                       name="event"
@@ -711,9 +706,8 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                   {events.map((event) => (
                     <label
                       key={event.event_id}
-                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                        selectedEvent === event.event_id ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
-                      }`}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${selectedEvent === event.event_id ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                        }`}
                     >
                       <input
                         type="radio"
@@ -732,16 +726,15 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               {selectedCategory === "eventStatus" && (
                 <div className="space-y-2">
                   {[
-                    { value: "All", label: "All Statuses"},
-                    { value: "UPCOMING", label: "Upcoming"},
-                    { value: "ONGOING", label: "Ongoing"},
-                    { value: "COMPLETED", label: "Completed"}
+                    { value: "All", label: "All Statuses" },
+                    { value: "UPCOMING", label: "Upcoming" },
+                    { value: "ONGOING", label: "Ongoing" },
+                    { value: "COMPLETED", label: "Completed" }
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                        status === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
-                      }`}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${status === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                        }`}
                     >
                       <input
                         type="radio"
@@ -760,15 +753,14 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               {selectedCategory === "gender" && (
                 <div className="space-y-2">
                   {[
-                    { value: "All", label: "All Genders"},
-                    { value: "Male", label: "Male"},
-                    { value: "Female", label: "Female"}
+                    { value: "All", label: "All Genders" },
+                    { value: "Male", label: "Male" },
+                    { value: "Female", label: "Female" }
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                        gender === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
-                      }`}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${gender === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                        }`}
                     >
                       <input
                         type="radio"
@@ -787,17 +779,16 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
               {selectedCategory === "volunteers" && (
                 <div className="space-y-2">
                   {[
-                    { value: "All", label: "All Ranges"},
-                    { value: "1-50", label: "1 - 50 volunteers"},
-                    { value: "51-100", label: "51 - 100 volunteers"},
-                    { value: "101-200", label: "101 - 200 volunteers"},
-                    { value: "201+", label: "201+ volunteers"}
+                    { value: "All", label: "All Ranges" },
+                    { value: "1-50", label: "1 - 50 volunteers" },
+                    { value: "51-100", label: "51 - 100 volunteers" },
+                    { value: "101-200", label: "101 - 200 volunteers" },
+                    { value: "201+", label: "201+ volunteers" }
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                        volunteerRange === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
-                      }`}
+                      className={`flex items-center p-4 rounded-xl cursor-pointer transition-all border-2 ${volunteerRange === option.value ? "bg-emerald-50 border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"
+                        }`}
                     >
                       <input
                         type="radio"
@@ -818,24 +809,23 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 mb-3 font-medium">Select metrics to include in reports and downloads:</p>
                   {[
-                    { value: "Completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
-                    { value: "Volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
-                    { value: "Participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
-                    { value: "Feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
-                    { value: "Growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
-                    { value: "Beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
-                    { value: "Active Events", label: "Active Events", fullLabel: "Active Events This Month"},
-                    { value: "Non-Participants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
-                    { value: "Attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
-                    { value: "Certifications", label: "Certifications", fullLabel: "Certifications Given"}
+                    { value: "Completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate" },
+                    { value: "Volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers" },
+                    { value: "Participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate" },
+                    { value: "Feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score" },
+                    { value: "Growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate" },
+                    { value: "Beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach" },
+                    { value: "Active Events", label: "Active Events", fullLabel: "Active Events This Month" },
+                    { value: "Non-Participants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate" },
+                    { value: "Attendance", label: "Attendance", fullLabel: "Attendance of Volunteers" },
+                    { value: "Certifications", label: "Certifications", fullLabel: "Certifications Given" }
                   ].map((metric) => (
                     <label
                       key={metric.value}
-                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                        selectedMetrics.includes(metric.value)
-                          ? "bg-emerald-50 border-emerald-500 shadow-md" 
+                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${selectedMetrics.includes(metric.value)
+                          ? "bg-emerald-50 border-emerald-500 shadow-md"
                           : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                      }`}
+                        }`}
                     >
                       <input
                         type="checkbox"
@@ -851,14 +841,14 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                       </div>
                     </label>
                   ))}
-                  
+
                   <div className="mt-4 flex gap-2">
                     <button
-                    onClick={() => setSelectedMetrics([
-                      "Completion", "Volunteers", "Participation", "Feedback", 
-                      "Growth", "Beneficiaries", "Active Events", "Non-Participants", 
-                      "Attendance", "Certifications"
-                    ])} 
+                      onClick={() => setSelectedMetrics([
+                        "Completion", "Volunteers", "Participation", "Feedback",
+                        "Growth", "Beneficiaries", "Active Events", "Non-Participants",
+                        "Attendance", "Certifications"
+                      ])}
                       className="flex-1 px-3 py-2 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 font-semibold transition-colors cursor-pointer"
                     >
                       Select All
@@ -867,10 +857,10 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                       onClick={() => setSelectedMetrics([])}
                       className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold transition-colors cursor-pointer"
                     >
-                      Clear 
+                      Clear
                     </button>
                   </div>
-                  
+
                   {selectedMetrics.length > 0 && (
                     <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                       <p className="text-sm font-semibold text-emerald-800">
@@ -888,13 +878,13 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
                 onClick={handleReset}
                 className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 font-bold transition-all cursor-pointer"
               >
-                Reset 
+                Reset
               </button>
               <button
                 onClick={handleApply}
                 className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition-all shadow-lg cursor-pointer"
               >
-                Apply 
+                Apply
               </button>
             </div>
           </div>
@@ -1007,11 +997,10 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
             {/* Report Type Button */}
             <button
               onClick={() => setReportSection("reportType")}
-              className={`w-full px-6 py-4 text-left transition-all cursor-pointer ${
-                reportSection === "reportType"
+              className={`w-full px-6 py-4 text-left transition-all cursor-pointer ${reportSection === "reportType"
                   ? "bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
                   : "border-l-4 border-transparent text-gray-700 hover:bg-emerald-50"
-              }`}
+                }`}
             >
               Report Type
             </button>
@@ -1019,11 +1008,10 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
             {/* Report Options Button */}
             <button
               onClick={() => setReportSection("reportOptions")}
-              className={`w-full px-6 py-4 text-left transition-all cursor-pointer ${
-                reportSection === "reportOptions"
+              className={`w-full px-6 py-4 text-left transition-all cursor-pointer ${reportSection === "reportOptions"
                   ? "bg-emerald-50 border-l-4 border-emerald-600 font-bold text-emerald-700 shadow-sm"
                   : "border-l-4 border-transparent text-gray-700 hover:bg-emerald-50"
-              }`}
+                }`}
             >
               Report Options
             </button>
@@ -1053,11 +1041,10 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
 
                   {/* SINGLE MONTH */}
                   <label
-                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                      reportType === "single"
+                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${reportType === "single"
                         ? "bg-emerald-50 border-emerald-500 shadow-lg"
                         : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                    }`}
+                      }`}
                   >
                     <input
                       type="radio"
@@ -1076,25 +1063,28 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                       {reportType === "single" && (
                         <div className="mt-4 space-y-3">
 
+
                           {/* MONTH SELECT */}
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                               Select Month
                             </label>
-                            <select
-                              value={selectedMonth}
-                              onChange={(e) => setSelectedMonth(e.target.value)}
-                              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:ring-2 focus:ring-emerald-500 bg-white"
-                            >
-                              <option value="">-- Select Month --</option>
-                              {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i + 1} value={i + 1}>
-                                  {new Date(0, i).toLocaleString("default", {
-                                    month: "long",
-                                  })}
-                                </option>
-                              ))}
-                            </select>
+                            <div className="flex items-center border-2 border-gray-300 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+                              <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="w-full border-none focus:outline-none cursor-pointer text-emerald-900 bg-transparent"
+                              >
+                                <option value="">-- Select Month --</option>
+                                {Array.from({ length: 12 }, (_, i) => (
+                                  <option key={i + 1} value={i + 1}>
+                                    {new Date(0, i).toLocaleString("default", {
+                                      month: "long",
+                                    })}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
 
                           {/* YEAR SELECT */}
@@ -1102,31 +1092,33 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                               Select Year
                             </label>
-                            <select
-                              value={selectedYear}
-                              onChange={(e) => setSelectedYear(e.target.value)}
-                              className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:ring-2 focus:ring-emerald-500 bg-white"
-                            >
-                              <option value="">-- Select Year --</option>
-                              {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
-                                <option key={year} value={year}>
-                                  {year}
-                                </option>
-                              ))}
-                            </select>
+                            <div className="flex items-center border-2 border-gray-300 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+                              <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                className="w-full border-none focus:outline-none cursor-pointer text-emerald-900 bg-transparent"
+                              >
+                                <option value="">-- Select Year --</option>
+                                {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                                  <option key={year} value={year}>
+                                    {year}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
                         </div>
                       )}
+
                     </div>
                   </label>
 
                   {/* MULTIPLE MONTHS */}
                   <label
-                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                      reportType === "multiple"
+                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${reportType === "multiple"
                         ? "bg-emerald-50 border-emerald-500 shadow-lg"
                         : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                    }`}
+                      }`}
                   >
                     <input
                       type="radio"
@@ -1189,11 +1181,10 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
 
                   {/* ANNUAL */}
                   <label
-                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                      reportType === "annual"
+                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${reportType === "annual"
                         ? "bg-emerald-50 border-emerald-500 shadow-lg"
                         : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                    }`}
+                      }`}
                   >
                     <input
                       type="radio"
@@ -1238,24 +1229,23 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600 mb-3 font-medium">Select metrics to include in reports and downloads:</p>
                   {[
-                    { value: "Completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate"},
-                    { value: "Volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers"},
-                    { value: "Participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate"},
-                    { value: "Feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score"},
-                    { value: "Growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate"},
-                    { value: "Beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach"},
-                    { value: "ActiveEvents", label: "Active Events", fullLabel: "Active Events This Month"},
-                    { value: "Non-Participants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate"},
-                    { value: "Attendance", label: "Attendance", fullLabel: "Attendance of Volunteers"},
-                    { value: "Certifications", label: "Certifications", fullLabel: "Certifications Given"}
-                   ].map((metric) => (
+                    { value: "Completion", label: "Project Completion", fullLabel: "Project & Event Completion Rate" },
+                    { value: "Volunteers", label: "Total Volunteers", fullLabel: "Total Registered Volunteers" },
+                    { value: "Participation", label: "Participation Rate", fullLabel: "Volunteer Participation Rate" },
+                    { value: "Feedback", label: "Feedback Score", fullLabel: "Volunteer Feedback Score" },
+                    { value: "Growth", label: "Growth Rate", fullLabel: "Volunteer Growth Rate" },
+                    { value: "Beneficiaries", label: "Beneficiaries", fullLabel: "Beneficiary Reach" },
+                    { value: "ActiveEvents", label: "Active Events", fullLabel: "Active Events This Month" },
+                    { value: "Non-Participants", label: "Non-Participants", fullLabel: "Volunteers Who Did Not Participate" },
+                    { value: "Attendance", label: "Attendance", fullLabel: "Attendance of Volunteers" },
+                    { value: "Certifications", label: "Certifications", fullLabel: "Certifications Given" }
+                  ].map((metric) => (
                     <label
                       key={metric.value}
-                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                        selectedMetrics.includes(metric.value)
-                          ? "bg-emerald-50 border-emerald-500 shadow-md" 
+                      className={`flex items-start p-4 rounded-xl cursor-pointer transition-all border-2 ${selectedMetrics.includes(metric.value)
+                          ? "bg-emerald-50 border-emerald-500 shadow-md"
                           : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                      }`}
+                        }`}
                     >
                       <input
                         type="checkbox"
@@ -1278,7 +1268,7 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                         <div className="text-xs text-gray-500 mt-0.5">{metric.fullLabel}</div>
                       </div>
                     </label>
-                    
+
                   ))}
 
                   <div className="mt-4 flex gap-2">
@@ -1310,12 +1300,12 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                     </button>
                   </div>
                   <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-  <p className="text-sm font-semibold text-emerald-800">
-    {selectedMetrics.length > 0
-      ? ` ${selectedMetrics.length} metric${selectedMetrics.length > 1 ? "s" : ""} selected for reports`
-      : "No metric selected"}
-  </p>
-</div>
+                    <p className="text-sm font-semibold text-emerald-800">
+                      {selectedMetrics.length > 0
+                        ? ` ${selectedMetrics.length} metric${selectedMetrics.length > 1 ? "s" : ""} selected for reports`
+                        : "No metric selected"}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -1331,11 +1321,10 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
 
               <button
                 onClick={handleGenerate}
-                className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer ${
-                  reportSection === "reportType"
+                className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer ${reportSection === "reportType"
                     ? "bg-emerald-600 text-white hover:bg-emerald-700"
                     : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                }`}
+                  }`}
                 disabled={reportSection !== "reportType"}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1528,11 +1517,53 @@ function ChartModal({ isOpen, onClose, title, children, showGenderBreakdown, gen
 function PDFLoadingOverlay({ isVisible }) {
   if (!isVisible) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[150] flex items-center justify-center">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-600 border-t-transparent"></div>
-        <p className="text-emerald-700 font-semibold text-lg">Generating PDF Report...</p>
-        <p className="text-gray-500 text-sm">Please wait</p>
+    <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm z-9999 flex items-center justify-center">
+      <div className="bg-white p-10 rounded-2xl shadow-2xl flex flex-col items-center gap-5 relative overflow-hidden">
+        {/* Animated background circles */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+          <div className="w-32 h-32 bg-emerald-600 rounded-full animate-ping"></div>
+        </div>
+
+        {/* Main spinner */}
+        <div className="relative">
+          <svg className="animate-spin h-16 w-16" viewBox="0 0 50 50">
+            <circle
+              className="opacity-25"
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              style={{ color: '#10b981' }}
+            />
+            <circle
+              className="opacity-75"
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              strokeDasharray="80"
+              strokeDashoffset="60"
+              strokeLinecap="round"
+              style={{ color: '#059669' }}
+            />
+          </svg>
+        </div>
+
+        {/* Progress dots */}
+        <div className="flex gap-2">
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+
+        <div className="text-center z-10">
+          <p className="text-emerald-700 font-bold text-xl mb-2">Generating PDF Report</p>
+          <p className="text-gray-600 text-sm">This may take a few moments...</p>
+        </div>
       </div>
     </div>
   );
@@ -1605,25 +1636,25 @@ const drawPieChart = (doc, data, startX, startY, radius) => {
 const drawBarChart = (doc, data, startX, startY, width, height) => {
   const entries = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, 5); // Top 5
   if (entries.length === 0) return;
-  
+
   const maxValue = Math.max(...entries.map(e => e[1]));
   const barWidth = (width / entries.length) - 5;
-  
+
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
-  
+
   entries.forEach((entry, index) => {
     const barHeight = (entry[1] / maxValue) * height;
     const x = startX + (index * (barWidth + 5));
     const y = startY + height - barHeight;
-    
+
     doc.setFillColor(39, 174, 96); // Emerald Green
     doc.rect(x, y, barWidth, barHeight, 'F');
-    
+
     // Label
-    doc.text(entry[0].substring(0, 8), x + (barWidth/2), startY + height + 5, { align: 'center' });
+    doc.text(entry[0].substring(0, 8), x + (barWidth / 2), startY + height + 5, { align: 'center' });
     // Value
-    doc.text(String(entry[1]), x + (barWidth/2), y - 2, { align: 'center' });
+    doc.text(String(entry[1]), x + (barWidth / 2), y - 2, { align: 'center' });
   });
 };
 
@@ -1670,15 +1701,15 @@ export default function DashboardPage() {
     return saved
       ? JSON.parse(saved)
       : [
-          { id: "completion", order: 0 },
-          { id: "volunteers", order: 1 },
-          { id: "participation", order: 2 },
-          { id: "applications", order: 3 },
-          { id: "growth", order: 4 },
-          { id: "feedback", order: 5 },
-          { id: "beneficiary", order: 6 },
-          { id: "activeEvents", order: 7 },
-        ];
+        { id: "completion", order: 0 },
+        { id: "volunteers", order: 1 },
+        { id: "participation", order: 2 },
+        { id: "applications", order: 3 },
+        { id: "growth", order: 4 },
+        { id: "feedback", order: 5 },
+        { id: "beneficiary", order: 6 },
+        { id: "activeEvents", order: 7 },
+      ];
   });
 
   const [draggedItem, setDraggedItem] = useState(null);
@@ -1686,16 +1717,16 @@ export default function DashboardPage() {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
-  dateRange: "all",
-  selectedEvent: "all",
-  gender: "all",
-  status: "all",
-  volunteerRange: "all",
-  customDateFrom: "",
-  customDateTo: "",
-  selectedMonths: [],
-  selectedMetrics: [],
-});
+    dateRange: "all",
+    selectedEvent: "all",
+    gender: "all",
+    status: "all",
+    volunteerRange: "all",
+    customDateFrom: "",
+    customDateTo: "",
+    selectedMonths: [],
+    selectedMetrics: [],
+  });
 
   useEffect(() => {
     initializeDashboard();
@@ -1755,19 +1786,19 @@ export default function DashboardPage() {
         .eq("ngo_code", ngoCode)
         .single();
 
-const { data: registeredVols } = await supabase
-  .from("Registered_Volunteers")
-  .select("user_id, joined_ngo")
-  .like("joined_ngo", `%${ngoCode}%`);
+      const { data: registeredVols } = await supabase
+        .from("Registered_Volunteers")
+        .select("user_id, joined_ngo")
+        .like("joined_ngo", `%${ngoCode}%`);
 
-// Ensure registeredVols is always an array
-const volunteerIds = (registeredVols || [])
-  .filter((vol) => {
-    if (!vol.joined_ngo) return false;
-    const ngoCodes = vol.joined_ngo.split("-");
-    return ngoCodes.includes(ngoCode);
-  })
-  .map((v) => v.user_id);
+      // Ensure registeredVols is always an array
+      const volunteerIds = (registeredVols || [])
+        .filter((vol) => {
+          if (!vol.joined_ngo) return false;
+          const ngoCodes = vol.joined_ngo.split("-");
+          return ngoCodes.includes(ngoCode);
+        })
+        .map((v) => v.user_id);
 
       const totalVolunteers = volunteerIds.length;
       const genderData = await fetchGenderDataRealtime(volunteerIds);
@@ -2281,27 +2312,27 @@ const volunteerIds = (registeredVols || [])
     }));
   };
 
-// Helper function to add logo to PDF
+  // Helper function to add logo to PDF
   const addLogo = async (doc, x, y, width, height, opacity = 1) => {
     if (!dashboardData.ngoLogo) return;
-    
+
     try {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.src = dashboardData.ngoLogo;
-      
+
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
       });
-      
+
       if (opacity < 1) {
         doc.saveGraphicsState();
         doc.setGState(new doc.GState({ opacity }));
       }
-      
+
       doc.addImage(img, "PNG", x, y, width, height);
-      
+
       if (opacity < 1) {
         doc.restoreGraphicsState();
       }
@@ -2339,7 +2370,7 @@ const volunteerIds = (registeredVols || [])
   };
 
   // Calculate non-participants
-const calculateNonParticipants = async (ngoCode, filteredEvents, allVolunteerIds) => {
+  const calculateNonParticipants = async (ngoCode, filteredEvents, allVolunteerIds) => {
     try {
       const eventIds = filteredEvents.map(e => e.event_id);
       const { data: eventUsers } = await supabase.from("Event_User").select("user_id").eq("ngo_id", ngoCode).in("event_id", eventIds).eq("status", "ONGOING"); // Changed to ONGOING per DB
@@ -2349,8 +2380,8 @@ const calculateNonParticipants = async (ngoCode, filteredEvents, allVolunteerIds
     } catch (error) { return 0; }
   };
 
-// Calculate attendance
-const calculateAttendance = async (ngoCode, filteredEvents) => {
+  // Calculate attendance
+  const calculateAttendance = async (ngoCode, filteredEvents) => {
     try {
       const eventIds = filteredEvents.map(e => e.event_id);
       // Attendance based on Task_Submissions existence for the event
@@ -2367,8 +2398,8 @@ const calculateAttendance = async (ngoCode, filteredEvents) => {
     } catch (error) { return { total: 0, byEvent: [] }; }
   };
 
-// Calculate certifications  
-const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDate) => {
+  // Calculate certifications  
+  const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDate) => {
     try {
       const eventIds = filteredEvents.map(e => e.event_id);
       let query = supabase.from("Certificate").select("certificate_id, user_id, event_id, date_created").in("event_id", eventIds);
@@ -2382,7 +2413,7 @@ const calculateCertifications = async (ngoCode, filteredEvents, startDate, endDa
     } catch (error) { return { total: 0, byEvent: [] }; }
   };
 
-const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
+  const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
     try {
       setReportModalOpen(false);
       setPdfLoading(true);
@@ -2458,7 +2489,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
       const getEventMetrics = (event, allEventUsers, allTaskSubmissions) => {
         const eventUsers = allEventUsers.filter(eu => eu.event_id === event.event_id);
         // FIX: Check for ONGOING status based on your DB data for active volunteers
-        const approvedUsers = eventUsers.filter(eu => eu.status === "ONGOING" || eu.status === "APPROVED"); 
+        const approvedUsers = eventUsers.filter(eu => eu.status === "ONGOING" || eu.status === "APPROVED");
         const rejectedUsers = eventUsers.filter(eu => eu.status === "REJECT" || eu.status === "REJECTED");
         const approvedUserIds = approvedUsers.map(eu => eu.user_id);
 
@@ -2474,10 +2505,10 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
           attendanceCount: uniqueAttendedUserIds.length,
         };
 
-        metrics.attendanceRate = metrics.approvedCount > 0 
-          ? ((metrics.attendanceCount / metrics.approvedCount) * 100).toFixed(0) + "%" 
+        metrics.attendanceRate = metrics.approvedCount > 0
+          ? ((metrics.attendanceCount / metrics.approvedCount) * 100).toFixed(0) + "%"
           : "0%";
-          
+
         metrics.participationRate = totalNgoVolunteers > 0
           ? ((metrics.approvedCount / totalNgoVolunteers) * 100).toFixed(1) + "%"
           : "N/A";
@@ -2537,32 +2568,32 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
       doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
       doc.text("Overall Report Summary", 14, y);
       y += 10;
-      
+
       const totalSignups = processedEvents.reduce((sum, e) => sum + e.metrics.totalSignups, 0);
       const totalApproved = processedEvents.reduce((sum, e) => sum + e.metrics.approvedCount, 0);
       const totalAttended = processedEvents.reduce((sum, e) => sum + e.metrics.attendanceCount, 0);
-      
+
       let filteredApplications = applications || [];
       if (isAnnualReport) {
         filteredApplications = filteredApplications.filter(app => { if (!app.date_application) return false; const appDate = new Date(app.date_application); return appDate.getFullYear() === parseInt(selectedYear); });
       } else {
         // Simplified for brevity in multiple/single logic
-        filteredApplications = filteredApplications.filter(app => { if (!app.date_application) return false; const appDate = new Date(app.date_application); return appDate.getFullYear() === parseInt(selectedYear) && (reportType === 'single' ? appDate.getMonth() + 1 === parseInt(selectedMonth) : selectedMonths.includes(app.date_application.substring(0,7))); });
+        filteredApplications = filteredApplications.filter(app => { if (!app.date_application) return false; const appDate = new Date(app.date_application); return appDate.getFullYear() === parseInt(selectedYear) && (reportType === 'single' ? appDate.getMonth() + 1 === parseInt(selectedMonth) : selectedMonths.includes(app.date_application.substring(0, 7))); });
       }
       const totalApplications = filteredApplications.length;
-      
+
       doc.setFontSize(11); doc.setTextColor(0, 0, 0);
-      doc.text(`•  Total Events in Period: ${processedEvents.length}`, 16, y); y+=6;
-      doc.text(`•  Total Event Signups: ${totalSignups}`, 16, y); y+=6;
+      doc.text(`•  Total Events in Period: ${processedEvents.length}`, 16, y); y += 6;
+      doc.text(`•  Total Event Signups: ${totalSignups}`, 16, y); y += 6;
       // Count unique approved across all selected events
       const uniqueApprovedAll = [...new Set(reportEventUsers.filter(eu => eu.status === 'ONGOING' || eu.status === 'APPROVED').map(eu => eu.user_id))].length;
-      doc.text(`•  Total Approved Volunteers (Unique): ${uniqueApprovedAll}`, 16, y); y+=6;
+      doc.text(`•  Total Approved Volunteers (Unique): ${uniqueApprovedAll}`, 16, y); y += 6;
       // Count unique attended across all selected events
       const uniqueAttendedAll = [...new Set(reportTaskSubmissions.map(ts => ts.user_id))].length;
-      doc.text(`•  Total Attended Volunteers (Unique): ${uniqueAttendedAll}`, 16, y); y+=6;
-      doc.text(`•  Total New Applications in Period: ${totalApplications}`, 16, y); y+=6;
-      doc.text(`•  Total Registered Volunteers (NGO-wide): ${totalNgoVolunteers}`, 16, y); y+=10;
-      
+      doc.text(`•  Total Attended Volunteers (Unique): ${uniqueAttendedAll}`, 16, y); y += 6;
+      doc.text(`•  Total New Applications in Period: ${totalApplications}`, 16, y); y += 6;
+      doc.text(`•  Total Registered Volunteers (NGO-wide): ${totalNgoVolunteers}`, 16, y); y += 10;
+
       doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(0, 100, 0);
       doc.text("Event Summary Table", 14, y);
       y += 6;
@@ -2573,7 +2604,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
         e.metrics.totalSignups, e.metrics.approvedCount, e.metrics.rejectedCount, e.metrics.attendanceCount,
         e.metrics.attendanceRate, e.metrics.participationRate
       ]);
-      
+
       autoTable(doc, { startY: y, head: [summaryTableHeaders], body: summaryTableBody, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 } });
       y = doc.lastAutoTable.finalY + 10;
 
@@ -2584,13 +2615,13 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
       doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 100, 0);
       doc.text("Overall Volunteer Demographics", 14, y);
       y += 10;
-      doc.setFontSize(10); doc.setTextColor(0,0,0);
+      doc.setFontSize(10); doc.setTextColor(0, 0, 0);
       doc.text("(Based on all unique approved volunteers for events in this period)", 14, y);
       y += 10;
 
       const allApprovedUserIds = [...new Set(reportEventUsers.filter(eu => eu.status === "ONGOING" || eu.status === "APPROVED").map(eu => eu.user_id))];
       const overallDemographics = getDemographics(allApprovedUserIds, userProfiles);
-      
+
       const col1X = 14; const col2X = pageW / 3 + 10; const col3X = (pageW / 3) * 2 + 10;
       const tableWidth = pageW / 3 - 20;
       let y_col1 = y, y_col2 = y, y_col3 = y;
@@ -2612,7 +2643,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
       // Location
       doc.setFont("helvetica", "bold"); doc.setFontSize(12);
       doc.text("Location Distribution (Top 5)", col3X, y_col3); y_col3 += 6;
-      const topLocations = Object.entries(overallDemographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10);
+      const topLocations = Object.entries(overallDemographics.locations).sort((a, b) => b[1] - a[1]).slice(0, 10);
       autoTable(doc, { startY: y_col3, head: [['City', 'Count']], body: topLocations, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, margin: { left: col3X } });
       y_col3 = doc.lastAutoTable.finalY + 10;
       // Bar Chart for Location
@@ -2677,7 +2708,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
         // Event Location
         doc.setFont("helvetica", "bold"); doc.setFontSize(10);
         doc.text("Location (Top 10)", col3X, y_col3_event); y_col3_event += 5;
-        const eventTopLocations = Object.entries(event.demographics.locations).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        const eventTopLocations = Object.entries(event.demographics.locations).sort((a, b) => b[1] - a[1]).slice(0, 10);
         autoTable(doc, { startY: y_col3_event, head: [['City', 'Count']], body: eventTopLocations, theme: 'grid', headStyles: { fillColor: [0, 100, 0] }, styles: { fontSize: 8 }, margin: { left: col3X } });
         y_col3_event = doc.lastAutoTable.finalY + 10;
         drawBarChart(doc, event.demographics.locations, col3X, y_col3_event, tableWidth, 30);
@@ -2697,13 +2728,13 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
       if (isAnnualReport) { fileName = `${dashboardData.ngoName || "NGO"}_Annual_Report_${selectedYear}.pdf`; }
       else if (reportType === "multiple") { fileName = `${dashboardData.ngoName || "NGO"}_Multi_Month_Report_${selectedYear}.pdf`; }
       else { const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' }); fileName = `${dashboardData.ngoName || "NGO"}_${monthName}_${selectedYear}_Report.pdf`; }
-      
+
       doc.save(fileName);
       setPdfLoading(false);
     } catch (error) { console.error("Error generating report:", error); setPdfLoading(false); }
   };
 
-  
+
   const handleDragStart = (e, itemId) => {
     setDraggedItem(itemId);
     e.dataTransfer.effectAllowed = "move";
@@ -2783,7 +2814,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
 
   const renderDraggableCard = (itemId, content) => {
     const isDragOver = dragOverItem === itemId;
-    
+
 
     return (
       <div
@@ -2794,12 +2825,11 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, itemId)}
         onDragEnd={handleDragEnd}
-        className={`transition-all duration-200 h-full ${
-          isDragOver ? "ring-4 ring-emerald-400 scale-105" : ""
-        }`}
+        className={`transition-all duration-200 h-full ${isDragOver ? "ring-4 ring-emerald-400 scale-105" : ""
+          }`}
         style={{ cursor: "grab" }}
       >
-        
+
         <div className="relative h-full">
           <div className="absolute top-2 left-2 text-gray-400 z-10 cursor-move">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -2823,7 +2853,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
     );
   }
 
-  
+
 
   const cardComponents = {
     completion: (
@@ -3136,7 +3166,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
         className="flex-1 p-6 overflow-y-auto transition-all duration-300"
         style={{
           filter:
-            modalState.isOpen || filterModalOpen || reportModalOpen
+            modalState.isOpen || filterModalOpen || reportModalOpen  || pdfLoading
               ? "blur(3px)"
               : "none",
           marginLeft: sidebarCollapsed ? "5rem" : "16rem",
@@ -3195,125 +3225,125 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
             </div>
           )}
 
-         {(activeFilters.dateRange !== "all" ||
-  activeFilters.selectedEvent !== "all" ||
-  activeFilters.gender !== "all" ||
-  activeFilters.status !== "all" ||
-  activeFilters.volunteerRange !== "all" ||
-  activeFilters.selectedMetrics.length > 0) && (
-  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-semibold text-emerald-800">
-          Filters:
-        </span>
-        
-        {/* For date ranges OTHER than specific-months */}
-        {activeFilters.dateRange !== "all" && activeFilters.dateRange !== "specific-months" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.dateRange === "custom"
-              ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}`
-              : activeFilters.dateRange}
-          </span>
-        )}
-        
-        {/* Display individual selected months with comma separation */}
-        {activeFilters.dateRange === "specific-months" && activeFilters.selectedMonths.length > 0 && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.selectedMonths
-              .map((month) =>
-                new Date(month + "-01").toLocaleDateString("en-US", {
-                  month: "short",
-                  year: "numeric",
-                })
-              )
-              .join(", ")}
-          </span>
-        )}
-        
-        {activeFilters.selectedEvent !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {dashboardData.events.find(
-              (e) => e.event_id === activeFilters.selectedEvent
-            )?.event_title || activeFilters.selectedEvent}
-          </span>
-        )}
-        {activeFilters.status !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.status}
-          </span>
-        )}
-        {activeFilters.gender !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm flex items-center gap-2">
-            {activeFilters.gender === "Male" ? (
-              <>
-                <img
-                  src={MaleIcon}
-                  alt="Male Icon"
-                  className="w-4 h-4"
-                />
-                Male
-              </>
-            ) : (
-              <>
-                <img
-                  src={FemaleIcon}
-                  alt="Female Icon"
-                  className="w-4 h-4"
-                />
-                Female
-              </>
+          {(activeFilters.dateRange !== "all" ||
+            activeFilters.selectedEvent !== "all" ||
+            activeFilters.gender !== "all" ||
+            activeFilters.status !== "all" ||
+            activeFilters.volunteerRange !== "all" ||
+            activeFilters.selectedMetrics.length > 0) && (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-emerald-800">
+                      Filters:
+                    </span>
+
+                    {/* For date ranges OTHER than specific-months */}
+                    {activeFilters.dateRange !== "all" && activeFilters.dateRange !== "specific-months" && (
+                      <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                        {activeFilters.dateRange === "custom"
+                          ? `${activeFilters.customDateFrom} to ${activeFilters.customDateTo}`
+                          : activeFilters.dateRange}
+                      </span>
+                    )}
+
+                    {/* Display individual selected months with comma separation */}
+                    {activeFilters.dateRange === "specific-months" && activeFilters.selectedMonths.length > 0 && (
+                      <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                        {activeFilters.selectedMonths
+                          .map((month) =>
+                            new Date(month + "-01").toLocaleDateString("en-US", {
+                              month: "short",
+                              year: "numeric",
+                            })
+                          )
+                          .join(", ")}
+                      </span>
+                    )}
+
+                    {activeFilters.selectedEvent !== "all" && (
+                      <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                        {dashboardData.events.find(
+                          (e) => e.event_id === activeFilters.selectedEvent
+                        )?.event_title || activeFilters.selectedEvent}
+                      </span>
+                    )}
+                    {activeFilters.status !== "all" && (
+                      <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                        {activeFilters.status}
+                      </span>
+                    )}
+                    {activeFilters.gender !== "all" && (
+                      <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm flex items-center gap-2">
+                        {activeFilters.gender === "Male" ? (
+                          <>
+                            <img
+                              src={MaleIcon}
+                              alt="Male Icon"
+                              className="w-4 h-4"
+                            />
+                            Male
+                          </>
+                        ) : (
+                          <>
+                            <img
+                              src={FemaleIcon}
+                              alt="Female Icon"
+                              className="w-4 h-4"
+                            />
+                            Female
+                          </>
+                        )}
+                      </span>
+                    )}
+                    {activeFilters.volunteerRange !== "all" && (
+                      <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                        {activeFilters.volunteerRange}
+                      </span>
+                    )}
+                    {activeFilters.selectedMetrics.length > 0 && (
+                      <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
+                        {activeFilters.selectedMetrics
+                          .map((metricValue) => {
+                            const metricLabels = {
+                              "Completion": "Project Completion",
+                              "Volunteers": "Total Volunteers",
+                              "Participation": "Participation Rate",
+                              "Feedback": "Feedback Score",
+                              "Growth": "Growth Rate",
+                              "Beneficiaries": "Beneficiaries",
+                              "Active Events": "Active Events",
+                              "Non-Participants": "Non-Participants",
+                              "Attendance": "Attendance",
+                              "Certifications": "Certifications"
+                            };
+                            return metricLabels[metricValue] || metricValue;
+                          })
+                          .join(", ")}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleApplyFilters({
+                        dateRange: "all",
+                        selectedEvent: "all",
+                        gender: "all",
+                        status: "all",
+                        volunteerRange: "all",
+                        customDateFrom: "",
+                        customDateTo: "",
+                        selectedMonths: [],
+                        selectedMetrics: []
+                      })
+                    }
+                    className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
             )}
-          </span>
-        )}
-        {activeFilters.volunteerRange !== "all" && (
-          <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-            {activeFilters.volunteerRange}
-          </span>
-        )}
-        {activeFilters.selectedMetrics.length > 0 && (
-  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm">
-    {activeFilters.selectedMetrics
-      .map((metricValue) => {
-        const metricLabels = {
-          "Completion": "Project Completion",
-          "Volunteers": "Total Volunteers",
-          "Participation": "Participation Rate",
-          "Feedback": "Feedback Score",
-          "Growth": "Growth Rate",
-          "Beneficiaries": "Beneficiaries",
-          "Active Events": "Active Events",
-          "Non-Participants": "Non-Participants",
-          "Attendance": "Attendance",
-          "Certifications": "Certifications"
-        };
-        return metricLabels[metricValue] || metricValue;
-      })
-      .join(", ")}
-  </span>
-)}
-      </div>
-      <button
-        onClick={() =>
-          handleApplyFilters({
-            dateRange: "all",
-            selectedEvent: "all",
-            gender: "all",
-            status: "all",
-            volunteerRange: "all",
-            customDateFrom: "",
-            customDateTo: "",
-            selectedMonths: [],
-            selectedMetrics: []
-          })
-        }
-        className="text-emerald-700 hover:text-emerald-900 font-semibold text-sm cursor-pointer"
-      >
-        Clear 
-      </button>
-    </div>
-  </div>
-)}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             <div
@@ -3484,7 +3514,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
               <p className="text-3xl font-bold text-emerald-700">
                 {Math.round(
                   dashboardData.totalVolunteers *
-                    (dashboardData.participationRate / 100)
+                  (dashboardData.participationRate / 100)
                 )}
               </p>
             </div>
@@ -3594,7 +3624,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
                 <p className="text-2xl font-bold text-blue-700">
                   {Math.round(
                     dashboardData.totalVolunteers *
-                      (dashboardData.participationRate / 100)
+                    (dashboardData.participationRate / 100)
                   )}
                 </p>
               </div>
@@ -3604,7 +3634,7 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
                   {dashboardData.totalVolunteers -
                     Math.round(
                       dashboardData.totalVolunteers *
-                        (dashboardData.participationRate / 100)
+                      (dashboardData.participationRate / 100)
                     )}
                 </p>
               </div>
@@ -3766,9 +3796,9 @@ const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
               <p className="text-3xl font-bold text-purple-700">
                 {dashboardData.events.length > 0
                   ? Math.round(
-                      dashboardData.beneficiaryReach /
-                        dashboardData.events.length
-                    )
+                    dashboardData.beneficiaryReach /
+                    dashboardData.events.length
+                  )
                   : 0}
               </p>
             </div>
