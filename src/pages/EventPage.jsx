@@ -7,12 +7,104 @@ import supabase from "../config/supabaseClient";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+// PDF Generation Loading Overlay
+function PDFLoadingOverlay({ isVisible }) {
+  if (!isVisible) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm z-9999 flex items-center justify-center">
+      <div className="bg-white p-10 rounded-2xl shadow-2xl flex flex-col items-center gap-5 relative overflow-hidden">
+        {/* Animated background circles */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+          <div className="w-32 h-32 bg-emerald-600 rounded-full animate-ping"></div>
+        </div>
+
+        {/* Main spinner */}
+        <div className="relative">
+          <svg className="animate-spin h-16 w-16" viewBox="0 0 50 50">
+            <circle
+              className="opacity-25"
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              style={{ color: '#10b981' }}
+            />
+            <circle
+              className="opacity-75"
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              strokeDasharray="80"
+              strokeDashoffset="60"
+              strokeLinecap="round"
+              style={{ color: '#059669' }}
+            />
+          </svg>
+        </div>
+
+        {/* Progress dots */}
+        <div className="flex gap-2">
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+
+        <div className="text-center z-10">
+          <p className="text-emerald-700 font-bold text-xl mb-2">Generating PDF Report</p>
+          <p className="text-gray-600 text-sm">This may take a few moments...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Validation Error Popup
+function ValidationErrorPopup({ message, onClose }) {
+  if (!message) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-9999 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-[0_8px_25px_rgba(0,0,0,0.25)] w-full max-w-sm animate-fadeInScale border border-red-300 overflow-hidden">
+        {/* Header */}
+        <div className="bg-red-600 px-6 py-3">
+          <h3 className="text-lg font-semibold text-white tracking-wide">
+            Error
+          </h3>
+        </div>
+
+        {/* Message */}
+        <div className="px-6 py-5 bg-white">
+          <p className="text-gray-800 text-[15px] leading-relaxed">
+            {message}
+          </p>
+        </div>
+
+        {/* Footer with right-aligned OK */}
+        <div className="px-6 py-3 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-red-600 text-white rounded-md font-medium shadow hover:bg-red-700 transition-all active:scale-95 cursor-pointer"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EventPage() {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const [activeButton, setActiveButton] = useState("Event Details");
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [validationError, setValidationError] = useState("");
   const [error, setError] = useState("");
   const [eventImage, setEventImage] = useState(null);
   const [volunteerStats, setVolunteerStats] = useState({
@@ -541,21 +633,28 @@ function EventPage() {
       doc.save(fileName);
       
     } catch (err) {
-      console.error("Error generating report:", err);
-      alert("Failed to generate report. Please try again.");
-    } finally {
-      setIsGeneratingReport(false);
-    }
+  setValidationError("Failed to generate report. Please try again.");
+} finally {
+  setIsGeneratingReport(false);
+}
   };
 
   if (loading) return (
-    <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
-      
-      <Sidebar onCollapseChange={setSidebarCollapsed} />
-      
-      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >    
+  <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
+    <PDFLoadingOverlay isVisible={isGeneratingReport} />
+    <ValidationErrorPopup 
+      message={validationError} 
+      onClose={() => setValidationError("")} 
+    />
+    <Sidebar onCollapseChange={setSidebarCollapsed} />
+    
+    <main 
+      className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+      style={{
+        filter: isGeneratingReport || validationError ? "blur(3px)" : "none",
+        marginLeft: sidebarCollapsed ? "5rem" : "16rem"
+      }}
+    >
           <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-900 mx-auto"></div>
           <p className="mt-4 text-emerald-900 font-montserrat font-semibold text-lg">Loading event data...</p>
@@ -564,13 +663,22 @@ function EventPage() {
     </div>
   );
 
-  if (error || !eventData) return (
-    <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
-      <Sidebar onCollapseChange={setSidebarCollapsed} />
-      
-      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >    
+ if (error || !eventData) return (
+  <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
+    <PDFLoadingOverlay isVisible={isGeneratingReport} />
+    <ValidationErrorPopup 
+      message={validationError} 
+      onClose={() => setValidationError("")} 
+    />
+    <Sidebar onCollapseChange={setSidebarCollapsed} />
+    
+    <main 
+      className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+      style={{
+        filter: isGeneratingReport || validationError ? "blur(3px)" : "none",
+        marginLeft: sidebarCollapsed ? "5rem" : "16rem"
+      }}
+    >
         <div className="bg-white rounded-lg shadow border-2 border-emerald-800 overflow-hidden p-8 text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-3xl font-bold font-montserrat  text-red-600 mb-4">Error</h2>
@@ -582,58 +690,72 @@ function EventPage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
-      <Sidebar onCollapseChange={setSidebarCollapsed} />
-      
-      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >    
+  <div className="flex min-h-screen bg-no-repeat bg-center" style={{backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%"}}>
+    <PDFLoadingOverlay isVisible={isGeneratingReport} />
+    <ValidationErrorPopup 
+      message={validationError} 
+      onClose={() => setValidationError("")} 
+    />
+    <Sidebar onCollapseChange={setSidebarCollapsed} />
+    
+    <main 
+      className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+      style={{
+        filter: isGeneratingReport || validationError ? "blur(3px)" : "none",
+        marginLeft: sidebarCollapsed ? "5rem" : "16rem"
+      }}
+    > 
         <div className="bg-white rounded-lg shadow overflow-hidden h-full flex flex-col">
           
           <div className={`${getHeaderColor(eventData.event_id)} rounded-t-full py-3 font-montserrat font-bold text-3xl shadow-md text-emerald-900 border-emerald-800 relative`}>
-            <button
-              onClick={handleGenerateEventReport}
-              disabled={isGeneratingReport}
-              className="absolute left-1 top-3 -translate-y-1 bg-white text-emerald-900 font-montserrat font-semibold px-2 py-1 rounded-lg hover:bg-emerald-50 shadow-lg transition-colors disabled:opacity-50  flex items-center gap-1 text-sm cursor-pointer"
->
-              {isGeneratingReport ? (
-                <>
-                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-emerald-900"></div>
-                  <span className="text-xs">Generating...</span>
-                </>
-              ) : (
-                <>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-8 w-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                Generate Report
-                </>
-              )}
-            </button>
             <div className="text-center">
               <span className="text-white font-montserrat font-extrabold">{eventData.event_id}</span>
             </div>
           </div>
 
-          <div className="p-6 flex gap-8 flex-1 overflow-auto">
+           <div className="p-6 flex gap-8 flex-1 overflow-auto">
             {/* LEFT COLUMN - Main Content */}
             <div className="flex-1 space-y-6 overflow-y-auto pr-4">
-              <h2 className="text-4xl font-bold font-montserrat text-emerald-800 leading-snug hover:text-emerald-700 transition-colors" title="Click to edit Event Name">
-                {eventData.event_title}
-              </h2>
+              {/* Event Title with Generate Report Button */}
+              <div className="flex items-center gap-4">
+                <h2 className="text-4xl font-bold font-montserrat text-emerald-800 leading-snug hover:text-emerald-700 transition-colors" title="Event Title">
+                  {eventData.event_title}
+                </h2>
+                
+                {/* Generate Report Button */}
+                <button
+                  onClick={handleGenerateEventReport}
+                  disabled={isGeneratingReport}
+                  className="bg-emerald-600 text-white font-montserrat font-semibold px-4 py-3 rounded-xl hover:bg-emerald-700 shadow-lg transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                >
+                  {isGeneratingReport ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Generate Report
+                    </>
+                  )}
+                </button>
+              </div>
 
-              <div className="flex gap-6 min-h-[250px]">
+    <div className="flex gap-6 min-h-[250px]">
                 <div className="flex-1 rounded-lg overflow-hidden shadow-lg cursor-pointer hover:opacity-90 transition-all max-h-[250px]"
                   title="Click to edit Event Image">
                   {eventImage ?  (
@@ -745,17 +867,17 @@ function EventPage() {
             {/* RIGHT COLUMN - Fixed Width Sidebar */}
             <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
               {/* Status Badge - Real-time */}
-              <div className="text-center">
-                <div className={`px-6 py-2 rounded-full text-center font-bold transition-all duration-500 ${
-                  currentStatus === 'ONGOING' ? 'bg-emerald-500 text-white animate-pulse' : 
-                  currentStatus === 'UPCOMING' ? 'bg-yellow-500 text-white' : 
-                  currentStatus === 'COMPLETED' ? 'bg-gray-500 text-white' :
-                  'bg-blue-500 text-white'
-                }`}>
-                  {currentStatus || eventData.status}
-                </div>
-              </div>
-
+              {/* Status Badge - Real-time */}
+<div className="text-center space-y-3">
+  <div className={`px-6 py-2 rounded-full text-center font-bold transition-all duration-500 ${
+    currentStatus === 'ONGOING' ? 'bg-emerald-500 text-white animate-pulse' : 
+    currentStatus === 'UPCOMING' ? 'bg-yellow-500 text-white' : 
+    currentStatus === 'COMPLETED' ? 'bg-gray-500 text-white' :
+    'bg-blue-500 text-white'
+  }`}>
+    {currentStatus || eventData.status}
+  </div>
+</div>
               {/* Complete Submissions Card */}
               <div className="bg-emerald-900 rounded-lg p-6 text-center shadow-lg transition-colors font-montserrat" title="Click to view submission details">
                 <p className="text-xl font-semibold text-white mb-2">Complete Submissions</p>
