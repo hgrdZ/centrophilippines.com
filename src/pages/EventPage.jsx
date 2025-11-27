@@ -726,7 +726,7 @@ function EventPage() {
                 <button
                   onClick={handleGenerateEventReport}
                   disabled={isGeneratingReport}
-                  className="bg-emerald-600 text-white font-montserrat font-semibold px-4 py-3 rounded-xl hover:bg-emerald-700 shadow-lg transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                  className="bg-emerald-600 text-white font-montserrat font-semibold px-4 py-2 rounded-full hover:bg-emerald-700 shadow-lg transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap cursor-pointer"
                 >
                   {isGeneratingReport ? (
                     <>
