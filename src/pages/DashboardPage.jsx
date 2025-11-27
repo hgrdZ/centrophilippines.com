@@ -37,7 +37,7 @@ const COLORS = {
 };
 
 // Helper function for real-time gender counting
-const fetchGenderDataRealtime = async (userIds) => {
+const fetchGenderDataRealtime = async (userIds, setValidationError) => {
   if (!userIds || userIds.length === 0) {
     return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
   }
@@ -49,7 +49,7 @@ const fetchGenderDataRealtime = async (userIds) => {
       .in("user_id", userIds);
 
     if (error) {
-      console.error("Error fetching gender data:", error);
+      setValidationError("Error fetching gender data. Please try again.");
       return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
     }
 
@@ -72,7 +72,9 @@ const fetchGenderDataRealtime = async (userIds) => {
       femalePercentage,
     };
   } catch (error) {
-    console.error("Error in fetchGenderDataRealtime:", error);
+    if (setValidationError) {
+      setValidationError("An unexpected error occurred while fetching gender data.");
+    }
     return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
   }
 };
@@ -160,6 +162,7 @@ function CustomCalendar({ onClose, onApply, startDate, endDate }) {
   const [selectedStart, setSelectedStart] = useState(startDate ? new Date(startDate) : null);
   const [selectedEnd, setSelectedEnd] = useState(endDate ? new Date(endDate) : null);
   const [isSelectingStart, setIsSelectingStart] = useState(true);
+  
 
   useEffect(() => {
     const handleEscKey = (e) => {
@@ -551,6 +554,7 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
     setSelectedMetrics([]);
   };
 
+
   const handleMetricToggle = (metricValue) => {
     if (selectedMetrics.includes(metricValue)) {
       setSelectedMetrics(selectedMetrics.filter(m => m !== metricValue));
@@ -918,13 +922,12 @@ function FilterModal({ isOpen, onClose, onApplyFilters, events }) {
   );
 }
 
-function ReportModal({ isOpen, onClose, onGenerate }) {
+function ReportModal({ isOpen, onClose, onGenerate, setValidationError  }) {
   const [reportType, setReportType] = useState("single");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState([]);
-
   const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [reportSection, setReportSection] = useState("reportType");
 
@@ -952,15 +955,15 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
     if (reportSection !== "reportType") return;
 
     if (reportType === "single" && (!selectedMonth || !selectedYear)) {
-      alert("Please select a month and year first.");
+    setValidationError("Please select a month and year first.");
       return;
     }
     if (reportType === "multiple" && selectedMonths.length === 0) {
-      alert("Please select at least one month.");
+    setValidationError("Please select at least one month.");
       return;
     }
     if (reportType === "annual" && !selectedYear) {
-      alert("Please select a year first.");
+    setValidationError("Please select a year first.");
       return;
     }
 
@@ -1109,7 +1112,6 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                           </div>
                         </div>
                       )}
-
                     </div>
                   </label>
 
@@ -1205,11 +1207,12 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Select Year
                           </label>
+                            <div className="flex items-center border-2 border-gray-300 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
 
                           <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(e.target.value)}
-                            className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 bg-white"
+                            className="w-full border-none focus:outline-none cursor-pointer text-emerald-900 bg-transparent"
                           >
                             <option value="">-- Select Year --</option>
                             {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
@@ -1218,6 +1221,7 @@ function ReportModal({ isOpen, onClose, onGenerate }) {
                               </option>
                             ))}
                           </select>
+                        </div>
                         </div>
                       )}
                     </div>
@@ -1568,6 +1572,42 @@ function PDFLoadingOverlay({ isVisible }) {
     </div>
   );
 }
+
+// Validation Error Popup
+function ValidationErrorPopup({ message, onClose }) {
+  if (!message) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-9999 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-[0_8px_25px_rgba(0,0,0,0.25)] w-full max-w-sm animate-fadeInScale border border-red-300 overflow-hidden">
+        {/* Header */}
+        <div className="bg-red-600 px-6 py-3">
+          <h3 className="text-lg font-semibold text-white tracking-wide">
+            Error
+          </h3>
+        </div>
+
+        {/* Message */}
+        <div className="px-6 py-5 bg-white">
+          <p className="text-gray-800 text-[15px] leading-relaxed">
+            {message}
+          </p>
+        </div>
+
+        {/* Footer with right-aligned OK */}
+        <div className="px-6 py-3 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-red-600 text-white rounded-md font-medium shadow hover:bg-red-700 transition-all active:scale-95 cursor-pointer"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Helper Functions for drawing charts in PDF
 const drawPieChart = (doc, data, startX, startY, radius) => {
   let total = Object.values(data).reduce((a, b) => a + b, 0);
@@ -1690,6 +1730,7 @@ export default function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [validationError, setValidationError] = useState("");
   const [viewingContext, setViewingContext] = useState(null);
   const [modalState, setModalState] = useState({ isOpen: false, type: null });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -1772,7 +1813,7 @@ export default function DashboardPage() {
       setViewingContext(contextToUse);
       await fetchDashboardData(contextToUse.ngo_code);
     } catch (error) {
-      console.error("Error initializing dashboard:", error);
+      setValidationError("Error fetching dashboard data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -1801,7 +1842,7 @@ export default function DashboardPage() {
         .map((v) => v.user_id);
 
       const totalVolunteers = volunteerIds.length;
-      const genderData = await fetchGenderDataRealtime(volunteerIds);
+      const genderData = await fetchGenderDataRealtime(volunteerIds, setValidationError);
 
       const { data: allApplications } = await supabase
         .from("Volunteer_Application")
@@ -1889,7 +1930,7 @@ export default function DashboardPage() {
       await generateMonthlyVolunteerData(ngoCode);
       generateEventsPerformanceData(events || []);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      setValidationError("Error fetching dashboard data. Please try again.");
     }
   };
 
@@ -2028,7 +2069,7 @@ export default function DashboardPage() {
         filteredVolunteerIds = usersData?.map((u) => u.user_id) || [];
       }
 
-      const genderData = await fetchGenderDataRealtime(filteredVolunteerIds);
+      const genderData = await fetchGenderDataRealtime(filteredVolunteerIds, setValidationError);
       const totalFiltered = filteredVolunteerIds.length;
 
       const completedEvents = finalEvents.filter(
@@ -2072,7 +2113,7 @@ export default function DashboardPage() {
         filteredVolunteerIds
       );
     } catch (error) {
-      console.error("Error applying filters:", error);
+  setValidationError("Error applying filters. Please try again.");
     }
   };
 
@@ -2138,7 +2179,7 @@ export default function DashboardPage() {
 
       setChartData((prev) => ({ ...prev, monthlyVolunteerData }));
     } catch (error) {
-      console.error("Error generating filtered monthly volunteer data:", error);
+  setValidationError("Error generating volunteer data. Please try again.");
     }
   };
 
@@ -2181,7 +2222,7 @@ export default function DashboardPage() {
 
       setChartData((prev) => ({ ...prev, growth: growthData }));
     } catch (error) {
-      console.error("Error generating growth data:", error);
+  setValidationError("Error generating growth data. Please try again.");
     }
   };
 
@@ -2230,7 +2271,7 @@ export default function DashboardPage() {
         applications: { data: applicationsData, forecast },
       }));
     } catch (error) {
-      console.error("Error generating applications data:", error);
+  setValidationError("Error generating applications data. Please try again.");
     }
   };
 
@@ -2280,7 +2321,7 @@ export default function DashboardPage() {
 
       setChartData((prev) => ({ ...prev, monthlyVolunteerData }));
     } catch (error) {
-      console.error("Error generating monthly volunteer data:", error);
+  setValidationError("Error generating monthly volunteer data. Please try again.");
     }
   };
 
@@ -2337,7 +2378,6 @@ export default function DashboardPage() {
         doc.restoreGraphicsState();
       }
     } catch (error) {
-      console.error("Error adding logo:", error);
     }
   };
 
@@ -2377,7 +2417,10 @@ export default function DashboardPage() {
       const participatedUserIds = new Set(eventUsers?.map(eu => eu.user_id) || []);
       const nonParticipants = allVolunteerIds.filter(id => !participatedUserIds.has(id));
       return nonParticipants.length;
-    } catch (error) { return 0; }
+} catch (error) { 
+  setValidationError("Error calculating non-participants.");
+  return 0; 
+}
   };
 
   // Calculate attendance
@@ -2395,7 +2438,10 @@ export default function DashboardPage() {
           attended: new Set(taskSubmissions?.filter(ts => ts.event_id === event.event_id).map(ts => ts.user_id)).size
         }))
       };
-    } catch (error) { return { total: 0, byEvent: [] }; }
+} catch (error) { 
+  setValidationError("Error calculating attendance.");
+  return { total: 0, byEvent: [] }; 
+}
   };
 
   // Calculate certifications  
@@ -2410,7 +2456,10 @@ export default function DashboardPage() {
         total: certificates?.length || 0,
         byEvent: filteredEvents.map(event => ({ event_id: event.event_id, event_title: event.event_title, certificates: certificates?.filter(cert => cert.event_id === event.event_id).length || 0 }))
       };
-    } catch (error) { return { total: 0, byEvent: [] }; }
+} catch (error) { 
+  setValidationError("Error calculating certifications.");
+  return { total: 0, byEvent: [] }; 
+}
   };
 
   const handleGenerateReport = async (selectedData, selectedYear, reportType) => {
@@ -2418,8 +2467,11 @@ export default function DashboardPage() {
       setReportModalOpen(false);
       setPdfLoading(true);
       const ngoCode = viewingContext?.ngo_code;
-      if (!ngoCode) { setPdfLoading(false); return; }
-
+if (!ngoCode) { 
+  setPdfLoading(false); 
+  setValidationError("NGO code not found. Please try again.");
+  return; 
+}
       let selectedMonth, selectedMonths;
       let isAnnualReport = false;
       let reportTitle;
@@ -2436,7 +2488,6 @@ export default function DashboardPage() {
         reportTitle = `Annual Report ${selectedYear}`;
       }
 
-      console.log("Starting data fetch...");
       const [eventsResult, eventUsersResult, applicationsResult, taskSubmissionsResult, registeredVolunteersResult] = await Promise.all([
         supabase.from("Event_Information").select("*").eq("ngo_id", ngoCode),
         supabase.from("Event_User").select("user_id, event_id, status, date_joined").eq("ngo_id", ngoCode),
@@ -2451,8 +2502,11 @@ export default function DashboardPage() {
       const taskSubmissions = taskSubmissionsResult.data || [];
       const registeredVolunteers = registeredVolunteersResult.data || [];
 
-      if (events.length === 0) { setPdfLoading(false); return; }
-
+if (events.length === 0) { 
+  setPdfLoading(false); 
+  setValidationError("No events found for the selected period.");
+  return; 
+}
       const allUserIds = [...new Set(eventUsers.map(u => u.user_id))];
       let userProfiles = [];
       if (allUserIds.length > 0) {
@@ -2478,8 +2532,11 @@ export default function DashboardPage() {
         filteredEvents = events.filter((ev) => { if (!ev.date) return false; const d = new Date(ev.date); return (d.getMonth() + 1 === parseInt(selectedMonth) && d.getFullYear() === parseInt(selectedYear)); });
       }
 
-      if (!filteredEvents || filteredEvents.length === 0) { setPdfLoading(false); return; }
-
+if (!filteredEvents || filteredEvents.length === 0) { 
+  setPdfLoading(false); 
+  setValidationError("No events found for the selected period.");
+  return; 
+}
       const sortedEvents = filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
       const eventIdsInReport = sortedEvents.map(e => e.event_id);
       const reportEventUsers = eventUsers.filter(eu => eventIdsInReport.includes(eu.event_id));
@@ -2731,8 +2788,11 @@ export default function DashboardPage() {
 
       doc.save(fileName);
       setPdfLoading(false);
-    } catch (error) { console.error("Error generating report:", error); setPdfLoading(false); }
-  };
+} catch (error) { 
+  setValidationError("Error generating report. Please try again.");
+  setPdfLoading(false); 
+}
+    };
 
 
   const handleDragStart = (e, itemId) => {
@@ -3160,13 +3220,17 @@ export default function DashboardPage() {
       <Sidebar onCollapseChange={setSidebarCollapsed} />
 
       <PDFLoadingOverlay isVisible={pdfLoading} />
+      <ValidationErrorPopup 
+  message={validationError} 
+  onClose={() => setValidationError("")} 
+/>
 
 
       <main
         className="flex-1 p-6 overflow-y-auto transition-all duration-300"
         style={{
           filter:
-            modalState.isOpen || filterModalOpen || reportModalOpen  || pdfLoading
+            modalState.isOpen || filterModalOpen || reportModalOpen  || pdfLoading || validationError
               ? "blur(3px)"
               : "none",
           marginLeft: sidebarCollapsed ? "5rem" : "16rem",
@@ -3476,6 +3540,7 @@ export default function DashboardPage() {
         isOpen={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
         onGenerate={handleGenerateReport}
+        setValidationError={setValidationError}
       />
 
       <ChartModal

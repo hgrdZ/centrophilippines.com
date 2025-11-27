@@ -8,6 +8,101 @@ import supabase from "../config/supabaseClient";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+// PDF Generation Loading Overlay - Updated to match Dashboard style
+function PDFLoadingOverlay({ isVisible }) {
+  if (!isVisible) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm z-9999 flex items-center justify-center">
+      <div className="bg-white p-10 rounded-2xl shadow-2xl flex flex-col items-center gap-5 relative overflow-hidden">
+        {/* Animated background circles */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+          <div className="w-32 h-32 bg-emerald-600 rounded-full animate-ping"></div>
+        </div>
+
+        {/* Main spinner */}
+        <div className="relative">
+          <svg className="animate-spin h-16 w-16" viewBox="0 0 50 50">
+            <circle
+              className="opacity-25"
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              style={{ color: '#10b981' }}
+            />
+            <circle
+              className="opacity-75"
+              cx="25"
+              cy="25"
+              r="20"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              strokeDasharray="80"
+              strokeDashoffset="60"
+              strokeLinecap="round"
+              style={{ color: '#059669' }}
+            />
+          </svg>
+        </div>
+
+        {/* Progress dots */}
+        <div className="flex gap-2">
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+
+        <div className="text-center z-10">
+          <p className="text-emerald-700 font-bold text-xl mb-2">Generating PDF Report</p>
+          <p className="text-gray-600 text-sm">This may take a few moments...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ValidationErrorPopup({ message, onClose }) {
+  if (!message) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-9999 flex items-center justify-center p-4">
+      
+      <div className="bg-white rounded-xl shadow-[0_8px_25px_rgba(0,0,0,0.25)] w-full max-w-sm animate-fadeInScale border border-red-300 overflow-hidden">
+        
+        {/* Header */}
+        <div className="bg-red-600 px-6 py-3">
+          <h3 className="text-lg font-semibold text-white tracking-wide">
+            Error
+          </h3>
+        </div>
+
+        {/* Message */}
+        <div className="px-6 py-5 bg-white">
+          <p className="text-gray-800 text-[15px] leading-relaxed">
+            {message}
+          </p>
+        </div>
+
+        {/* Footer with right-aligned OK */}
+        <div className="px-6 py-3 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-red-600 text-white rounded-md font-medium shadow hover:bg-red-700 transition-all active:scale-95 cursor-pointer"
+          >
+            OK
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
+
 // Month Calendar Component
 function MonthCalendar({ onClose, onApply, selectedMonths = [] }) {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -149,6 +244,8 @@ function ManageReports() {
   const [reportType, setReportType] = useState("single");
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [validationError, setValidationError] = useState("");
   
   const handleButtonClick = (button) => setActiveButton(button);
 
@@ -433,28 +530,30 @@ function ManageReports() {
   };
 
   const handleGenerateMonthlyReport = async () => {
-    // Validation
-    if (reportType === "single" && (!selectedMonth || !selectedYear)) {
-      alert("Please select a month and year first.");
-      return;
-    }
-    if (reportType === "annual" && !selectedYear) {
-      alert("Please select a year first.");
-      return;
-    }
-    if (reportType === "multiple" && selectedMonths.length === 0) {
-      alert("Please select at least one month.");
-      return;
-    }
+  // Validation
+  if (reportType === "single" && (!selectedMonth || !selectedYear)) {
+    setValidationError("Please select a month and year first.");
+    return;
+  }
+  if (reportType === "annual" && !selectedYear) {
+    setValidationError("Please select a year first.");
+    return;
+  }
+  if (reportType === "multiple" && selectedMonths.length === 0) {
+    setValidationError("Please select at least one month.");
+    return;
+  }
 
-    const adminData = JSON.parse(localStorage.getItem("admin"));
-    const ngoCode = adminData?.NGO_Information?.ngo_code;
-    if (!ngoCode) {
-      alert("NGO information not found.");
-      return;
-    }
+  const adminData = JSON.parse(localStorage.getItem("admin"));
+  const ngoCode = adminData?.NGO_Information?.ngo_code;
+  if (!ngoCode) {
+    setValidationError("NGO information not found.");
+    return;
+  }
 
-    setShowReportModal(false);
+  setShowReportModal(false);
+  setIsGeneratingPDF(true);
+  setValidationError(""); // Clear any previous errors
 
     const { data: events } = await supabase
       .from("Event_Information")
@@ -462,9 +561,10 @@ function ManageReports() {
       .eq("ngo_id", ngoCode);
 
     if (!events || events.length === 0) {
-      alert("No events found.");
-      return;
-    }
+      setIsGeneratingPDF(false);
+  setValidationError("No events found.");
+  return;
+}
 
     const { data: eventUsers } = await supabase
       .from("Event_User")
@@ -510,10 +610,10 @@ function ManageReports() {
     }
 
     if (!filteredEvents || filteredEvents.length === 0) {
-      alert("No events found for the selected period.");
-      return;
-    }
-
+  setIsGeneratingPDF(false);
+  setValidationError("No events found for the selected period.");
+  return;
+}
     const sortedEvents = filteredEvents.sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     );
@@ -744,6 +844,8 @@ function ManageReports() {
     }
 
     doc.save(fileName);
+    setIsGeneratingPDF(false);
+
   };
 
   if (loading) {
@@ -755,6 +857,12 @@ function ManageReports() {
           backgroundSize: "100% 100%",
         }}
       >
+        <PDFLoadingOverlay isVisible={isGeneratingPDF} />
+<ValidationErrorPopup 
+  message={validationError} 
+  onClose={() => setValidationError("")} 
+/>
+
         <Sidebar handleButtonClick={handleButtonClick} activeButton={activeButton} />
         <main className="flex-1 ml-64 p-4 overflow-y-auto">
           <div className="flex items-center justify-center h-64">
@@ -776,10 +884,16 @@ function ManageReports() {
         backgroundSize: "100% 100%",
       }}
     >
+      <PDFLoadingOverlay isVisible={isGeneratingPDF} />
+<ValidationErrorPopup 
+  message={validationError} 
+  onClose={() => setValidationError("")} 
+/>
       <Sidebar onCollapseChange={setSidebarCollapsed} />
 
       <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+        style={{ filter: isGeneratingPDF || validationError ? "blur(3px)" : "none",
+          marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
       >  
         <div id="manage_reports" className="relative z-10 space-y-6">
           {/* Search Bar and Actions */}
@@ -857,67 +971,77 @@ function ManageReports() {
                   <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
                     <div className="space-y-3">
                       {/* SINGLE MONTH */}
-                      <label
-                        className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${
-                          reportType === "single"
-                            ? "bg-emerald-50 border-emerald-500 shadow-lg"
-                            : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="reportType"
-                          value="single"
-                          checked={reportType === "single"}
-                          onChange={(e) => setReportType(e.target.value)}
-                          className="mt-1 w-4 h-4 text-emerald-600"
-                        />
-                        <div className="ml-3 flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="font-bold text-gray-800">Single Month</div>
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">Generate report for a specific month</div>
-                          
-                          {reportType === "single" && (
-                            <div className="mt-4 space-y-3">
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                  Select Month
-                                </label>
-                                <select
-                                  value={selectedMonth}
-                                  onChange={(e) => setSelectedMonth(e.target.value)}
-                                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
-                                >
-                                  <option value="">-- Select Month --</option>
-                                  {Array.from({ length: 12 }, (_, i) => (
-                                    <option key={i + 1} value={i + 1}>
-                                      {new Date(0, i).toLocaleString("default", { month: "long" })}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                  Select Year
-                                </label>
-                                <select
-                                  value={selectedYear}
-                                  onChange={(e) => setSelectedYear(e.target.value)}
-                                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
-                                >
-                                  <option value="">-- Select Year --</option>
-                                  {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
-                                    <option key={year} value={year}>
-                                      {year}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+                  <label
+                    className={`flex items-start p-5 rounded-xl cursor-pointer border-2 transition-all ${reportType === "single"
+                        ? "bg-emerald-50 border-emerald-500 shadow-lg"
+                        : "bg-white border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                  >
+                    <input
+                      type="radio"
+                      name="reportType"
+                      value="single"
+                      checked={reportType === "single"}
+                      onChange={(e) => setReportType(e.target.value)}
+                      className="mt-1 w-4 h-4 text-emerald-600"
+                    />
+                    <div className="ml-3 flex-1">
+                      <div className="font-bold text-gray-800">Single Month</div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Generate report for a specific month
+                      </div>
+
+                      {reportType === "single" && (
+                        <div className="mt-4 space-y-3">
+
+
+                          {/* MONTH SELECT */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Select Month
+                            </label>
+                            <div className="flex items-center border-2 border-gray-300 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+                              <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="w-full border-none focus:outline-none cursor-pointer text-emerald-900 bg-transparent"
+                              >
+                                <option value="">-- Select Month --</option>
+                                {Array.from({ length: 12 }, (_, i) => (
+                                  <option key={i + 1} value={i + 1}>
+                                    {new Date(0, i).toLocaleString("default", {
+                                      month: "long",
+                                    })}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
-                          )}
+                          </div>
+
+                          {/* YEAR SELECT */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Select Year
+                            </label>
+                            <div className="flex items-center border-2 border-gray-300 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+                              <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                                className="w-full border-none focus:outline-none cursor-pointer text-emerald-900 bg-transparent"
+                              >
+                                <option value="">-- Select Year --</option>
+                                {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                                  <option key={year} value={year}>
+                                    {year}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
                         </div>
-                      </label>
+                      )}
+                    </div>
+                  </label>
 
                       {/* MULTIPLE MONTHS */}
                       <label
@@ -1010,11 +1134,12 @@ function ManageReports() {
                               <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 Select Year
                               </label>
-                              <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                                className="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
-                              >
+                              <div className="flex items-center border-2 border-gray-300 bg-white rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+                          <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                            className="w-full border-none focus:outline-none cursor-pointer text-emerald-900 bg-transparent"
+                          >
                                 <option value="">-- Select Year --</option>
                                 {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
                                   <option key={year} value={year}>
@@ -1022,6 +1147,7 @@ function ManageReports() {
                                   </option>
                                 ))}
                               </select>
+                            </div>
                             </div>
                           )}
                         </div>
