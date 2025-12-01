@@ -14,6 +14,9 @@ export default function ReviewApplicationPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showRejectSuccessPopup, setShowRejectSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorTitle, setErrorTitle] = useState("");
   const [acceptedVolunteerName, setAcceptedVolunteerName] = useState("");
   const [rejectedVolunteerName, setRejectedVolunteerName] = useState("");
   const [rejectReason, setRejectReason] = useState(""); // Added for rejection reason
@@ -71,18 +74,18 @@ export default function ReviewApplicationPage() {
     fetchPendingApplications();
   }, []);
 
-  // Prevent body scroll when modal is open
+
   useEffect(() => {
-    if (showAcceptModal || showRejectModal || showSuccessPopup || showRejectSuccessPopup) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [showAcceptModal, showRejectModal, showSuccessPopup, showRejectSuccessPopup]);
+  if (showAcceptModal || showRejectModal || showSuccessPopup || showRejectSuccessPopup || showErrorPopup) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = 'unset';
+  }
+  
+  return () => {
+    document.body.style.overflow = 'unset';
+  };
+}, [showAcceptModal, showRejectModal, showSuccessPopup, showRejectSuccessPopup, showErrorPopup]);
 
   // Show accept modal
   const handleAcceptClick = () => {
@@ -90,7 +93,8 @@ export default function ReviewApplicationPage() {
       setShowAcceptModal(true);
     }
   };
-useEffect(() => {
+  
+  useEffect(() => {
   const handleEscKey = (e) => {
     if (e.key === 'Escape') {
       if (showAcceptModal) {
@@ -108,10 +112,15 @@ useEffect(() => {
         setShowRejectSuccessPopup(false);
         setRejectedVolunteerName("");
       }
+      if (showErrorPopup) {
+        setShowErrorPopup(false);
+        setErrorMessage("");
+        setErrorTitle("");
+      }
     }
   };
 
-  const isAnyModalOpen = showAcceptModal || showRejectModal || showSuccessPopup || showRejectSuccessPopup;
+  const isAnyModalOpen = showAcceptModal || showRejectModal || showSuccessPopup || showRejectSuccessPopup || showErrorPopup;
   
   if (isAnyModalOpen) {
     document.addEventListener('keydown', handleEscKey);
@@ -120,15 +129,29 @@ useEffect(() => {
   return () => {
     document.removeEventListener('keydown', handleEscKey);
   };
-}, [showAcceptModal, showRejectModal, showSuccessPopup, showRejectSuccessPopup]);
+}, [showAcceptModal, showRejectModal, showSuccessPopup, showRejectSuccessPopup, showErrorPopup]);
 
-  // Show reject modal
-  const handleRejectClick = () => {
-    if (selectedVolunteer) {
-      setRejectReason(""); // Reset reason
-      setShowRejectModal(true);
-    }
+  // Show error popup
+  const showError = (title, message) => {
+    setErrorTitle(title);
+    setErrorMessage(message);
+    setShowErrorPopup(true);
   };
+
+  // Close error popup
+  const handleCloseErrorPopup = () => {
+    setShowErrorPopup(false);
+    setErrorMessage("");
+    setErrorTitle("");
+  };
+
+ // Show reject modal
+const handleRejectClick = () => {
+  if (selectedVolunteer) {
+    setRejectReason(""); // Reset reason
+    setShowRejectModal(true);
+  }
+};
 
   // Accept a volunteer application
   const handleConfirmAccept = async () => {
@@ -157,7 +180,7 @@ useEffect(() => {
 
       if (statusError) {
         console.error("Error accepting volunteer:", statusError);
-        alert("Failed to accept application. Please try again.");
+        showError("Failed to Accept", "Failed to accept application. Please try again.");
         setShowAcceptModal(false);
         return;
       }
@@ -169,7 +192,7 @@ useEffect(() => {
 
       if (deleteError) {
         console.error("Error deleting volunteer application:", deleteError);
-        alert("Failed to remove application from pending list.");
+        showError("Database Error", "Failed to remove application from pending list.");
         setShowAcceptModal(false);
         return;
       }
@@ -196,7 +219,7 @@ useEffect(() => {
 
         if (updateError) {
           console.error("Error updating Registered_Volunteers:", updateError);
-          alert("Failed to update volunteer registration.");
+          showError("Update Error", "Failed to update volunteer registration.");
           setShowAcceptModal(false);
           return;
         }
@@ -210,7 +233,7 @@ useEffect(() => {
 
         if (insertError) {
           console.error("Error inserting into Registered_Volunteers:", insertError);
-          alert("Failed to register volunteer.");
+          showError("Registration Error", "Failed to register volunteer.");
           setShowAcceptModal(false);
           return;
         }
@@ -226,126 +249,131 @@ useEffect(() => {
       // Show success popup
       setShowSuccessPopup(true);
     } catch (error) {
-      console.error("Unexpected error during accept process:", error);
-      alert("An unexpected error occurred. Please try again.");
-      setShowAcceptModal(false);
-    }
+        console.error("Unexpected error during accept process:", error);
+        showError("Unexpected Error", "An unexpected error occurred. Please try again.");
+        setShowAcceptModal(false);
+      }
   };
 
-  // Reject a volunteer application
-  const handleConfirmReject = async () => {
-    if (!selectedVolunteer) return;
+ // Reject a volunteer application
+const handleConfirmReject = async () => {
+  if (!selectedVolunteer) return;
 
-    // Validate rejection reason
-    if (!rejectReason.trim()) {
-      alert("Please provide a reason for rejection.");
+// Validate rejection reason
+if (!rejectReason.trim()) {
+  setShowRejectModal(false);
+  setTimeout(() => {
+    showError("Reason", "Please provide a reason for rejection before proceeding.");
+  }, 100); 
+  return;
+}
+
+    const dataToInsert = {
+    application_id: selectedVolunteer.application_id,
+    user_id: selectedVolunteer.user_id,
+    ngo_id: selectedVolunteer.ngo_id,
+    date_application: selectedVolunteer.date_application,
+    result: false,
+  };
+
+  console.log("=== DEBUG: Reject Application ===");
+  console.log("Selected Volunteer:", selectedVolunteer);
+  console.log("Data to insert into Application_Status:", dataToInsert);
+
+  try {
+    const { data: insertedData, error: statusError } = await supabase
+      .from("Application_Status")
+      .insert([dataToInsert])
+      .select();
+
+    console.log("Inserted data result:", insertedData);
+    console.log("Insert error:", statusError);
+
+    if (statusError) {
+      console.error("Error rejecting volunteer:", statusError);
+      showError("Failed to Reject", "Failed to reject application. Please try again.");
+      setShowRejectModal(false);
       return;
     }
 
-    const dataToInsert = {
-      application_id: selectedVolunteer.application_id,
-      user_id: selectedVolunteer.user_id,
-      ngo_id: selectedVolunteer.ngo_id,
-      date_application: selectedVolunteer.date_application,
-      result: false,
-    };
-
-    console.log("=== DEBUG: Reject Application ===");
-    console.log("Selected Volunteer:", selectedVolunteer);
-    console.log("Data to insert into Application_Status:", dataToInsert);
-
-    try {
-      const { data: insertedData, error: statusError } = await supabase
-        .from("Application_Status")
-        .insert([dataToInsert])
-        .select();
-
-      console.log("Inserted data result:", insertedData);
-      console.log("Insert error:", statusError);
-
-      if (statusError) {
-        console.error("Error rejecting volunteer:", statusError);
-        alert("Failed to reject application. Please try again.");
-        setShowRejectModal(false);
-        return;
-      }
     const volunteerFullName = selectedVolunteer.firstname && selectedVolunteer.lastname
       ? `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`
       : selectedVolunteer.name || 'Volunteer';
 
-      const { error: deleteError } = await supabase
-        .from("Volunteer_Application")
-        .delete()
-        .eq("application_id", selectedVolunteer.application_id);
+    const { error: deleteError } = await supabase
+      .from("Volunteer_Application")
+      .delete()
+      .eq("application_id", selectedVolunteer.application_id);
 
-      if (deleteError) {
-        console.error("Error deleting volunteer application:", deleteError);
-        alert("Failed to remove application from pending list.");
-        setShowRejectModal(false);
-        return;
-      }
-
-      // Send rejection email
-      try {
-        console.log("🔵 Attempting to send rejection email...");
-        console.log('📝 Volunteer Full Name:', volunteerFullName);
-        console.log("📧 Recipient:", selectedVolunteer.email);
-        console.log("🏢 NGO Name:", ngoName);
-        console.log("📝 Reason:", rejectReason);
-
-        const response = await fetch('/api/send-reject-org', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            recipientEmail: selectedVolunteer.email,
-            volunteerName: `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`,
-            ngoName: ngoName,
-            reason: rejectReason,
-          })
-        });
-
-        console.log("📊 Response status:", response.status);
-        console.log("📊 Response ok:", response.ok);
-
-        if (!response.ok) {
-          console.error('❌ Server responded with error:', response.status);
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          throw new Error(`Server error: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('📬 Email result:', result);
-
-        if (!result.success) {
-          console.error("❌ Email sending failed:", result.error);
-          alert(`Warning: Email not sent. Reason: ${result.error}`);
-        } else {
-          console.log("✅ Rejection email sent successfully to:", selectedVolunteer.email);
-        }
-      } catch (emailError) {
-        console.error("🔴 Error sending rejection email:", emailError);
-        console.error("🔴 Full error:", emailError.message);
-        alert(`Warning: Failed to send rejection email. The application was still rejected in the database.\n\nError: ${emailError.message}`);
-      }
-
-      // Store volunteer name before removing from state
-      setRejectedVolunteerName(`${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`);
-
-      setPendingApplications(pendingApplications.filter((vol) => vol.application_id !== selectedVolunteer.application_id));
+    if (deleteError) {
+      console.error("Error deleting volunteer application:", deleteError);
+      showError("Database Error", "Failed to remove application from pending list.");
       setShowRejectModal(false);
-      setSelectedVolunteer(null);
-      
-      // Show reject success popup
-      setShowRejectSuccessPopup(true);
-    } catch (error) {
-      console.error("Unexpected error during reject process:", error);
-      alert("An unexpected error occurred. Please try again.");
-      setShowRejectModal(false);
+      return;
     }
-  };
+
+    // Send rejection email (don't block success if email fails)
+    try {
+      console.log("Attempting to send rejection email...");
+      console.log('Volunteer Full Name:', volunteerFullName);
+      console.log("Recipient:", selectedVolunteer.email);
+      console.log("NGO Name:", ngoName);
+      console.log("Reason:", rejectReason);
+
+      const response = await fetch('/api/send-reject-org', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: selectedVolunteer.email,
+          volunteerName: `${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`,
+          ngoName: ngoName,
+          reason: rejectReason,
+        })
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
+      if (!response.ok) {
+        console.error('Server responded with error:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Email result:', result);
+
+      if (!result.success) {
+        console.error("Email sending failed:", result.error);
+        console.warn(`Warning: Email not sent. Reason: ${result.error}`);
+      } else {
+        console.log("✅ Rejection email sent successfully to:", selectedVolunteer.email);
+      }
+    } catch (emailError) {
+      console.error("Error sending rejection email:", emailError);
+      console.error("Full error:", emailError.message);
+      console.warn(`Warning: Failed to send rejection email. The application was still rejected in the database.`);
+    }
+
+    // Store volunteer name before removing from state
+    setRejectedVolunteerName(`${selectedVolunteer.firstname} ${selectedVolunteer.lastname}`);
+
+    setPendingApplications(pendingApplications.filter((vol) => vol.application_id !== selectedVolunteer.application_id));
+    setShowRejectModal(false);
+    setSelectedVolunteer(null);
+    
+    // Show reject success popup - THIS SHOULD ALWAYS RUN
+    setShowRejectSuccessPopup(true);
+    
+  } catch (error) {
+    console.error("Unexpected error during reject process:", error);
+    showError("Unexpected Error", "An unexpected error occurred. Please try again.");
+    setShowRejectModal(false);
+  }
+};
 
   // Cancel accept
   const handleCancelAccept = () => {
@@ -372,13 +400,14 @@ useEffect(() => {
 
   // Handle backdrop click
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      if (showAcceptModal) handleCancelAccept();
-      if (showRejectModal) handleCancelReject();
-      if (showSuccessPopup) handleCloseSuccessPopup();
-      if (showRejectSuccessPopup) handleCloseRejectSuccessPopup();
-    }
-  };
+  if (e.target === e.currentTarget) {
+    if (showAcceptModal) handleCancelAccept();
+    if (showRejectModal) handleCancelReject();
+    if (showSuccessPopup) handleCloseSuccessPopup();
+    if (showRejectSuccessPopup) handleCloseRejectSuccessPopup();
+    if (showErrorPopup) handleCloseErrorPopup();
+  }
+};
 
   // Check if current path matches the button
   const isActive = (path) => location.pathname === path;
@@ -549,6 +578,58 @@ useEffect(() => {
           )}
         </div>
       </main>
+      
+      {/* Error Popup Modal */}
+{showErrorPopup && (
+  <div 
+    className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+    onClick={handleBackdropClick}
+    style={{ 
+      zIndex: 99999999,
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: '100vh'
+    }}
+  >
+    <div 
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      style={{ zIndex: 99999998 }}
+    ></div>
+
+    <div 
+      className="relative bg-white rounded-lg shadow-2xl border-2 border-red-700 p-8 max-w-md w-full mx-4 transform animate-scaleIn"
+      style={{ 
+        zIndex: 100000000,
+        position: 'relative'
+      }}
+    >
+      <div className="text-center mb-6">
+        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <h3 className="text-2xl font-bold text-red-700 mb-2">{errorTitle}</h3>
+
+        </div>
+        <p className="text-lg text-gray-700 whitespace-pre-line">{errorMessage}</p>
+      </div>
+
+      <div className="bg-red-100 border border-red-700 rounded-lg p-4 mb-6">
+        <p className="text-red-700 text-sm text-center">
+          Please try again or contact support if the problem persists.
+        </p>
+      </div>
+
+      <button
+        onClick={handleCloseErrorPopup}
+        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-orange-700 transition-colors cursor-pointer"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
 
       {/* Accept Confirmation Modal */}
       {showAcceptModal && selectedVolunteer && (
@@ -579,7 +660,7 @@ useEffect(() => {
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
                 <h3 className="text-2xl font-bold text-emerald-900 mb-2">Application</h3>
               </div>
               <p className="text-lg text-gray-700">
@@ -656,7 +737,7 @@ useEffect(() => {
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
                 <h3 className="text-2xl font-bold text-red-700">Reject</h3>
               </div>
               <p className="text-lg text-gray-700">
@@ -707,13 +788,21 @@ useEffect(() => {
               >
                 Cancel
               </button>
-              <button
-                onClick={handleConfirmReject}
-                disabled={!rejectReason.trim()}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-red-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Reject
-              </button>
+             <button
+  onClick={() => {
+    if (!rejectReason.trim()) {
+      setShowRejectModal(false);
+      setTimeout(() => {
+        showError("Required", "Please provide a reason for rejection before proceeding.");
+      }, 100);
+    } else {
+      handleConfirmReject();
+    }
+  }}
+  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-red-800 transition-colors cursor-pointer"
+>
+  Reject
+</button>
             </div>
           </div>
         </div>
@@ -748,7 +837,7 @@ useEffect(() => {
             }}
           >
             <div className="text-center mb-6">
-              <div className="mx-auto w-30 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
                 <h3 className="text-3xl font-bold text-emerald-900 mb-2"> Accepted!</h3>
               </div>
               <p className="text-lg text-gray-700">

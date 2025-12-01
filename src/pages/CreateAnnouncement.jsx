@@ -360,7 +360,7 @@ function CreateAnnouncement() {
           >
             {/* Title */}
             <div className="mb-6">
-              <label className="block mb-2 font-semibold text-lg text-green-900">Title</label>
+              <label className="block mb-2 font-semibold text-lg text-green-900">Title <span className="text-red-600">*</span> </label>
               <input
                 type="text"
                 placeholder="Enter announcement title"
@@ -375,7 +375,7 @@ function CreateAnnouncement() {
   {/* Post Date & Time */}
   <div className="flex-1 min-w-[250px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
-      Post Date & Time
+      Post Date & Time <span className="text-red-600">*</span>
     </label>
     <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={DatesIcon} alt="Post Date" className="w-5 h-5 mr-2 opacity-70" />
@@ -396,7 +396,7 @@ function CreateAnnouncement() {
   {/* Priority Type */}
   <div className="flex-1 min-w-[200px]">
     <label className="block mb-2 font-semibold text-lg text-green-900">
-      Priority Type
+      Priority Type <span className="text-red-600">*</span>
     </label>
     <div className="flex items-center border border-green-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
       <img src={PriorityIcon} alt="Priority" className="w-5 h-5 mr-2 opacity-70" />
@@ -416,7 +416,7 @@ function CreateAnnouncement() {
 
             {/* Announcement Type */}
   <div className="flex-1 min-w-[250px]">
-              <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type</label>
+              <label className="block mb-2 font-semibold text-lg text-green-900">Announcement Type <span className="text-red-600">*</span></label>
     <div className="flex items-center mb-2 border bg-white border-green-300 rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <img src={EventIcon} alt="Announcement Type" className="w-5 h-5 mr-2" />
                 <select
@@ -439,7 +439,7 @@ function CreateAnnouncement() {
             {/* Event Selection - Only show when "Event" is selected */}
             {announcementType === "Event" && (
               <div className="mb-4">
-                <label className="block mb-2 font-semibold text-lg text-green-900">Select Event</label>
+                <label className="block mb-2 font-semibold text-lg text-green-900">Select Event <span className="text-red-600">*</span></label>
                 <div className="flex items-center border bg-white border-green-300 rounded px-3">
                   <img src={EventIcon} alt="Event" className="w-5 h-5 mr-2" />
                   <select
@@ -447,7 +447,7 @@ function CreateAnnouncement() {
                     onChange={(e) => setSelectedEvent(e.target.value)}
                     className="w-full p-2 border-none focus:outline-none cursor-pointer"
                   >
-                    <option value="">Select event</option>
+                    <option value="">Select event </option>
                     {events.map((event) => (
                       <option key={event.event_id} value={event.event_id}>
                         {event.event_id} - {formatEventOption(event)}
@@ -460,7 +460,7 @@ function CreateAnnouncement() {
 
             {/* Message */}
             <div className="mb-4">
-              <label className="block mb-2 font-semibold text-lg text-green-900">Message</label>
+              <label className="block mb-2 font-semibold text-lg text-green-900">Message <span className="text-red-600">*</span></label>
               <textarea
                 placeholder="Enter your announcement message"
                 value={message}

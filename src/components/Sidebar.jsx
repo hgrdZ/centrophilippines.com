@@ -148,7 +148,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
                 <img
                   src={ngoLogo}
                   alt="Organization Logo"
-                  className="w-full h-full object-contain p-2"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full text-gray-400 font-montserrat font-semibold">

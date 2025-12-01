@@ -661,7 +661,7 @@ function CreateEvent() {
       {/* Event Title */}
       <div className="mb-4">
         <label className="block font-semibold text-lg text-emerald-800 mb-1">
-          Event Title
+          Event Title <span className="text-red-600">*</span>
         </label>
         <input
           type="text"
@@ -676,7 +676,7 @@ function CreateEvent() {
       <div className="w-full flex flex-wrap gap-6 mb-6">
         <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Date
+            Date  <span className="text-red-600">*</span>
           </label>
           <div className="flex items-center border bg-white border-gray-300 rounded px-4 py-2">
             <img src={DateIcon} alt="Date" className="w-5 h-5 mr-2" />
@@ -692,7 +692,7 @@ function CreateEvent() {
 
         <div className="flex-1 min-w-[200px]">
           <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Time
+            Time <span className="text-red-600">*</span>
           </label>
     <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
@@ -727,7 +727,7 @@ function CreateEvent() {
       {/* Location with Google Maps Autocomplete */}
       <div className="mb-4">
         <label className="block font-semibold text-lg text-green-800 mb-1">
-          Location
+          Location <span className="text-red-600">*</span>
         </label>
         <input
           ref={locationInputRef}
@@ -750,7 +750,7 @@ function CreateEvent() {
       {/* Event Description */}
       <div className="mb-4">
         <label className="block mb-2 font-semibold text-lg text-emerald-900">
-          Event Description
+          Event Description <span className="text-red-600">*</span>
         </label>
         <textarea
           placeholder="Enter Event Description"
@@ -764,7 +764,7 @@ function CreateEvent() {
       {/* Event Objectives */}
       <div className="mb-4">
         <label className="block font-semibold text-lg text-emerald-800 mb-1">
-          Event Objectives
+          Event Objectives <span className="text-red-600">*</span>
         </label>
         <textarea
           placeholder="Enter Objectives (separate each objective with a dash '-')"
@@ -782,7 +782,7 @@ function CreateEvent() {
       <div className="w-full flex flex-wrap gap-6 mb-3">
         <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Volunteers Limit
+            Volunteers Limit <span className="text-red-600">*</span>
           </label>
           <input
             type="number"
@@ -796,7 +796,7 @@ function CreateEvent() {
 
   <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-emerald-800 mb-2">
-            Call Time
+            Call Time <span className="text-red-600">*</span>
           </label>
           <div className="flex items-center border bg-white border-gray-300 rounded px-4 py-2">
             <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
@@ -805,7 +805,7 @@ function CreateEvent() {
               onChange={(e) => setCallTime(e.target.value)}
               className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
             >
-              <option value="">Select Call Time</option>
+              <option value="">Select Time</option>
               {timeOptions.map((time) => (
                 <option key={`call-${time.value}`} value={time.value}>
                   {time.label}
@@ -819,7 +819,7 @@ function CreateEvent() {
       {/* Event Tasks */}
       <div className="mb-4">
         <label className="block font-semibold text-lg text-emerald-800 mb-1">
-          Event Tasks (What to Expect)
+          Event Tasks (What to Expect) <span className="text-red-600">*</span>
         </label>
         <textarea
           placeholder="Enter what volunteers can expect (separate each task with a dash '-')"
@@ -836,7 +836,7 @@ function CreateEvent() {
       {/* Volunteer Guidelines */}
       <div className="mb-4">
         <label className="block font-semibold text-lg text-emerald-800 mb-1">
-          Volunteer Guidelines
+          Volunteer Guidelines <span className="text-red-600">*</span>
         </label>
         <textarea
           placeholder="Enter volunteer guidelines (separate each guideline with a dash '-')"
@@ -854,7 +854,7 @@ function CreateEvent() {
       <div className="w-full flex flex-wrap gap-6 mb-3">
         <div className="flex-1 min-w-[250px]">
           <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Upload Event Poster/Image
+            Upload Event Poster/Image <span className="text-red-600">*</span>
           </label>
     <div className="flex items-center border bg-white border-gray-300 rounded px-3">
             <img src={FileIcon} alt="Upload" className="w-5 h-5 mr-2" />
@@ -902,7 +902,7 @@ function CreateEvent() {
 
   <div className="flex-1 min-w-[300px]">
           <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Volunteer Opportunities
+            Volunteer Opportunities <span className="text-red-600">*</span>
           </label>
     <div className="border bg-white border-gray-300 rounded p-3 flex-1">
             <div className="flex items-center mb-2">
@@ -992,7 +992,7 @@ function CreateEvent() {
           <div key={task.id} className="bg-white rounded-lg border border-emerald-300 p-4">
             <div className="mb-3">
               <label className="block font-semibold text-lg text-emerald-800 mb-2">
-                Task {index + 1}
+                Task {index + 1} <span className="text-red-600">*</span>
               </label>
               <textarea
                 placeholder="Enter task description..."

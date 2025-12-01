@@ -161,9 +161,14 @@ const VolunteersPage = () => {
     if (!selectedVolunteer) return;
 
     if (!removalReason.trim()) {
-      alert("Please provide a reason for removal.");
-      return;
-    }
+  setShowConfirmModal(false);
+  setTimeout(() => {
+    setResultMessage("Please provide a reason for removal before proceeding.");
+    setResultType("error");
+    setShowResultModal(true);
+  }, 100);
+  return;
+}
 
     setIsSendingEmail(true);
 
@@ -361,9 +366,9 @@ const VolunteersPage = () => {
     if (resultType === "success") {
       return { title: "Success", color: "text-green-700", border: "border-green-700" };
     } else if (resultType === "warning") {
-      return { title: "Warning", color: "text-yellow-700", border: "border-yellow-700" };
+      return { title: "Warning", color: "text-red-700", border: "border-red-700" };
     } else {
-      return { title: "Error", color: "text-red-700", border: "border-red-700" };
+      return { title: "Required", color: "text-red-700", border: "border-red-700" };
     }
   };
 
@@ -586,118 +591,169 @@ const VolunteersPage = () => {
       </main>
 
       {showConfirmModal && selectedVolunteer && (
-        <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
-          onClick={handleBackdropClick}
-          style={{ zIndex: 99999999 }}
-        >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-          <div
-            className="relative bg-white rounded-lg shadow-2xl border-2 border-red-700 p-8 max-w-md w-full mx-4 transform animate-scaleIn"
-            style={{ zIndex: 100000000 }}
-          >
-            <div className="text-center mb-6">
-              <h3 className="text-3xl font-bold text-red-700 font-montserrat mb-2">
-                Remove
-              </h3>
-              <p className="text-lg text-gray-700 font-montserrat">
-                Are you sure you want to remove <br />
-                <span className="font-bold text-emerald-900">
-                  {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-                </span>{" "}
-                from your organization?
-              </p>
-            </div>
+  <div
+    className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+    onClick={handleBackdropClick}
+    style={{ 
+      zIndex: 99999999,
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: '100vh'
+    }}
+  >
+    <div 
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      style={{ zIndex: 99999998 }}
+    ></div>
 
-            <div className="bg-emerald-50 rounded-lg p-4 mb-4 border border-red-700">
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedVolunteer.profile_picture || "images/placeholder.jpg"}
-                  alt={selectedVolunteer.firstname}
-                  className="w-12 h-12 object-cover rounded-full border-2 border-emerald-900"
-                />
-                <div>
-                  <p className="font-bold text-emerald-900 font-montserrat text-lg">
-                    {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-                  </p>
-                  <p className="text-emerald-700 font-montserrat text-sm">
-                    {selectedVolunteer.email}
-                  </p>
-                </div>
-              </div>
-            </div>
+    <div
+      className="relative bg-white rounded-lg shadow-2xl border-2 border-red-700 p-8 max-w-md w-full mx-4 transform animate-scaleIn"
+      style={{ 
+        zIndex: 100000000,
+        position: 'relative'
+      }}
+    >
+      <div className="text-center mb-6">
+        <div className="mx-auto w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+          <h3 className="text-2xl font-bold text-red-700">Remove</h3>
+        </div>
+        <p className="text-base text-gray-700">
+          Are you sure you want to remove <br />
+          <span className="font-bold text-emerald-900">
+            {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+          </span>{" "}
+          from your organization?
+        </p>
+      </div>
 
-            <div className="mb-4">
-              <label className="block text-emerald-900 font-bold font-montserrat mb-2 text-lg">
-                Reason for Removal: <span className="text-red-700">*</span>
-              </label>
-              <textarea
-                value={removalReason}
-                onChange={(e) => setRemovalReason(e.target.value)}
-                placeholder="Please provide a reason for removing this volunteer..."
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-montserrat text-gray-700 focus:outline-none focus:border-emerald-700 resize-none"
-                rows="4"
-                disabled={isSendingEmail}
-              />
-            </div>
-
-            <div className="bg-red-50 border border-red-700 rounded-lg p-4 mb-6">
-              <p className="text-red-700 font-montserrat text-sm">
-                <span className="font-bold">Warning:</span> The volunteer will receive an email notification with your reason.
-              </p>
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={handleCancelRemove}
-                disabled={isSendingEmail}
-                className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-montserrat font-bold py-3 px-6 rounded-lg border-2 border-gray-400 transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmRemove}
-                disabled={isSendingEmail}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-red-800 transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                {isSendingEmail ? "Removing..." : "Remove"}
-              </button>
-            </div>
+      <div className="bg-emerald-50 rounded-lg p-4 mb-4 border border-emerald-200">
+        <div className="flex items-center gap-3">
+          <img
+            src={selectedVolunteer.profile_picture || "images/placeholder.jpg"}
+            alt={selectedVolunteer.firstname}
+            className="w-12 h-12 object-cover rounded-full border-2 border-emerald-900"
+          />
+          <div>
+            <p className="font-bold text-emerald-900 text-lg">
+              {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+            </p>
+            <p className="text-emerald-700 text-sm">
+              {selectedVolunteer.email}
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
-      {showResultModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
-          onClick={(e) => e.target === e.currentTarget && handleCloseResultModal()}
-          style={{ zIndex: 99999999 }}
+      <div className="mb-6">
+              <label className="block text-emerald-900 font-bold mb-2 text-base">
+          Reason for Removal <span className="text-red-600">*</span>
+        </label>
+        <textarea
+          value={removalReason}
+          onChange={(e) => setRemovalReason(e.target.value)}
+          placeholder="Please provide a reason for removing this volunteer..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+          rows="4"
+          disabled={isSendingEmail}
+        />
+      </div>
+
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <p className="text-red-700 text-sm">
+          <span className="font-bold">Warning:</span> This action cannot be undone. The volunteer will be notified via email with the reason you provided.
+        </p>
+      </div>
+
+      <div className="flex gap-4">
+        <button
+          onClick={handleCancelRemove}
+          disabled={isSendingEmail}
+          className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg border-2 border-gray-400 transition-colors disabled:opacity-50 cursor-pointer"
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-          <div
-            className={`relative bg-white rounded-lg shadow-2xl border-2 p-8 max-w-md w-full mx-4 transform animate-scaleIn ${getResultTitleAndColor().border}`}
-            style={{ zIndex: 100000000 }}
-          >
-            {getResultIcon()}
-            
-            <div className="text-center mb-6">
-              <h3 className={`text-3xl font-bold font-montserrat mb-2 ${getResultTitleAndColor().color}`}>
-                {getResultTitleAndColor().title}
-              </h3>
-              <p className="text-lg text-gray-700 font-montserrat">
-                {resultMessage}
-              </p>
-            </div>
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            if (!removalReason.trim()) {
+              setShowConfirmModal(false);
+              setTimeout(() => {
+                setResultMessage("Please provide a reason for removal before proceeding.");
+                setResultType("error");
+                setShowResultModal(true);
+              }, 100);
+            } else {
+              handleConfirmRemove();
+            }
+          }}
+          disabled={isSendingEmail}
+          className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-red-800 transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          {isSendingEmail ? "Removing..." : "Remove"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+     {showResultModal && (
+  <div
+    className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+    onClick={(e) => e.target === e.currentTarget && handleCloseResultModal()}
+    style={{ 
+      zIndex: 99999999,
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: '100vh'
+    }}
+  >
+    <div 
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      style={{ zIndex: 99999998 }}
+    ></div>
 
-            <button
-              onClick={handleCloseResultModal}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-emerald-800 transition-colors"
-            >
-              Close
-            </button>
-          </div>
+    <div
+      className={`relative bg-white rounded-lg shadow-2xl border-2 p-8 max-w-md w-full mx-4 transform animate-scaleIn ${getResultTitleAndColor().border}`}
+      style={{ 
+        zIndex: 100000000,
+        position: 'relative'
+      }}
+    >
+      <div className="text-center mb-6">
+        <div className={`mx-auto w-20 h-20 ${
+          resultType === "success" ? "bg-green-100" : 
+          resultType === "warning" ? "bg-red-100" : 
+          "bg-red-100"
+        } p-8 w-full max-w-md rounded-xl flex items-center justify-center mb-4`}>
+          <h3 className={`text-2xl font-bold font-montserrat ${getResultTitleAndColor().color}`}>
+            {getResultTitleAndColor().title}
+          </h3>
         </div>
-      )}
+        <p className="text-lg text-gray-700 whitespace-pre-line">
+          {resultMessage}
+        </p>
+      </div>
+      <div className="bg-red-100 border border-red-700 rounded-lg p-4 mb-6">
+        <p className="text-red-700 text-sm text-center">
+          Please try again or contact support if the problem persists.
+        </p>
+      </div>
+
+      <button
+        onClick={handleCloseResultModal}
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-emerald-800 transition-colors cursor-pointer"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
 
       <style jsx>{`
         @keyframes fadeIn {

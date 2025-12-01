@@ -980,6 +980,9 @@
   .border-white {
     border-color: var(--color-white);
   }
+   .border-red-200 {
+    border-color: var(--color-red-200);
+  }
   .border-red-300 {
     border-color: var(--color-red-300);
   }
@@ -1097,6 +1100,12 @@
   .bg-lime-500 {
     background-color: var(--color-lime-500);
   }
+   .bg-orange-100 {
+    background-color: var(--color-orange-100);
+  }
+  .bg-orange-200 {
+    background-color: var(--color-orange-200);
+  }
   .bg-orange-400 {
     background-color: var(--color-orange-400);
   }
@@ -1114,6 +1123,9 @@
   }
   .bg-purple-500 {
     background-color: var(--color-purple-500);
+  }
+  .bg-red-50 {
+    background-color: var(--color-red-50);
   }
   .bg-red-100 {
     background-color: var(--color-red-100);

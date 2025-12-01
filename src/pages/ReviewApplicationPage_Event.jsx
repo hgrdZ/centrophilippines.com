@@ -534,7 +534,7 @@ export default function ReviewApplicationEventPage() {
                         <button
                           onClick={() => setShowCentroConfirm(true)}
                           disabled={isNavigating}
-                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center text-lg"
+                          className="w-full bg-orange-400 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 cursor-pointer disabled:cursor-not-allowed transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center text-lg"
                         >
                           Review
                         </button>
@@ -569,8 +569,8 @@ export default function ReviewApplicationEventPage() {
 
           <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 transform transition-all scale-100 border-2 border-orange-400 z-50">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center">
-                <h2 className="text-2xl font-bold text-black mb-2">
+              <div className="w-16 h-16 rounded-full bg-orange-400 w-full max-w-md flex items-center justify-center">
+                <h2 className="text-2xl font-bold text-white mb-2">
                 Review
               </h2>
               </div>

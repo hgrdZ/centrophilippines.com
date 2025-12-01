@@ -19,6 +19,9 @@ function ReviewAiScheduling() {
   const [adjustedVolunteerType, setAdjustedVolunteerType] = useState("");
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorTitle, setErrorTitle] = useState("");
   const [showSuccessApprove, setShowSuccessApprove] = useState(false);
   const [showSuccessReject, setShowSuccessReject] = useState(false);
   const [showSuccessAdjust, setShowSuccessAdjust] = useState(false);
@@ -41,7 +44,6 @@ function ReviewAiScheduling() {
           location.state;
 
         if (!selectedEvent?.event_id) {
-          console.warn("⚠️ Missing event_id in selectedEvent:", selectedEvent);
           navigate("/review-application-event");
           return;
         }
@@ -58,16 +60,11 @@ function ReviewAiScheduling() {
           .maybeSingle();
 
         if (eventError) {
-          console.error("Error fetching full event data:", eventError);
           generateAiSuggestions(selectedVolunteer, selectedEvent);
         } else if (fullEventData) {
           setEventDetails(fullEventData);
           generateAiSuggestions(selectedVolunteer, fullEventData);
         } else {
-          console.warn(
-            "⚠️ Event not found in Event_Information:",
-            selectedEvent.event_id
-          );
         }
       } else {
         navigate("/review-application-event");
@@ -97,13 +94,11 @@ function ReviewAiScheduling() {
         .eq("status", "ONGOING");
 
       if (error) {
-        console.error("Error fetching accepted volunteers count:", error);
         setAcceptedVolunteersCount(0);
         return;
       }
       setAcceptedVolunteersCount(data.length);
     } catch (error) {
-      console.error("Error in fetchAcceptedVolunteersCount:", error);
       setAcceptedVolunteersCount(0);
     }
   };
@@ -119,7 +114,6 @@ function ReviewAiScheduling() {
         .eq("status", "PENDING");
 
       if (error) {
-        console.error("Error fetching event volunteers:", error);
         return;
       }
 
@@ -134,7 +128,6 @@ function ReviewAiScheduling() {
             .maybeSingle();
 
           if (userError) {
-            console.error("Error fetching volunteer details:", userError);
             return null;
           }
 
@@ -156,7 +149,6 @@ function ReviewAiScheduling() {
       );
       setCurrentVolunteerIndex(currentIndex >= 0 ? currentIndex : 0);
     } catch (error) {
-      console.error("Error in fetchEventVolunteers:", error);
     }
   };
 
@@ -231,7 +223,6 @@ function ReviewAiScheduling() {
         const suggestions = JSON.parse(cleanedText);
         setAiSuggestions(suggestions);
       } catch (parseError) {
-        console.error("Error parsing AI response:", parseError);
         const fallbackSuggestions = createStrictFallbackSuggestions(
           volunteerData,
           eventData
@@ -239,7 +230,6 @@ function ReviewAiScheduling() {
         setAiSuggestions(fallbackSuggestions);
       }
     } catch (error) {
-      console.error("Error generating AI suggestions:", error);
       const fallbackSuggestions = createStrictFallbackSuggestions(
         volunteerData,
         eventData
@@ -484,7 +474,6 @@ function ReviewAiScheduling() {
     reason
   ) => {
     try {
-      console.log("📧 Sending rejection email to:", volunteerEmail);
       const response = await fetch(`/api/send-reject-event`, {
         method: "POST",
         headers: {
@@ -500,15 +489,12 @@ function ReviewAiScheduling() {
       });
 
       if (!response.ok) {
-        console.error("Server responded with error:", response.status);
         return false;
       }
 
       const result = await response.json();
-      console.log("✓ Email sent successfully:", result);
       return result.success;
     } catch (error) {
-      console.error("✗ Error sending email:", error);
       return false;
     }
   };
@@ -553,88 +539,83 @@ function ReviewAiScheduling() {
   };
 
   const handleConfirmApprove = async () => {
-    try {
-      const { error: updateError } = await supabase
-        .from("Event_User")
-        .update({ status: "ONGOING" })
-        .eq("user_id", volunteer.user_id)
-        .eq("event_id", eventDetails.event_id)
-        .eq("status", "PENDING");
+  try {
+    const { error: updateError } = await supabase
+      .from("Event_User")
+      .update({ status: "ONGOING" })
+      .eq("user_id", volunteer.user_id)
+      .eq("event_id", eventDetails.event_id)
+      .eq("status", "PENDING");
 
-      if (updateError) {
-        console.error("Error updating volunteer status:", updateError);
-        alert("Failed to update status. Please try again.");
-        return;
-      }
-
-      setShowApproveModal(false);
-      setShowSuccessApprove(true);
-      setAcceptedVolunteersCount((prev) => prev + 1);
-      setProcessedVolunteer(volunteer);
-
-      const updatedVolunteers = allVolunteers.filter(
-        (v) => v.user_id !== volunteer.user_id
-      );
-      setAllVolunteers(updatedVolunteers);
-
-      if (updatedVolunteers.length > 0) {
-        const nextIndex =
-          currentVolunteerIndex >= updatedVolunteers.length
-            ? 0
-            : currentVolunteerIndex;
-        const nextVolunteer = updatedVolunteers[nextIndex];
-        setVolunteer(nextVolunteer);
-        setCurrentVolunteerIndex(nextIndex);
-        generateAiSuggestions(nextVolunteer, eventDetails);
-      }
-    } catch (error) {
-      console.error("Unexpected error during approval:", error);
-      alert("An unexpected error occurred. Please try again.");
-    }
-  };
-
-  const handleConfirmReject = async () => {
-    if (!rejectionReason.trim()) {
-      alert("Please provide a reason for rejection.");
+    if (updateError) {
+      showError("Database Error", "Failed to update status. Please try again.");
       return;
     }
 
+    setShowApproveModal(false);
+    setShowSuccessApprove(true);
+    setAcceptedVolunteersCount((prev) => prev + 1);
+    setProcessedVolunteer(volunteer);
+
+    const updatedVolunteers = allVolunteers.filter(
+      (v) => v.user_id !== volunteer.user_id
+    );
+    setAllVolunteers(updatedVolunteers);
+
+    if (updatedVolunteers.length > 0) {
+      const nextIndex = currentVolunteerIndex >= updatedVolunteers.length ? 0 : currentVolunteerIndex;
+      const nextVolunteer = updatedVolunteers[nextIndex];
+      setVolunteer(nextVolunteer);
+      setCurrentVolunteerIndex(nextIndex);
+      generateAiSuggestions(nextVolunteer, eventDetails);
+    }
+  } catch (error) {
+    showError("Unexpected Error", "An unexpected error occurred. Please try again.");
+  }
+};
+
+  const handleConfirmReject = async () => {
+    if (!rejectionReason.trim()) {
+    setShowRejectModal(false);
+    setTimeout(() => {
+      showError("Required", "Please provide a reason for rejection before proceeding.");
+    }, 100);
+    return;
+  }
+
     setIsSendingEmail(true);
 
-    try {
-      const adminData = JSON.parse(localStorage.getItem("admin"));
-      if (!adminData) {
-        alert("Admin data not found. Please log in again.");
-        setIsSendingEmail(false);
-        return;
-      }
+  try {
+    const adminData = JSON.parse(localStorage.getItem("admin"));
+    if (!adminData) {
+      showError("Authentication Error", "Admin data not found. Please log in again.");
+      setIsSendingEmail(false);
+      return;
+    }
 
-      const { data: ngoData, error: ngoError } = await supabase
-        .from("NGO_Information")
-        .select("name")
-        .eq("admin_id", adminData.NGO_Information.admin_id)
-        .maybeSingle();
+    const { data: ngoData, error: ngoError } = await supabase
+      .from("NGO_Information")
+      .select("name")
+      .eq("admin_id", adminData.NGO_Information.admin_id)
+      .maybeSingle();
 
-      const ngoName =
-        ngoData?.name ||
-        adminData.NGO_Information.name ||
-        "Centro Organization";
+          const ngoName = ngoData?.name || adminData.NGO_Information.name || "Centro Organization";
 
-      const { error: updateError } = await supabase
-        .from("Event_User")
-        .update({ status: "REJECTED" })
-        .eq("user_id", volunteer.user_id)
-        .eq("event_id", eventDetails.event_id)
-        .eq("status", "PENDING");
+    const { error: updateError } = await supabase
+      .from("Event_User")
+      .update({ status: "REJECTED" })
+      .eq("user_id", volunteer.user_id)
+      .eq("event_id", eventDetails.event_id)
+      .eq("status", "PENDING");
 
-      if (updateError) {
-        console.error("Error updating volunteer status:", updateError);
-        alert("Failed to update status. Please try again.");
-        setIsSendingEmail(false);
-        return;
-      }
+    if (updateError) {
+      showError("Database Error", "Failed to update status. Please try again.");
+      setIsSendingEmail(false);
+      return;
+    }
 
-      const volunteerFullName = `${volunteer.firstname} ${volunteer.lastname}`;
+    const volunteerFullName = `${volunteer.firstname} ${volunteer.lastname}`;
+ try {
       await sendRejectionEmail(
         volunteer.email,
         volunteerFullName,
@@ -642,33 +623,31 @@ function ReviewAiScheduling() {
         ngoName,
         rejectionReason
       );
-
-      setShowRejectModal(false);
-      setIsSendingEmail(false);
-      setShowSuccessReject(true);
-      setProcessedVolunteer(volunteer);
-
-      const updatedVolunteers = allVolunteers.filter(
-        (v) => v.user_id !== volunteer.user_id
-      );
-      setAllVolunteers(updatedVolunteers);
-
-      if (updatedVolunteers.length > 0) {
-        const nextIndex =
-          currentVolunteerIndex >= updatedVolunteers.length
-            ? 0
-            : currentVolunteerIndex;
-        const nextVolunteer = updatedVolunteers[nextIndex];
-        setVolunteer(nextVolunteer);
-        setCurrentVolunteerIndex(nextIndex);
-        generateAiSuggestions(nextVolunteer, eventDetails);
-      }
-    } catch (error) {
-      console.error("Unexpected error during rejection:", error);
-      alert("An unexpected error occurred. Please try again.");
-      setIsSendingEmail(false);
+    } catch (emailError) {
     }
-  };
+    setShowRejectModal(false);
+    setIsSendingEmail(false);
+    setShowSuccessReject(true);
+    setProcessedVolunteer(volunteer);
+
+    const updatedVolunteers = allVolunteers.filter(
+      (v) => v.user_id !== volunteer.user_id
+    );
+    setAllVolunteers(updatedVolunteers);
+
+    if (updatedVolunteers.length > 0) {
+      const nextIndex = currentVolunteerIndex >= updatedVolunteers.length ? 0 : currentVolunteerIndex;
+      const nextVolunteer = updatedVolunteers[nextIndex];
+      setVolunteer(nextVolunteer);
+      setCurrentVolunteerIndex(nextIndex);
+      generateAiSuggestions(nextVolunteer, eventDetails);
+    }
+  } catch (error) {
+    showError("Unexpected Error", "An unexpected error occurred. Please try again.");
+    setIsSendingEmail(false);
+  }
+};
+
 
   const handleAdjustSchedule = () => {
     setShowAdjustConfirmModal(true);
@@ -698,56 +677,63 @@ function ReviewAiScheduling() {
   };
 
   const handleApproveAdjusted = async () => {
-    try {
-      const { error: updateError } = await supabase
-        .from("Event_User")
-        .update({
-          status: "ONGOING",
-          adjusted_time_slot: adjustedTimeSlot,
-          adjusted_duration: adjustedDuration,
-          adjusted_volunteer_type: adjustedVolunteerType,
-          adjustment_notes: `Schedule adjusted: ${adjustedTimeSlot} for ${adjustedDuration} as ${adjustedVolunteerType}`,
-        })
-        .eq("user_id", volunteer.user_id)
-        .eq("event_id", eventDetails.event_id)
-        .eq("status", "PENDING");
+  try {
+    const { error: updateError } = await supabase
+      .from("Event_User")
+      .update({
+        status: "ONGOING",
+        adjusted_time_slot: adjustedTimeSlot,
+        adjusted_duration: adjustedDuration,
+        adjusted_volunteer_type: adjustedVolunteerType,
+        adjustment_notes: `Schedule adjusted: ${adjustedTimeSlot} for ${adjustedDuration} as ${adjustedVolunteerType}`,
+      })
+      .eq("user_id", volunteer.user_id)
+      .eq("event_id", eventDetails.event_id)
+      .eq("status", "PENDING");
 
-      if (updateError) {
-        console.error("Error updating volunteer status:", updateError);
-        alert("Failed to update status. Please try again.");
-        return;
-      }
-
-      handleCloseAdjustModal();
-      setShowSuccessAdjust(true);
-      setAcceptedVolunteersCount((prev) => prev + 1);
-
-      const updatedVolunteers = allVolunteers.filter(
-        (v) => v.user_id !== volunteer.user_id
-      );
-      setAllVolunteers(updatedVolunteers);
-
-      if (updatedVolunteers.length > 0) {
-        const nextIndex =
-          currentVolunteerIndex >= updatedVolunteers.length
-            ? 0
-            : currentVolunteerIndex;
-        const nextVolunteer = updatedVolunteers[nextIndex];
-        setVolunteer(nextVolunteer);
-        setCurrentVolunteerIndex(nextIndex);
-        generateAiSuggestions(nextVolunteer, eventDetails);
-      }
-    } catch (error) {
-      console.error("Unexpected error during approval:", error);
-      alert("An unexpected error occurred. Please try again.");
+    if (updateError) {
+      showError("Update Error", "Failed to update status. Please try again.");
+      return;
     }
-  };
+
+    handleCloseAdjustModal();
+    setShowSuccessAdjust(true);
+    setAcceptedVolunteersCount((prev) => prev + 1);
+
+    const updatedVolunteers = allVolunteers.filter(
+      (v) => v.user_id !== volunteer.user_id
+    );
+    setAllVolunteers(updatedVolunteers);
+
+    if (updatedVolunteers.length > 0) {
+      const nextIndex = currentVolunteerIndex >= updatedVolunteers.length ? 0 : currentVolunteerIndex;
+      const nextVolunteer = updatedVolunteers[nextIndex];
+      setVolunteer(nextVolunteer);
+      setCurrentVolunteerIndex(nextIndex);
+      generateAiSuggestions(nextVolunteer, eventDetails);
+    }
+  } catch (error) {
+    showError("Unexpected Error", "An unexpected error occurred. Please try again.");
+  }
+};
 
   const handleRejectAdjusted = async () => {
     setRejectionReason("");
     handleCloseAdjustModal();
     setShowRejectModal(true);
   };
+  
+  const showError = (title, message) => {
+  setErrorTitle(title);
+  setErrorMessage(message);
+  setShowErrorPopup(true);
+};
+
+const handleCloseErrorPopup = () => {
+  setShowErrorPopup(false);
+  setErrorMessage("");
+  setErrorTitle("");
+};
 
   if (!volunteer || !eventDetails) {
     return (
@@ -1135,21 +1121,21 @@ function ReviewAiScheduling() {
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-orange-500 p-6 max-w-md w-full mx-4">
             <div className="text-center mb-4">
-              <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
-                <h3 className="text-xl font-bold text-orange-900">
+              <div className="flex items-center bg-orange-400 justify-center gap-3 rounded-lg px-4 py-2 mb-3">
+                <h3 className="text-xl font-bold text-white">
                   Adjust
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">
-                Do you want to customize the deployment schedule for <br />
+                Do you want to customize the deployment schedule for
                 <span className="font-bold text-orange-900">
-                  {volunteer?.firstname} {volunteer?.lastname}
+                   {" "} {volunteer?.firstname} {volunteer?.lastname}
                 </span>
                 ?
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 mb-4 border border-orange-500">
+            <div className="bg-emerald-50 rounded-lg p-4 mb-4 border border-emerald-500">
               <div className="flex items-center gap-3">
                 <img
                   src={
@@ -1190,7 +1176,7 @@ function ReviewAiScheduling() {
             <div className="flex gap-3">
               <button
                 onClick={handleCloseAdjustConfirmModal}
-                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 cursor-pointer"
+                className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 cursor-pointer"
               >
                 Cancel
               </button>
@@ -1204,14 +1190,43 @@ function ReviewAiScheduling() {
           </div>
         </div>
       )}
+      {showErrorPopup && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
+    onClick={(e) => e.target === e.currentTarget && handleCloseErrorPopup()}
+  >
+    <div className="bg-white rounded-xl shadow-2xl border-2 border-red-700 p-8 max-w-md w-full">
+      <div className="text-center mb-6">
+        <div className="mx-auto w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+          <h3 className="text-2xl font-bold text-red-700 mb-2">{errorTitle}</h3>
+        </div>
+        <p className="text-lg text-gray-700 whitespace-pre-line">{errorMessage}</p>
+      </div>
+
+      <div className="bg-red-100 border border-red-700 rounded-lg p-4 mb-6">
+        <p className="text-red-700 text-sm text-center">
+          Please try again or contact support if the problem persists.
+        </p>
+      </div>
+
+      <button
+        onClick={handleCloseErrorPopup}
+        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg border-2 border-red-800 transition-colors cursor-pointer"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
+
 
       {showAdjustModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl border-2 border-orange-500 p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="text-center mb-4">
-              <div className="flex items-center justify-center gap-3 bg-orange-100 rounded-lg px-4 py-2 mb-3">
-                <h3 className="text-2xl font-bold text-orange-900">
-                  Adjust Schedule
+              <div className="flex items-center justify-center gap-3 bg-orange-400 rounded-lg px-4 py-2 mb-3">
+                <h3 className="text-2xl font-bold text-white">
+                  Reschedule
                 </h3>
               </div>
               <p className="text-base text-gray-700 leading-relaxed">
@@ -1223,7 +1238,7 @@ function ReviewAiScheduling() {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 mb-4 border-2 border-orange-600 shadow-md">
+            <div className="bg-emerald-50 rounded-lg p-4 mb-4 border-2 border-emerald-600 shadow-md">
               <div className="flex items-center gap-3">
                 <img
                   src={
@@ -1237,7 +1252,7 @@ function ReviewAiScheduling() {
                   <p className="font-bold text-orange-900 text-base mb-1">
                     {volunteer?.firstname} {volunteer?.lastname}
                   </p>
-                  <p className="text-orange-600 text-sm">{volunteer?.email}</p>
+                  <p className="text-emerald-600 text-sm">{volunteer?.email}</p>
                 </div>
               </div>
             </div>
@@ -1316,7 +1331,7 @@ function ReviewAiScheduling() {
             <div className="flex gap-3">
               <button
                 onClick={handleCloseAdjustModal}
-                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 text-sm cursor-pointer"
+                className="flex-1 bg-gray-300 hover-bg-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 text-sm cursor-pointer"
               >
                 Cancel
               </button>
@@ -1431,7 +1446,7 @@ function ReviewAiScheduling() {
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-900 p-6 max-w-md w-full mx-4">
             <div className="text-center mb-4">
-              <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
+              <div className="flex items-center bg-emerald-100 justify-center gap-3 rounded-full px-4 py-2 mb-3">
                 <h3 className="text-xl font-bold text-emerald-900">
                   Approve 
                 </h3>
@@ -1449,7 +1464,7 @@ function ReviewAiScheduling() {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 mb-4 border border-emerald-500">
+            <div className="bg-emerald-50 rounded-lg p-4 mb-4 border border-emerald-500">
               <div className="flex items-center gap-3">
                 <img
                   src={
@@ -1478,7 +1493,7 @@ function ReviewAiScheduling() {
             <div className="flex gap-3">
               <button
                 onClick={handleCloseApproveModal}
-                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 cursor-pointer"
+                className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 cursor-pointer"
               >
                 Cancel
               </button>
@@ -1498,10 +1513,10 @@ function ReviewAiScheduling() {
           className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
           onClick={(e) => e.target === e.currentTarget && handleCloseRejectModal()}
         >
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-[#e08a8a] p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-red-700 p-6 max-w-md w-full mx-4">
             <div className="text-center mb-4">
-              <div className="flex items-center justify-center gap-3 rounded-lg px-4 py-2 mb-3">
-                <h3 className="text-xl font-bold text-red-400">
+              <div className="flex items-center bg-red-100 justify-center gap-3 rounded-lg px-4 py-2 mb-3">
+                <h3 className="text-xl font-bold text-red-700">
                   Reject 
                 </h3>
               </div>
@@ -1518,7 +1533,7 @@ function ReviewAiScheduling() {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 mb-4 border border-red-400">
+            <div className="bg-emerald-50 rounded-lg p-4 mb-4 border border-emerald-500">
               <div className="flex items-center gap-3">
                 <img
                   src={
@@ -1551,7 +1566,7 @@ function ReviewAiScheduling() {
               />
             </div>
 
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-400 rounded-lg p-3 mb-4">
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-700 rounded-lg p-3 mb-4">
               <p className="text-red-700 text-sm font-semibold leading-relaxed">
                 <span className="font-bold">Warning:</span> The volunteer will receive an email notification with your reason.
               </p>
@@ -1561,14 +1576,14 @@ function ReviewAiScheduling() {
               <button
                 onClick={handleCloseRejectModal}
                 disabled={isSendingEmail}
-                className="flex-1 bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-bold py-2 px-3 rounded-lg border-2 border-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmReject}
                 disabled={isSendingEmail}
-                className="flex-1 bg-red-400 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-400 transition-all duration-200 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 bg-red-600 text-white font-bold py-2 px-3 text-sm rounded-lg border-2 border-red-700 transition-all duration-200 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSendingEmail ? "Rejecting..." : "Reject"}
               </button>
