@@ -2252,7 +2252,7 @@ export default function DashboardPage() {
       ];
       const currentDate = new Date();
 
-      const growthData = [];
+const growthData = [];
       for (let i = 4; i >= 0; i--) {
         const date = new Date(
           currentDate.getFullYear(),
@@ -2264,15 +2264,18 @@ export default function DashboardPage() {
           date.getMonth() + 1
         ).padStart(2, "0")}`;
 
-        const volunteersUpToMonth =
-          eventUsers?.filter((eu) => {
-            if (!eu.date_joined) return false;
-            return eu.date_joined <= `${yearMonth}-31`;
-          }).length || 0;
+        // Filter event joins up to this month
+        const signupsUpToMonth = eventUsers?.filter((eu) => {
+          if (!eu.date_joined) return false;
+          return eu.date_joined <= `${yearMonth}-31`;
+        }) || [];
+
+        // FIX: Count UNIQUE user_ids using a Set
+        const uniqueVolunteersCount = new Set(signupsUpToMonth.map(eu => eu.user_id)).size;
 
         growthData.push({
           month: monthName,
-          volunteers: volunteersUpToMonth,
+          volunteers: uniqueVolunteersCount, // Use the unique count
         });
       }
 
