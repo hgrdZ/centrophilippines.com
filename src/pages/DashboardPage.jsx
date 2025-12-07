@@ -22,6 +22,7 @@ import {
   CartesianGrid,
   BarChart,
   Bar,
+  Legend,
 } from "recharts";
 
 const COLORS = {
@@ -36,46 +37,100 @@ const COLORS = {
   },
 };
 
-// Helper function for real-time gender counting
+// Helper function for real-time gender and age counting
 const fetchGenderDataRealtime = async (userIds, setValidationError) => {
   if (!userIds || userIds.length === 0) {
-    return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
+    return { 
+      male: 0, 
+      female: 0, 
+      malePercentage: 0, 
+      femalePercentage: 0,
+      ageGenderData: [] // Initialize empty age data
+    };
   }
 
   try {
+    // Added 'birthdate' to the selection
     const { data: usersData, error } = await supabase
       .from("LoginInformation")
-      .select("user_id, gender")
+      .select("user_id, gender, birthdate") 
       .in("user_id", userIds);
 
     if (error) {
-      setValidationError("Error fetching gender data. Please try again.");
-      return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
+      setValidationError("Error fetching gender/age data. Please try again.");
+      return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0, ageGenderData: [] };
     }
 
     let maleCount = 0;
     let femaleCount = 0;
+    
+    // Initialize Age Buckets
+    const ageGroups = {
+      "Under 18": { name: "Under 18", Male: 0, Female: 0 },
+      "18-24": { name: "18-24", Male: 0, Female: 0 },
+      "25-34": { name: "25-34", Male: 0, Female: 0 },
+      "35-44": { name: "35-44", Male: 0, Female: 0 },
+      "45+": { name: "45+", Male: 0, Female: 0 },
+      "Unknown": { name: "Unknown", Male: 0, Female: 0 }
+    };
+
+    const calculateAge = (birthdate) => {
+      if (!birthdate) return -1;
+      const today = new Date();
+      const birthDate = new Date(birthdate);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    };
 
     usersData?.forEach((user) => {
-      if (user.gender?.toLowerCase() === "male") maleCount++;
-      else if (user.gender?.toLowerCase() === "female") femaleCount++;
+      const gender = user.gender?.toLowerCase() === "male" ? "Male" : 
+                     user.gender?.toLowerCase() === "female" ? "Female" : "Other";
+      
+      // Gender Counts
+      if (gender === "Male") maleCount++;
+      else if (gender === "Female") femaleCount++;
+
+      // Age Calculation
+      const age = calculateAge(user.birthdate);
+      let range = "Unknown";
+      
+      if (age !== -1) {
+        if (age < 18) range = "Under 18";
+        else if (age >= 18 && age <= 24) range = "18-24";
+        else if (age >= 25 && age <= 34) range = "25-34";
+        else if (age >= 35 && age <= 44) range = "35-44";
+        else range = "45+";
+      }
+
+      // Increment Age Group
+      if (gender === "Male" || gender === "Female") {
+        ageGroups[range][gender]++;
+      }
     });
 
     const total = maleCount + femaleCount;
     const malePercentage = total > 0 ? Math.round((maleCount / total) * 100) : 0;
     const femalePercentage = total > 0 ? Math.round((femaleCount / total) * 100) : 0;
 
+    // Convert object to array for Recharts
+    const ageGenderData = Object.values(ageGroups);
+
     return {
       male: maleCount,
       female: femaleCount,
       malePercentage,
       femalePercentage,
+      ageGenderData, // Return the processed age data
     };
   } catch (error) {
     if (setValidationError) {
       setValidationError("An unexpected error occurred while fetching gender data.");
     }
-    return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0 };
+    return { male: 0, female: 0, malePercentage: 0, femalePercentage: 0, ageGenderData: [] };
   }
 };
 
@@ -1718,6 +1773,7 @@ export default function DashboardPage() {
       female: 0,
       malePercentage: 0,
       femalePercentage: 0,
+      ageGenderData: [],
     },
   });
 
@@ -2196,7 +2252,7 @@ export default function DashboardPage() {
       ];
       const currentDate = new Date();
 
-      const growthData = [];
+const growthData = [];
       for (let i = 4; i >= 0; i--) {
         const date = new Date(
           currentDate.getFullYear(),
@@ -2208,15 +2264,18 @@ export default function DashboardPage() {
           date.getMonth() + 1
         ).padStart(2, "0")}`;
 
-        const volunteersUpToMonth =
-          eventUsers?.filter((eu) => {
-            if (!eu.date_joined) return false;
-            return eu.date_joined <= `${yearMonth}-31`;
-          }).length || 0;
+        // Filter event joins up to this month
+        const signupsUpToMonth = eventUsers?.filter((eu) => {
+          if (!eu.date_joined) return false;
+          return eu.date_joined <= `${yearMonth}-31`;
+        }) || [];
+
+        // FIX: Count UNIQUE user_ids using a Set
+        const uniqueVolunteersCount = new Set(signupsUpToMonth.map(eu => eu.user_id)).size;
 
         growthData.push({
           month: monthName,
-          volunteers: volunteersUpToMonth,
+          volunteers: uniqueVolunteersCount, // Use the unique count
         });
       }
 
@@ -3584,6 +3643,31 @@ if (!filteredEvents || filteredEvents.length === 0) {
               </p>
             </div>
           </div>
+{/* NEW: Age Range by Gender Chart */}
+          {dashboardData.volunteerGenderData?.ageGenderData && (
+            <div className="mt-8 pt-6 border-t-2 border-gray-100">
+              <h4 className="text-lg font-bold text-gray-800 mb-4 font-montserrat">
+                Volunteers Age Distribution by Gender
+              </h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={dashboardData.volunteerGenderData.ageGenderData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="Male" fill="#3498db" name="Male" />
+                  <Bar dataKey="Female" fill="#e91e63" name="Female" />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="text-xs text-gray-500 mt-2">
+                Based on birthdate provided in user profiles
+              </p>
+            </div>
+          )}
         </div>
       </ChartModal>
 
