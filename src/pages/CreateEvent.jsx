@@ -739,10 +739,10 @@ function CreateEvent() {
         />
         {locationDetails && (
           <div className="mt-2 p-2 bg-emerald-50 rounded border border-emerald-200 text-sm">
-            <p className="text-green-800">
+            <p className="text-emerald-800">
               <span className="font-semibold">Selected:</span> {locationDetails.name}
             </p>
-            <p className="text-gray-600 text-xs">{locationDetails.address}</p>
+            <p className="font-bold text-xs">{locationDetails.address}</p>
           </div>
         )}
       </div>
