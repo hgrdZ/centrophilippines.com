@@ -879,7 +879,7 @@ function CreateEvent() {
               <button
                 type="button"
                 onClick={removeSelectedFile}
-                className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium block"
+                className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium block cursor-pointer"
               >
                 Remove Image
               </button>
@@ -892,7 +892,7 @@ function CreateEvent() {
               <button
                 type="button"
                 onClick={removeSelectedFile}
-                className="mt-1 text-red-600 hover:text-red-800 text-xs font-medium"
+                className="mt-1 text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
               >
                 Remove File
               </button>
