@@ -320,10 +320,10 @@ function Sidebar({ handleAlert, onCollapseChange }) {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
           <div
-            className="relative bg-white rounded-2xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-600"
+            className="relative bg-white rounded-2xl shadow-2xl p-8 w-96 max-w-md mx-4 transform animate-scaleIn border-2 border-red-700"
           >
             <div className="flex justify-center mb-4">
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center bg-red-100 rounded-xl w-full max-w-md p-2">
                 <h2 className="text-3xl font-bold text-red-600 mb-2 font-montserrat">
                    Logout
                 </h2>
@@ -332,7 +332,7 @@ function Sidebar({ handleAlert, onCollapseChange }) {
 
             <div className="text-center">
               <p className="text-gray-600 mb-8 text-lg mt-4 font-montserrat">
-                Are you sure you want to log out? You will need to sign in again
+                Are you sure you want to log out? <br /> You will need to sign in again
                 to access your account.
               </p>
 

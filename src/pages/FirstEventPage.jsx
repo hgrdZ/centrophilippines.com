@@ -275,36 +275,52 @@ function ConfirmationModal({ isOpen, onClose, onConfirm, action, count }) {
       >
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-        <div className="relative bg-white rounded-xl shadow-2xl p-8 w-96 max-w-md mx-4 z-[10000] transform animate-scaleIn border-2 border-emerald-900">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {action === "Approve" ? "Approval" : "Rejection"}
-            </h2>
-            <p className="text-gray-600 mb-8 text-lg mt-4">
-              Are you sure you want to {action} {count} volunteer
-              {count > 1 ? "s" : ""}?
-            </p>
+        <div className="relative bg-white rounded-xl shadow-2xl p-4 max-w-md w-full animate-scaleIn border-2 border-emerald-900">
 
-            <div className="flex flex-col sm:flex-row justify-center gap-3">
-              <button
-                onClick={onConfirm}
-                className={`${
-                  action === "Approve"
-                    ? "bg-emerald-600 border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700"
-                    : "bg-red-600 border-red-600 hover:bg-red-700 hover:border-red-700"
-                } text-white px-6 py-3 rounded-lg text-lg font-medium border-2 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer`}
-              >
-                {action === "Approve" ? "Approve" : "Reject"}
-              </button>
-              <button
-                onClick={onClose}
-                className="bg-white text-gray-800 px-6 py-3 rounded-lg text-lg font-medium border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+  <div
+    className={`text-center w-full p-4 rounded-xl font-montserrat font-bold text-2xl 
+      ${action === "Approve" 
+        ? "bg-emerald-100 text-emerald-900" 
+        : "bg-red-100 text-red-900"
+      }`
+    }
+  >
+    {action === "Approve" ? "Approval" : "Rejection"}
+  </div>
+
+  {/* BODY */}
+  <div className="p-8 text-center">
+    <p className="text-gray-700 text-lg leading-relaxed mb-8">
+      Are you sure you want to <br />
+      {action} {count} volunteer{count > 1 ? "s" : ""}?
+    </p>
+
+    {/* BUTTONS */}
+    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      <button
+        onClick={onConfirm}
+        className={`w-full sm:w-auto px-6 py-3 rounded-xl text-lg font-semibold text-white shadow-md cursor-pointer
+          ${action === "Approve" 
+            ? "bg-emerald-600 hover:bg-emerald-700" 
+            : "bg-red-600 hover:bg-red-700"
+          } transition-all duration-200 hover:scale-105 active:scale-95`}
+      >
+        {action}
+      </button>
+
+      <button
+        onClick={onClose}
+        className="w-full sm:w-auto px-6 py-3 rounded-xl text-lg font-semibold  cursor-pointer
+                   bg-gray-200 text-gray-800 border border-gray-300
+                   hover:bg-gray-300 transition-all duration-200 
+                   hover:scale-105 active:scale-95"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
       </div>
 
       <style jsx>{`

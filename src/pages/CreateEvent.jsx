@@ -738,7 +738,7 @@ function CreateEvent() {
           className="w-full px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer focus:outline-none focus:border-green-500"
         />
         {locationDetails && (
-          <div className="mt-2 p-2 bg-green-50 rounded border border-green-200 text-sm">
+          <div className="mt-2 p-2 bg-emerald-50 rounded border border-emerald-200 text-sm">
             <p className="text-green-800">
               <span className="font-semibold">Selected:</span> {locationDetails.name}
             </p>
