@@ -474,7 +474,7 @@ function ReviewAiScheduling() {
     reason
   ) => {
     try {
-      const response = await fetch(`/api/send-reject-event`, {
+      const response = await fetch(`http://localhost:5000/api/api/send-reject-event`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
