@@ -738,11 +738,11 @@ function CreateEvent() {
           className="w-full px-4 py-2 rounded bg-white border border-gray-300 cursor-pointer focus:outline-none focus:border-green-500"
         />
         {locationDetails && (
-          <div className="mt-2 p-2 bg-green-50 rounded border border-green-200 text-sm">
-            <p className="text-green-800">
+          <div className="mt-2 p-2 bg-emerald-50 rounded border border-emerald-200 text-sm">
+            <p className="text-emerald-800">
               <span className="font-semibold">Selected:</span> {locationDetails.name}
             </p>
-            <p className="text-gray-600 text-xs">{locationDetails.address}</p>
+            <p className="font-bold text-xs">{locationDetails.address}</p>
           </div>
         )}
       </div>
@@ -879,7 +879,7 @@ function CreateEvent() {
               <button
                 type="button"
                 onClick={removeSelectedFile}
-                className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium block"
+                className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium block cursor-pointer"
               >
                 Remove Image
               </button>
@@ -892,7 +892,7 @@ function CreateEvent() {
               <button
                 type="button"
                 onClick={removeSelectedFile}
-                className="mt-1 text-red-600 hover:text-red-800 text-xs font-medium"
+                className="mt-1 text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
               >
                 Remove File
               </button>
