@@ -130,7 +130,7 @@ const VolunteersPage = () => {
   const sendRemovalEmail = async (volunteerEmail, volunteerName, reason, ngoName) => {
     try {
       console.log('Sending email to:', volunteerEmail);
-      const response = await fetch('http://localhost:5000/api/send-removal-notification', {
+      const response = await fetch('api/send-removal-notification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
