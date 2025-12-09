@@ -63,7 +63,7 @@ function AddNGOPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
-  
+
   const [formData, setFormData] = useState({
     loginId: "",
     password: "",
@@ -78,11 +78,12 @@ function AddNGOPage() {
     location: "",
     logo: null,
     preferredVolunteering: [],
+    preferredSkills: [],
   });
 
   const supportedImageTypes = [
     'image/jpeg',
-    'image/jpg', 
+    'image/jpg',
     'image/png',
     'image/gif',
     'image/webp',
@@ -201,6 +202,22 @@ function AddNGOPage() {
     });
   };
 
+  const handleSkillsChange = (skill) => {
+    setFormData(prev => {
+      if (prev.preferredSkills.includes(skill)) {
+        return {
+          ...prev,
+          preferredSkills: prev.preferredSkills.filter(item => item !== skill)
+        };
+      } else {
+        return {
+          ...prev,
+          preferredSkills: [...prev.preferredSkills, skill]
+        };
+      }
+    });
+  };
+
   const uploadNgoLogo = async (file) => {
     if (!file) return null;
 
@@ -230,7 +247,7 @@ function AddNGOPage() {
               ...uploadOptions,
               upsert: true
             });
-          
+
           if (retryError) throw retryError;
         } else {
           throw uploadError;
@@ -249,7 +266,7 @@ function AddNGOPage() {
 
     } catch (error) {
       console.error("Error uploading logo:", error);
-      
+
       if (error.message.includes('row_level_security')) {
         setModalConfig({
           title: "Storage Permission Error",
@@ -265,7 +282,7 @@ function AddNGOPage() {
           type: "alert",
         });
       }
-      
+
       return null;
     } finally {
       setLogoUploading(false);
@@ -330,6 +347,7 @@ function AddNGOPage() {
     if (!formData.email.trim()) missingFields.push("Official Email");
     if (!formData.location.trim()) missingFields.push("NGO Location");
     if (formData.preferredVolunteering.length === 0) missingFields.push("Preferred Volunteering Types");
+    if (formData.preferredSkills.length === 0) missingFields.push("Preferred Skills");
 
     if (missingFields.length > 0) {
       setModalConfig({
@@ -426,7 +444,8 @@ function AddNGOPage() {
         created_at: new Date().toISOString().split('T')[0],
         ngo_logo: logoUrl,
         ngo_code: formData.ngoCode.toUpperCase(),
-        preferred_volunteering: formData.preferredVolunteering.join("-")
+        preferred_volunteering: formData.preferredVolunteering.join("-"),
+        preferred_skills: formData.preferredSkills.join("-")
       };
 
       const { error: ngoError } = await supabase
@@ -450,7 +469,7 @@ function AddNGOPage() {
         await supabase.from("NGO_Information").delete().eq("admin_id", adminId);
         throw adminError;
       }
-      
+
       setModalConfig({
         title: "Success",
         message: "NGO registered successfully!",
@@ -476,12 +495,12 @@ function AddNGOPage() {
 
   return (
     <div className="flex min-h-screen bg-no-repeat bg-center" style={{ backgroundImage: `url(${CentroAdminBg})`, backgroundSize: "100% 100%" }}>
-        <Sidebar onCollapseChange={setSidebarCollapsed} />
+      <Sidebar onCollapseChange={setSidebarCollapsed} />
 
       <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
         style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >               
-      <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
+      >
+        <div className="bg-white shadow-2xl rounded-2xl w-full max-w-3xl overflow-hidden border border-emerald-200 text-center relative">
           {/* Close Button */}
           <button
             onClick={handleClose}
@@ -546,7 +565,7 @@ function AddNGOPage() {
             {/* Row 2: Admin ID + Admin Type */}
             <div className="w-full flex flex-wrap gap-6">
               <div className="flex-1 min-w-[250px]">
-                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin ID *</label>
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin ID <span className="text-red-600">*</span></label>
                 <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                   <input
                     type="text"
@@ -563,7 +582,7 @@ function AddNGOPage() {
               </div>
 
               <div className="flex-1 min-w-[200px]">
-                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin Type</label>
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Admin Type <span className="text-red-600">*</span></label>
                 <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                   <select
                     name="adminType"
@@ -582,7 +601,7 @@ function AddNGOPage() {
             {/* Row 3: NGO Code + NGO Logo */}
             <div className="w-full flex flex-wrap gap-6">
               <div className="flex-1 min-w-[250px]">
-                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Code *</label>
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Code <span className="text-red-600">*</span></label>
                 <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                   <input
                     type="text"
@@ -599,7 +618,7 @@ function AddNGOPage() {
               </div>
 
               <div className="flex-1 min-w-[280px]">
-                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Logo</label>
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Logo <span className="text-red-600">*</span></label>
                 <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                   <input
                     type="file"
@@ -614,14 +633,14 @@ function AddNGOPage() {
                 <p className="text-xs text-gray-500 mt-1">
                   Supported: jpg, jpeg, png, gif, webp, svg, bmp. Max: 10MB
                 </p>
-                
+
                 {logoPreview && (
                   <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
                     <img src={logoPreview} alt="Logo Preview" className="max-w-full h-20 object-contain mx-auto rounded border" />
                     <p className="text-sm text-gray-600 mt-2 font-medium">{formData.logo.name}</p>
                   </div>
                 )}
-                
+
                 {formData.logo && !logoPreview && (
                   <div className="mt-2 p-2 bg-emerald-100 rounded text-sm text-emerald-800">
                     File selected: {formData.logo.name}
@@ -638,7 +657,7 @@ function AddNGOPage() {
 
             {/* Row 4: NGO Name (full width) */}
             <div>
-              <label className="block mb-2 font-semibold text-base text-emerald-900">NGO Name *</label>
+              <label className="block mb-2 font-semibold text-base text-emerald-900">NGO Name <span className="text-red-600">*</span></label>
               <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <input
                   type="text"
@@ -656,7 +675,7 @@ function AddNGOPage() {
 
             {/* Row 5: Description (full width) */}
             <div>
-              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Description</label>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Description <span className="text-red-600">*</span></label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -670,7 +689,7 @@ function AddNGOPage() {
 
             {/* Row 6: Address (full width) */}
             <div>
-              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Address *</label>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Address <span className="text-red-600">*</span></label>
               <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <input
                   type="text"
@@ -689,7 +708,7 @@ function AddNGOPage() {
             {/* Row 7: Phone + Email */}
             <div className="w-full flex flex-wrap gap-6">
               <div className="flex-1 min-w-[250px]">
-                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Phone Number *</label>
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Phone Number <span className="text-red-600">*</span></label>
                 <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                   <input
                     type="text"
@@ -706,7 +725,7 @@ function AddNGOPage() {
               </div>
 
               <div className="flex-1 min-w-[250px]">
-                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Official Email *</label>
+                <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">Official Email <span className="text-red-600">*</span></label>
                 <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                   <input
                     type="email"
@@ -725,7 +744,7 @@ function AddNGOPage() {
 
             {/* Row 8: NGO Location (full width) */}
             <div>
-              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Location *</label>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">NGO Location <span className="text-red-600">*</span></label>
               <div className="flex items-center border border-emerald-300 bg-white rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <input
                   type="text"
@@ -742,62 +761,151 @@ function AddNGOPage() {
             </div>
 
             {/* Row 9: Preferred Volunteering Types - Fixed 2 Rows x 4 Columns */}
-<div>
-  <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">
-    Preferred Volunteering Types *
-  </label>
-  <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
-    {/* First Row - 4 items */}
-    <div className="flex flex-wrap gap-4 mb-3">
-      {volunteeringOptions.slice(0, 4).map((option) => (
-        <label
-          key={option}
-          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
-          style={{ width: 'calc(25% - 12px)' }}
-        >
-          <input
-            type="checkbox"
-            checked={formData.preferredVolunteering.includes(option)}
-            onChange={() => handleVolunteeringChange(option)}
-            disabled={loading || logoUploading}
-            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
-          />
-          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
-        </label>
-      ))}
-    </div>
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">
+                Preferred Volunteering Types <span className="text-red-600">*</span>
+              </label>
+              <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
+                {/* First Row - 4 items */}
+                <div className="flex flex-wrap gap-4 mb-3">
+                  {volunteeringOptions.slice(0, 4).map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+                      style={{ width: 'calc(25% - 12px)' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.preferredVolunteering.includes(option)}
+                        onChange={() => handleVolunteeringChange(option)}
+                        disabled={loading || logoUploading}
+                        className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
+                    </label>
+                  ))}
+                </div>
 
-    {/* Second Row - 4 items */}
-    <div className="flex flex-wrap gap-4">
-      {volunteeringOptions.slice(4, 8).map((option) => (
-        <label
-          key={option}
-          className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
-          style={{ width: 'calc(25% - 12px)' }}
-        >
-          <input
-            type="checkbox"
-            checked={formData.preferredVolunteering.includes(option)}
-            onChange={() => handleVolunteeringChange(option)}
-            disabled={loading || logoUploading}
-            className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
-          />
-          <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
-        </label>
-      ))}
-    </div>
+                {/* Second Row - 4 items */}
+                <div className="flex flex-wrap gap-4">
+                  {volunteeringOptions.slice(4, 8).map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+                      style={{ width: 'calc(25% - 12px)' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.preferredVolunteering.includes(option)}
+                        onChange={() => handleVolunteeringChange(option)}
+                        disabled={loading || logoUploading}
+                        className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 leading-tight">{option}</span>
+                    </label>
+                  ))}
+                </div>
 
-    {/* Selected Count */}
-    {formData.preferredVolunteering.length > 0 && (
-      <div className="mt-4 pt-3 border-t border-gray-200">
-        <p className="text-sm text-teal-700">
-          <span className="font-medium">Selected ({formData.preferredVolunteering.length}):</span>{" "}
-          {formData.preferredVolunteering.join(", ")}
-        </p>
-      </div>
-    )}
-  </div>
-</div>
+                {/* Selected Count */}
+                {formData.preferredVolunteering.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <p className="text-sm text-emerald-900">
+                      <span className="font-medium">Selected ({formData.preferredVolunteering.length}):</span>{" "}
+                      {formData.preferredVolunteering.join(", ")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Row 10: Preferred Skills - 3 Rows x 3 Columns */}
+            <div>
+              <label className="block mb-2 mt-2 font-semibold text-base text-emerald-900">
+                Preferred Skills <span className="text-red-600">*</span>
+              </label>
+              <div className="border border-emerald-300 rounded-lg p-4 bg-white focus-within:ring-2 focus-within:ring-emerald-400">
+                {/* First Row - 3 items */}
+                <div className="flex flex-wrap gap-4 mb-3">
+                  {[
+                    "Event Planning & Coordination",
+                    "Manual Labor & Construction",
+                    "Teaching & Tutoring"
+                  ].map((skill) => (
+                    <label
+                      key={skill}
+                      className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+                      style={{ width: 'calc(33.333% - 11px)' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.preferredSkills?.includes(skill) || false}
+                        onChange={() => handleSkillsChange(skill)}
+                        disabled={loading || logoUploading}
+                        className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 leading-tight">{skill}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Second Row - 3 items */}
+                <div className="flex flex-wrap gap-4 mb-3">
+                  {[
+                    "Medical & Healthcare",
+                    "Graphic Design & Photography",
+                    "Writing & Content Creation"
+                  ].map((skill) => (
+                    <label
+                      key={skill}
+                      className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+                      style={{ width: 'calc(33.333% - 11px)' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.preferredSkills?.includes(skill) || false}
+                        onChange={() => handleSkillsChange(skill)}
+                        disabled={loading || logoUploading}
+                        className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 leading-tight">{skill}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Third Row - 3 items */}
+                <div className="flex flex-wrap gap-4">
+                  {[
+                    "Counseling & Mentoring",
+                    "Fundraising & Grant Writing",
+                    "Cooking & Food Service"
+                  ].map((skill) => (
+                    <label
+                      key={skill}
+                      className="flex items-start p-2 rounded hover:bg-emerald-50 cursor-pointer transition-colors"
+                      style={{ width: 'calc(33.333% - 11px)' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.preferredSkills?.includes(skill) || false}
+                        onChange={() => handleSkillsChange(skill)}
+                        disabled={loading || logoUploading}
+                        className="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer flex-shrink-0"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 leading-tight">{skill}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Selected Count */}
+                {formData.preferredSkills && formData.preferredSkills.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <p className="text-sm text-emerald-900">
+                      <span className="font-medium">Selected ({formData.preferredSkills.length}):</span>{" "}
+                      {formData.preferredSkills.join(", ")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Submit Button */}
             <div className="pt-2 mt-4">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CentroAdminBg from "../images/CENTRO_ADMIN.png";
-import Sidebar from "../components/Sidebar"; 
+import Sidebar from "../components/Sidebar";
 import supabase from "../config/supabaseClient";
 import MaleIcon from "../images/male.png";
 import FemaleIcon from "../images/female.png";
@@ -27,12 +27,12 @@ const VolunteersPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [removalReason, setRemovalReason] = useState("");
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  
+
   // Result modal states
   const [showResultModal, setShowResultModal] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [resultType, setResultType] = useState("success"); // "success", "warning", or "error"
-  
+
   // Sort states
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -95,24 +95,24 @@ const VolunteersPage = () => {
   }, []);
 
   useEffect(() => {
-  const handleEscKey = (e) => {
-    if (e.key === 'Escape') {
-      if (showConfirmModal) {
-        setShowConfirmModal(false);
-        setRemovalReason("");
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape') {
+        if (showConfirmModal) {
+          setShowConfirmModal(false);
+          setRemovalReason("");
+        }
+        if (showResultModal) {
+          setShowResultModal(false);
+        }
+        if (showSortDropdown) {
+          setShowSortDropdown(false);
+        }
       }
-      if (showResultModal) {
-        setShowResultModal(false);
-      }
-      if (showSortDropdown) {
-        setShowSortDropdown(false);
-      }
-    }
-  };
+    };
 
-  document.addEventListener('keydown', handleEscKey);
-  return () => document.removeEventListener('keydown', handleEscKey);
-}, [showConfirmModal, showResultModal, showSortDropdown]);
+    document.addEventListener('keydown', handleEscKey);
+    return () => document.removeEventListener('keydown', handleEscKey);
+  }, [showConfirmModal, showResultModal, showSortDropdown]);
 
   useEffect(() => {
     if (showConfirmModal || showResultModal) document.body.style.overflow = "hidden";
@@ -161,14 +161,14 @@ const VolunteersPage = () => {
     if (!selectedVolunteer) return;
 
     if (!removalReason.trim()) {
-  setShowConfirmModal(false);
-  setTimeout(() => {
-    setResultMessage("Please provide a reason for removal before proceeding.");
-    setResultType("error");
-    setShowResultModal(true);
-  }, 100);
-  return;
-}
+      setShowConfirmModal(false);
+      setTimeout(() => {
+        setResultMessage("Please provide a reason for removal before proceeding.");
+        setResultType("error");
+        setShowResultModal(true);
+      }, 100);
+      return;
+    }
 
     setIsSendingEmail(true);
 
@@ -264,7 +264,7 @@ const VolunteersPage = () => {
 
       setShowConfirmModal(false);
       setIsSendingEmail(false);
-      
+
       if (emailSent) {
         setResultMessage(`${volunteerFullName} has been removed and notified via email.`);
         setResultType("success");
@@ -422,9 +422,8 @@ const VolunteersPage = () => {
                     <div className="py-2">
                       <button
                         onClick={() => handleSortChange("id")}
-                        className={`w-full text-left px-4 py-2 font-montserrat hover:bg-emerald-50 flex items-center justify-between ${
-                          sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                        }`}
+                        className={`w-full text-left px-4 py-2 font-montserrat hover:bg-emerald-50 flex items-center justify-between ${sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                          }`}
                       >
                         <span>Volunteer ID</span>
                         {sortBy === "id" && (
@@ -435,9 +434,8 @@ const VolunteersPage = () => {
                       </button>
                       <button
                         onClick={() => handleSortChange("name")}
-                        className={`w-full text-left px-4 py-2 font-montserrat hover:bg-emerald-50 flex items-center justify-between ${
-                          sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                        }`}
+                        className={`w-full text-left px-4 py-2 font-montserrat hover:bg-emerald-50 flex items-center justify-between ${sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                          }`}
                       >
                         <span>Name</span>
                         {sortBy === "name" && (
@@ -472,11 +470,10 @@ const VolunteersPage = () => {
                     {filteredVolunteers.map((volunteer) => (
                       <tr
                         key={volunteer.user_id}
-                        className={`cursor-pointer hover:bg-emerald-50 ${
-                          selectedVolunteer?.user_id === volunteer.user_id
+                        className={`cursor-pointer hover:bg-emerald-50 ${selectedVolunteer?.user_id === volunteer.user_id
                             ? "bg-emerald-100 font-semibold"
                             : ""
-                        }`}
+                          }`}
                         onClick={() => setSelectedVolunteer(volunteer)}
                       >
                         <td className="py-2 px-4">{volunteer.user_id}</td>
@@ -509,19 +506,19 @@ const VolunteersPage = () => {
                     <h3 className="text-2xl text-emerald-900 font-montserrat mt-6 font-bold leading-tight">
                       {selectedVolunteer.firstname} <br /> {selectedVolunteer.lastname}
                     </h3>
-<div className="flex items-center gap-2 mt-1">
-  <p className="text-sm text-gray-600 font-montserrat font-semibold bg-emerald-100 px-3 py-1 rounded-full inline-block">
-    {selectedVolunteer.user_id}
-  </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-gray-600 font-montserrat font-semibold bg-emerald-100 px-3 py-1 rounded-full inline-block">
+                        {selectedVolunteer.user_id}
+                      </p>
 
-  {selectedVolunteer.gender && (
-    <img
-      src={selectedVolunteer.gender === "Male" ? MaleIcon : FemaleIcon}
-      alt={selectedVolunteer.gender}
-      className="w-4 h-4"
-    />
-  )}
-</div>
+                      {selectedVolunteer.gender && (
+                        <img
+                          src={selectedVolunteer.gender === "Male" ? MaleIcon : FemaleIcon}
+                          alt={selectedVolunteer.gender}
+                          className="w-5 h-5"
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -561,6 +558,21 @@ const VolunteersPage = () => {
                   </ul>
                 </p>
 
+                <p className="text-m text-emerald-900 font-montserrat mb-3">
+                  <span className="font-bold text-lg">Preferred Skills</span>
+                  {selectedVolunteer.preferred_skills ? (
+                    <ul className="list-disc list-inside mt-1">
+                      {selectedVolunteer.preferred_skills
+                        .split(",")
+                        .map((skill, index) => (
+                          <li key={index}>{skill.trim()}</li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500 mt-1">Not specified</p>
+                  )}
+                </p>
+
                 <div className="mt-4 flex justify-evenly text-center text-emerald-900">
                   <div>
                     <p className="text-2xl font-bold font-montserrat">Completed Tasks</p>
@@ -591,169 +603,168 @@ const VolunteersPage = () => {
       </main>
 
       {showConfirmModal && selectedVolunteer && (
-  <div
-    className="fixed inset-0 flex items-center justify-center animate-fadeIn"
-    onClick={handleBackdropClick}
-    style={{ 
-      zIndex: 99999999,
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      width: '100vw',
-      height: '100vh'
-    }}
-  >
-    <div 
-      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      style={{ zIndex: 99999998 }}
-    ></div>
+        <div
+          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          onClick={handleBackdropClick}
+          style={{
+            zIndex: 99999999,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh'
+          }}
+        >
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: 99999998 }}
+          ></div>
 
-    <div
-      className="relative bg-white rounded-lg shadow-2xl border-2 border-red-700 p-8 max-w-md w-full mx-4 transform animate-scaleIn"
-      style={{ 
-        zIndex: 100000000,
-        position: 'relative'
-      }}
-    >
-      <div className="text-center mb-6">
-        <div className="mx-auto w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-          <h3 className="text-2xl font-bold text-red-700">Remove</h3>
-        </div>
-        <p className="text-base text-gray-700">
-          Are you sure you want to remove <br />
-          <span className="font-bold text-emerald-900">
-            {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-          </span>{" "}
-          from your organization?
-        </p>
-      </div>
+          <div
+            className="relative bg-white rounded-lg shadow-2xl border-2 border-red-700 p-8 max-w-md w-full mx-4 transform animate-scaleIn"
+            style={{
+              zIndex: 100000000,
+              position: 'relative'
+            }}
+          >
+            <div className="text-center mb-6">
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+                <h3 className="text-2xl font-bold text-red-700">Remove</h3>
+              </div>
+              <p className="text-base text-gray-700">
+                Are you sure you want to remove <br />
+                <span className="font-bold text-emerald-900">
+                  {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+                </span>{" "}
+                from your organization?
+              </p>
+            </div>
 
-      <div className="bg-emerald-50 rounded-lg p-4 mb-4 border border-emerald-200">
-        <div className="flex items-center gap-3">
-          <img
-            src={selectedVolunteer.profile_picture || "images/placeholder.jpg"}
-            alt={selectedVolunteer.firstname}
-            className="w-12 h-12 object-cover rounded-full border-2 border-emerald-900"
-          />
-          <div>
-            <p className="font-bold text-emerald-900 text-lg">
-              {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-            </p>
-            <p className="text-emerald-700 text-sm">
-              {selectedVolunteer.email}
-            </p>
+            <div className="bg-emerald-50 rounded-lg p-4 mb-4 border border-emerald-200">
+              <div className="flex items-center gap-3">
+                <img
+                  src={selectedVolunteer.profile_picture || "images/placeholder.jpg"}
+                  alt={selectedVolunteer.firstname}
+                  className="w-12 h-12 object-cover rounded-full border-2 border-emerald-900"
+                />
+                <div>
+                  <p className="font-bold text-emerald-900 text-lg">
+                    {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+                  </p>
+                  <p className="text-emerald-700 text-sm">
+                    {selectedVolunteer.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-emerald-900 font-bold mb-2 text-base">
+                Reason for Removal <span className="text-red-600">*</span>
+              </label>
+              <textarea
+                value={removalReason}
+                onChange={(e) => setRemovalReason(e.target.value)}
+                placeholder="Please provide a reason for removing this volunteer..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                rows="4"
+                disabled={isSendingEmail}
+              />
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-700 text-sm">
+                <span className="font-bold">Warning:</span> This action cannot be undone. The volunteer will be notified via email with the reason you provided.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleCancelRemove}
+                disabled={isSendingEmail}
+                className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg border-2 border-gray-400 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!removalReason.trim()) {
+                    setShowConfirmModal(false);
+                    setTimeout(() => {
+                      setResultMessage("Please provide a reason for removal before proceeding.");
+                      setResultType("error");
+                      setShowResultModal(true);
+                    }, 100);
+                  } else {
+                    handleConfirmRemove();
+                  }
+                }}
+                disabled={isSendingEmail}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-red-800 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isSendingEmail ? "Removing..." : "Remove"}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="mb-6">
-              <label className="block text-emerald-900 font-bold mb-2 text-base">
-          Reason for Removal <span className="text-red-600">*</span>
-        </label>
-        <textarea
-          value={removalReason}
-          onChange={(e) => setRemovalReason(e.target.value)}
-          placeholder="Please provide a reason for removing this volunteer..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-          rows="4"
-          disabled={isSendingEmail}
-        />
-      </div>
-
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-        <p className="text-red-700 text-sm">
-          <span className="font-bold">Warning:</span> This action cannot be undone. The volunteer will be notified via email with the reason you provided.
-        </p>
-      </div>
-
-      <div className="flex gap-4">
-        <button
-          onClick={handleCancelRemove}
-          disabled={isSendingEmail}
-          className="flex-1 bg-gray-200 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg border-2 border-gray-400 transition-colors disabled:opacity-50 cursor-pointer"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            if (!removalReason.trim()) {
-              setShowConfirmModal(false);
-              setTimeout(() => {
-                setResultMessage("Please provide a reason for removal before proceeding.");
-                setResultType("error");
-                setShowResultModal(true);
-              }, 100);
-            } else {
-              handleConfirmRemove();
-            }
+      )}
+      {showResultModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center animate-fadeIn"
+          onClick={(e) => e.target === e.currentTarget && handleCloseResultModal()}
+          style={{
+            zIndex: 99999999,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh'
           }}
-          disabled={isSendingEmail}
-          className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg border-2 border-red-800 transition-colors disabled:opacity-50 cursor-pointer"
         >
-          {isSendingEmail ? "Removing..." : "Remove"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-     {showResultModal && (
-  <div
-    className="fixed inset-0 flex items-center justify-center animate-fadeIn"
-    onClick={(e) => e.target === e.currentTarget && handleCloseResultModal()}
-    style={{ 
-      zIndex: 99999999,
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      width: '100vw',
-      height: '100vh'
-    }}
-  >
-    <div 
-      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      style={{ zIndex: 99999998 }}
-    ></div>
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: 99999998 }}
+          ></div>
 
-    <div
-      className={`relative bg-white rounded-lg shadow-2xl border-2 p-8 max-w-md w-full mx-4 transform animate-scaleIn ${getResultTitleAndColor().border}`}
-      style={{ 
-        zIndex: 100000000,
-        position: 'relative'
-      }}
-    >
-      <div className="text-center mb-6">
-        <div className={`mx-auto w-20 h-20 ${
-          resultType === "success" ? "bg-green-100" : 
-          resultType === "warning" ? "bg-red-100" : 
-          "bg-red-100"
-        } p-8 w-full max-w-md rounded-xl flex items-center justify-center mb-4`}>
-          <h3 className={`text-2xl font-bold font-montserrat ${getResultTitleAndColor().color}`}>
-            {getResultTitleAndColor().title}
-          </h3>
+          <div
+            className={`relative bg-white rounded-lg shadow-2xl border-2 p-8 max-w-md w-full mx-4 transform animate-scaleIn ${getResultTitleAndColor().border}`}
+            style={{
+              zIndex: 100000000,
+              position: 'relative'
+            }}
+          >
+            <div className="text-center mb-6">
+              <div className={`mx-auto w-20 h-20 ${resultType === "success" ? "bg-green-100" :
+                  resultType === "warning" ? "bg-red-100" :
+                    "bg-red-100"
+                } p-8 w-full max-w-md rounded-xl flex items-center justify-center mb-4`}>
+                <h3 className={`text-2xl font-bold font-montserrat ${getResultTitleAndColor().color}`}>
+                  {getResultTitleAndColor().title}
+                </h3>
+              </div>
+              <p className="text-lg text-gray-700 whitespace-pre-line">
+                {resultMessage}
+              </p>
+            </div>
+            <div className="bg-red-100 border border-red-700 rounded-lg p-4 mb-6">
+              <p className="text-red-700 text-sm text-center">
+                Please try again or contact support if the problem persists.
+              </p>
+            </div>
+
+            <button
+              onClick={handleCloseResultModal}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-emerald-800 transition-colors cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
         </div>
-        <p className="text-lg text-gray-700 whitespace-pre-line">
-          {resultMessage}
-        </p>
-      </div>
-      <div className="bg-red-100 border border-red-700 rounded-lg p-4 mb-6">
-        <p className="text-red-700 text-sm text-center">
-          Please try again or contact support if the problem persists.
-        </p>
-      </div>
-
-      <button
-        onClick={handleCloseResultModal}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 font-montserrat rounded-lg border-2 border-emerald-800 transition-colors cursor-pointer"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {

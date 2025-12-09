@@ -13,7 +13,7 @@ export default function ReviewApplicationEventPage() {
   const [selectedEventDetails, setSelectedEventDetails] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showCentroConfirm, setShowCentroConfirm] = useState(false);
-  
+
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("asc");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -23,7 +23,7 @@ export default function ReviewApplicationEventPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
-  
+
   useEffect(() => {
     const fetchEvents = async () => {
       const adminData = JSON.parse(localStorage.getItem("admin"));
@@ -96,7 +96,7 @@ export default function ReviewApplicationEventPage() {
         const { data: volunteerData, error: userError } = await supabase
           .from("LoginInformation")
           .select(
-            "user_id, firstname, lastname, email, contact_number, profile_picture, gender, preferred_volunteering"
+            "user_id, firstname, lastname, email, contact_number, profile_picture, gender, preferred_volunteering, preferred_skills"
           )
           .eq("user_id", app.user_id)
           .single();
@@ -238,31 +238,29 @@ export default function ReviewApplicationEventPage() {
           backgroundSize: "100% 100%",
         }}
       >
-      <Sidebar onCollapseChange={setSidebarCollapsed} />
+        <Sidebar onCollapseChange={setSidebarCollapsed} />
 
-      <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
-      >                   
-      <div id="review_application" className="relative z-10 space-y-4">
+        <main className="flex-1 p-4 overflow-y-auto transition-all duration-300"
+          style={{ marginLeft: sidebarCollapsed ? "5rem" : "16rem" }}
+        >
+          <div id="review_application" className="relative z-10 space-y-4">
             <div className="flex gap-4">
               <Link to="/review-application" className="flex-1">
                 <button
-                  className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${
-                    isActive("/review-application")
-                      ? "bg-emerald-900 text-white border-emerald-500"
-                      : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
-                  }`}
+                  className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${isActive("/review-application")
+                    ? "bg-emerald-900 text-white border-emerald-500"
+                    : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
+                    }`}
                 >
                   Organization Applications
                 </button>
               </Link>
               <Link to="/review-application-event" className="flex-1">
                 <button
-                  className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${
-                    isActive("/review-application-event")
-                      ? "bg-emerald-900 text-white border-emerald-500"
-                      : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
-                  }`}
+                  className={`w-full text-xl text-center py-3 rounded-lg font-bold border-2 transition-colors cursor-pointer ${isActive("/review-application-event")
+                    ? "bg-emerald-900 text-white border-emerald-500"
+                    : "bg-gray-200 hover:bg-gray-300 border-gray-900 text-gray-900"
+                    }`}
                 >
                   Event Applications
                 </button>
@@ -350,9 +348,9 @@ export default function ReviewApplicationEventPage() {
             )}
 
             {pendingApplications.length > 0 ? (
-<div className="w-full flex flex-wrap gap-6 mb-6">
+              <div className="w-full flex flex-wrap gap-6 mb-6">
                 {/* Applicant List - 2 columns out of 3 */}
-  <div className="flex-1 min-w-full bg-white rounded-lg shadow overflow-hidden">
+                <div className="flex-1 min-w-full bg-white rounded-lg shadow overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50 w-full">
                     <h3 className="text-lg font-semibold text-emerald-900">
                       Applicant List
@@ -384,9 +382,8 @@ export default function ReviewApplicationEventPage() {
                           <div className="py-2">
                             <button
                               onClick={() => handleSortChange("id")}
-                              className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-                                sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                              }`}
+                              className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${sortBy === "id" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                                }`}
                             >
                               <span>User ID</span>
                               {sortBy === "id" && (
@@ -397,9 +394,8 @@ export default function ReviewApplicationEventPage() {
                             </button>
                             <button
                               onClick={() => handleSortChange("name")}
-                              className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${
-                                sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
-                              }`}
+                              className={`w-full text-left px-4 py-2 hover:bg-emerald-50 flex items-center justify-between text-sm ${sortBy === "name" ? "bg-emerald-100 font-bold text-emerald-900" : "text-gray-700"
+                                }`}
                             >
                               <span>Name</span>
                               {sortBy === "name" && (
@@ -425,11 +421,10 @@ export default function ReviewApplicationEventPage() {
                       {sortedApplications.map((volunteer) => (
                         <div
                           key={volunteer.user_id}
-                          className={`grid grid-cols-3 py-3 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${
-                            selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
-                              ? "bg-emerald-100 font-semibold"
-                              : ""
-                          }`}
+                          className={`grid grid-cols-3 py-3 px-4 border-b cursor-pointer transition hover:bg-emerald-50 ${selectedVolunteer && selectedVolunteer.user_id === volunteer.user_id
+                            ? "bg-emerald-100 font-semibold"
+                            : ""
+                            }`}
                           onClick={() => setSelectedVolunteer(volunteer)}
                         >
                           <div className="text-sm">{volunteer.user_id}</div>
@@ -442,7 +437,7 @@ export default function ReviewApplicationEventPage() {
                 </div>
 
                 {/* Profile Card - 1 column out of 3 */}
-  <div className="flex-1 min-w-[300px] max-w-[400px] bg-white rounded-lg shadow p-6 flex flex-col" style={{ minWidth: "300px", maxWidth: "400px" }}>
+                <div className="flex-1 min-w-[300px] max-w-[400px] bg-white rounded-lg shadow p-6 flex flex-col" style={{ minWidth: "300px", maxWidth: "400px" }}>
                   {selectedVolunteer ? (
                     <>
                       <div className="overflow-y-auto flex-1 pr-2">
@@ -454,19 +449,19 @@ export default function ReviewApplicationEventPage() {
                           alt={selectedVolunteer.firstname}
                           className="w-28 h-28 mx-auto mb-4 object-cover border-4 border-white shadow rounded-full"
                         />
-<div className="flex justify-center items-center gap-2 mb-6">
-  <h3 className="text-xl text-emerald-900 font-bold text-center">
-    {selectedVolunteer.firstname} {selectedVolunteer.lastname}
-  </h3>
+                        <div className="flex justify-center items-center gap-2 mb-6">
+                          <h3 className="text-xl text-emerald-900 font-bold text-center">
+                            {selectedVolunteer.firstname} {selectedVolunteer.lastname}
+                          </h3>
 
-  {selectedVolunteer.gender && (
-    <img
-      src={selectedVolunteer.gender === "Male" ? MaleIcon : FemaleIcon}
-      alt={selectedVolunteer.gender}
-      className="w-4 h-4"
-    />
-  )}
-</div>
+                          {selectedVolunteer.gender && (
+                            <img
+                              src={selectedVolunteer.gender === "Male" ? MaleIcon : FemaleIcon}
+                              alt={selectedVolunteer.gender}
+                              className="w-4 h-4"
+                            />
+                          )}
+                        </div>
 
                         <p className="text-sm text-emerald-900 mb-4">
                           <span className="font-bold text-base">Email Address</span>
@@ -528,6 +523,31 @@ export default function ReviewApplicationEventPage() {
                             </ul>
                           </>
                         )}
+
+                        {selectedVolunteer.preferred_skills ? (
+                          <>
+                            <p className="mt-3 font-bold text-base mb-2 text-emerald-900">
+                              Preferred Skills
+                            </p>
+                            <ul className="list-disc pl-5 text-sm text-emerald-900">
+                              {selectedVolunteer.preferred_skills
+                                .split(",")
+                                .map((skill, idx) => (
+                                  <li key={idx} className="mb-1">
+                                    {skill.trim()}
+                                  </li>
+                                ))}
+                            </ul>
+                          </>
+                        ) : (
+                          <>
+                            <p className="mt-3 font-bold text-base mb-2 text-emerald-900">
+                              Preferred Skills
+                            </p>
+                            <p className="text-sm text-gray-500 pl-5">Not specified</p>
+                          </>
+                        )}
+
                       </div>
 
                       <div className="mt-4 pt-4 border-t border-gray-200 flex-shrink-0">
@@ -571,8 +591,8 @@ export default function ReviewApplicationEventPage() {
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 rounded-full bg-orange-400 w-full max-w-md flex items-center justify-center">
                 <h2 className="text-2xl font-bold text-white mb-2">
-                Review
-              </h2>
+                  Review
+                </h2>
               </div>
             </div>
 

@@ -105,6 +105,7 @@ function CreateEvent() {
   const [eventTasks, setEventTasks] = useState("");
   const [volunteerGuidelines, setVolunteerGuidelines] = useState("");
   const [volunteerOpportunities, setVolunteerOpportunities] = useState([]);
+  const [preferredSkills, setPreferredSkills] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -132,6 +133,18 @@ function CreateEvent() {
     "Human Rights & Advocacy",
     "Animal Welfare"
   ];
+
+  const skillOptions = [
+  "Event Planning & Coordination",
+  "Manual Labor & Construction",
+  "Teaching & Tutoring",
+  "Medical & Healthcare",
+  "Graphic Design & Photography",
+  "Writing & Content Creation",
+  "Counseling & Mentoring",
+  "Fundraising & Grant Writing",
+  "Cooking & Food Service"
+];
 
   // Supported image formats
   const supportedImageTypes = [
@@ -315,6 +328,8 @@ function CreateEvent() {
       });
       return false;
     }
+
+    if (preferredSkills.length === 0) missingFields.push("At least one Preferred Skill");
 
     // Validate date is not in the past
     const selectedDate = new Date(eventDate);
@@ -573,6 +588,7 @@ function CreateEvent() {
         event_image: imageUrl,
         volunteer_joined: 0,
         status: "UPCOMING",
+        preferred_skills: preferredSkills.join("-"),
         created_at: new Date().toISOString().split('T')[0]
       };
 
@@ -620,6 +636,16 @@ function CreateEvent() {
       }
     });
   };
+
+  const handleSkillChange = (skill) => {
+  setPreferredSkills(prev => {
+    if (prev.includes(skill)) {
+      return prev.filter(item => item !== skill);
+    } else {
+      return [...prev, skill];
+    }
+  });
+};
 
   // Generate time options
   const generateTimeOptions = () => {
@@ -850,104 +876,155 @@ function CreateEvent() {
         </p>
       </div>
 
-      {/* Upload Poster & Volunteer Opportunities */}
-      <div className="w-full flex flex-wrap gap-6 mb-3">
-        <div className="flex-1 min-w-[250px]">
-          <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Upload Event Poster/Image <span className="text-red-600">*</span>
-          </label>
+     {/* Upload Poster, Volunteer Opportunities & Preferred Skills - 3 columns */}
+<div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  {/* Upload Event Poster */}
+  <div className="flex flex-col">
+    <label className="block font-semibold text-lg text-emerald-800 mb-1">
+      Upload Event Poster/Image <span className="text-red-600">*</span>
+    </label>
     <div className="flex items-center border bg-white border-gray-300 rounded px-3">
-            <img src={FileIcon} alt="Upload" className="w-5 h-5 mr-2" />
-            <input
-              type="file"
-              accept={supportedImageTypes.join(',')}
-              onChange={handleFileSelect}
-              className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-          <p className="text-xs text-emerald-700 mt-1">
-            Supported formats: {supportedExtensions.join(', ')}. Max size: 10MB.
-          </p>
-          
-          {imagePreview && (
-            <div className="mt-2">
-              <img 
-                src={imagePreview} 
-                alt="Preview" 
-                className="max-w-full h-32 object-cover rounded border"
-              />
-              <button
-                type="button"
-                onClick={removeSelectedFile}
-                className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium block cursor-pointer"
-              >
-                Remove Image
-              </button>
-            </div>
-          )}
-          
-          {selectedFile && !imagePreview && (
-            <div className="mt-2 p-2 bg-emerald-100 rounded text-sm text-emerald-800">
-              <p>File selected: {selectedFile.name}</p>
-              <button
-                type="button"
-                onClick={removeSelectedFile}
-                className="mt-1 text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
-              >
-                Remove File
-              </button>
-            </div>
-          )}
-        </div>
-
-  <div className="flex-1 min-w-[300px]">
-          <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Volunteer Opportunities <span className="text-red-600">*</span>
-          </label>
-    <div className="border bg-white border-gray-300 rounded p-3 flex-1">
-            <div className="flex items-center mb-2">
-              <img
-                src={OpportunitiesIcon}
-                alt="Opportunities"
-                className="w-5 h-5 mr-2"
-              />
-              <span className="text-sm font-medium">Select all that apply:</span>
-            </div>
-      <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
-              {opportunityOptions.map((option) => (
-                <label key={option} className="flex items-center text-sm cursor-pointer group hover:bg-emerald-50 p-2 rounded transition-colors">
-                  <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={volunteerOpportunities.includes(option)}
-                      onChange={() => handleOpportunityChange(option)}
-                      className="sr-only"
-                    />
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                      volunteerOpportunities.includes(option) 
-                        ? 'bg-emerald-600 border-emerald-600' 
-                        : 'border-gray-300 group-hover:border-emerald-400'
-                    }`}>
-                      {volunteerOpportunities.includes(option) && (
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                        </svg>
-                      )}
-                    </div>
-                    <span className={`ml-3 group-hover:text-emerald-800 transition-all duration-200 ${
-                      volunteerOpportunities.includes(option) 
-                        ? 'text-emerald-800 font-bold' 
-                        : 'text-gray-700 font-normal'
-                    }`}>
-                      {option}
-                    </span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
+      <img src={FileIcon} alt="Upload" className="w-5 h-5 mr-2" />
+      <input
+        type="file"
+        accept={supportedImageTypes.join(',')}
+        onChange={handleFileSelect}
+        className="w-full px-4 py-2 rounded bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      />
+    </div>
+    <p className="text-xs text-emerald-700 mt-1">
+      Supported formats: {supportedExtensions.join(', ')}. Max size: 10MB.
+    </p>
+    
+    {imagePreview && (
+      <div className="mt-2">
+        <img 
+          src={imagePreview} 
+          alt="Preview" 
+          className="max-w-full h-32 object-cover rounded border"
+        />
+        <button
+          type="button"
+          onClick={removeSelectedFile}
+          className="mt-2 text-red-600 hover:text-red-800 text-xs font-medium block cursor-pointer"
+        >
+          Remove Image
+        </button>
       </div>
+    )}
+    
+    {selectedFile && !imagePreview && (
+      <div className="mt-2 p-2 bg-emerald-100 rounded text-sm text-emerald-800">
+        <p>File selected: {selectedFile.name}</p>
+        <button
+          type="button"
+          onClick={removeSelectedFile}
+          className="mt-1 text-red-600 hover:text-red-800 text-xs font-medium cursor-pointer"
+        >
+          Remove File
+        </button>
+      </div>
+    )}
+  </div>
+
+  {/* Volunteer Opportunities */}
+  <div className="flex flex-col">
+    <label className="block font-semibold text-lg text-emerald-800 mb-1">
+      Volunteer Opportunities <span className="text-red-600">*</span>
+    </label>
+    <div className="border bg-white border-gray-300 rounded p-3 flex-1 flex flex-col max-h-[280px]">
+      <div className="flex items-center mb-2">
+        <img
+          src={OpportunitiesIcon}
+          alt="Opportunities"
+          className="w-5 h-5 mr-2"
+        />
+        <span className="text-sm font-medium">Select all that apply:</span>
+      </div>
+      <div className="grid grid-cols-1 gap-2 overflow-y-auto flex-1 pr-1">
+        {opportunityOptions.map((option) => (
+          <label key={option} className="flex items-center text-sm cursor-pointer group hover:bg-emerald-50 p-2 rounded transition-colors">
+            <div className="relative flex items-center w-full">
+              <input
+                type="checkbox"
+                checked={volunteerOpportunities.includes(option)}
+                onChange={() => handleOpportunityChange(option)}
+                className="sr-only"
+              />
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                volunteerOpportunities.includes(option) 
+                  ? 'bg-emerald-600 border-emerald-600' 
+                  : 'border-gray-300 group-hover:border-emerald-400'
+              }`}>
+                {volunteerOpportunities.includes(option) && (
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                  </svg>
+                )}
+              </div>
+              <span className={`ml-3 group-hover:text-emerald-800 transition-all duration-200 ${
+                volunteerOpportunities.includes(option) 
+                  ? 'text-emerald-800 font-bold' 
+                  : 'text-gray-700 font-normal'
+              }`}>
+                {option}
+              </span>
+            </div>
+          </label>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  {/* Preferred Skills */}
+  <div className="flex flex-col">
+    <label className="block font-semibold text-lg text-emerald-800 mb-1">
+      Preferred Skills <span className="text-red-600">*</span>
+    </label>
+    <div className="border bg-white border-gray-300 rounded p-3 flex-1 flex flex-col max-h-[280px]">
+      <div className="flex items-center mb-2">
+        <img
+          src={OpportunitiesIcon}
+          alt="Skills"
+          className="w-5 h-5 mr-2"
+        />
+        <span className="text-sm font-medium">Select all that apply:</span>
+      </div>
+      <div className="grid grid-cols-1 gap-2 overflow-y-auto flex-1 pr-1">
+        {skillOptions.map((skill) => (
+          <label key={skill} className="flex items-center text-sm cursor-pointer group hover:bg-emerald-50 p-2 rounded transition-colors">
+            <div className="relative flex items-center w-full">
+              <input
+                type="checkbox"
+                checked={preferredSkills.includes(skill)}
+                onChange={() => handleSkillChange(skill)}
+                className="sr-only"
+              />
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                preferredSkills.includes(skill) 
+                  ? 'bg-emerald-600 border-emerald-600' 
+                  : 'border-gray-300 group-hover:border-emerald-400'
+              }`}>
+                {preferredSkills.includes(skill) && (
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                  </svg>
+                )}
+              </div>
+              <span className={`ml-3 group-hover:text-emerald-800 transition-all duration-200 ${
+                preferredSkills.includes(skill) 
+                  ? 'text-emerald-800 font-bold' 
+                  : 'text-gray-700 font-normal'
+              }`}>
+                {skill}
+              </span>
+            </div>
+          </label>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Step 1 Buttons */}
       <div className="flex justify-between">
@@ -1096,6 +1173,11 @@ function CreateEvent() {
             <p className="text-sm text-emerald-600 font-medium">Volunteer Opportunities:</p>
             <p className="text-gray-800 text-sm">{volunteerOpportunities.join(", ")}</p>
           </div>
+
+          <div className="mt-4">
+            <p className="text-sm text-emerald-600 font-medium">Preferred Skills:</p>
+            <p className="text-gray-800 text-sm">{preferredSkills.join(", ")}</p>
+        </div>
           
           {selectedFile && (
             <div className="mt-4">

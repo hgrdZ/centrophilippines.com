@@ -855,6 +855,22 @@ function EventPage() {
                 </div>
               )}
 
+              {eventData.preferred_skills && (
+              <div>
+                <h3 className="font-semibold text-xl text-emerald-900 hover:text-emerald-700 transition-colors">Preferred Skills:</h3>
+                {parseBulletPoints(eventData.preferred_skills).length > 0 ? (
+                  <ul className="list-disc pl-6 space-y-2 text-gray-800 bg-orange-50 p-2 rounded-lg">
+                    {parseBulletPoints(eventData.preferred_skills).map((item, index) => (
+                      <li key={index} className="leading-relaxed">{item.trim()}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-gray-800 bg-orange-50 p-2 rounded-lg leading-relaxed">{eventData.preferred_skills}</div>
+                )}
+              </div>
+            )}
+              
+
               <div className="flex justify-center pt-1">
                 <Link to={`/event/${eventData.event_id}/first`}>
                   <button className="bg-emerald-900 text-white font-montserrat font-semibold px-8 py-3 rounded-lg hover:bg-emerald-700 shadow-lg transition-colors cursor-pointer">
