@@ -956,6 +956,20 @@ function ReviewAiScheduling() {
                         <p className="text-gray-700">N/A</p>
                       )}
                     </div>
+                                        <div className="col-span-2">
+                      <p className="font-semibold text-emerald-800">Volunteering Skills Needed:</p>
+                      {eventDetails.preferred_skills ? (
+                        <ul className="list-disc list-inside text-gray-700">
+                          {eventDetails.preferred_skills
+                            .split("-")
+                            .map((item, index) => (
+                              <li key={index}>{item.trim()}</li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-700">N/A</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
