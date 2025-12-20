@@ -67,6 +67,8 @@ function CentroLogin({ setIsAuthenticated }) {
     setError("");
     if (!loginId || !password) {
       setError("Both Admin ID and Password are required.");
+      // Auto-hide error after 4 seconds
+      setTimeout(() => setError(""), 4000);
       return;
     }
 
@@ -74,6 +76,28 @@ function CentroLogin({ setIsAuthenticated }) {
     setProgress(0);
 
     try {
+      // First, check if the Admin ID exists
+      const { data: adminCheck, error: checkError } = await supabase
+        .from("NGO_Admin")
+        .select("login_id, password")
+        .eq("login_id", loginId);
+
+      if (checkError) {
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
+        setTimeout(() => setError(""), 4000);
+        return;
+      }
+
+      // If no admin found with this login_id
+      if (!adminCheck || adminCheck.length === 0) {
+        setError("Invalid Admin ID. Please check your Admin ID.");
+        setLoading(false);
+        setTimeout(() => setError(""), 4000);
+        return;
+      }
+
+      // If admin exists, check password
       const { data, error } = await supabase
         .from("NGO_Admin")
         .select(`
@@ -87,8 +111,9 @@ function CentroLogin({ setIsAuthenticated }) {
         .single();
 
       if (error || !data) {
-        setError("Invalid Admin ID or Password.");
+        setError("Invalid Password. Please check your password.");
         setLoading(false);
+        setTimeout(() => setError(""), 4000);
       } else {
         if (rememberMe) {
           localStorage.setItem("rememberedLoginId", loginId);
@@ -119,6 +144,8 @@ function CentroLogin({ setIsAuthenticated }) {
       console.error(err);
       setError("Something went wrong. Please try again.");
       setLoading(false);
+      // Auto-hide error after 4 seconds
+      setTimeout(() => setError(""), 4000);
     }
   };
 

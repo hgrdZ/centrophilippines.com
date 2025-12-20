@@ -19,6 +19,7 @@ import ApplicantsPage from "./pages/ApplicantsPage.jsx";
 import ReviewAiSchedulingPage from "./pages/ReviewAiSchedulingPage.jsx";
 import AcceptedVolunteers from "./pages/AcceptedVolunteers.jsx";
 import CentroLogin from "./pages/CentroLogin.jsx"; 
+import ForgotPassword from "./pages/ForgotPassword";
 import NGOHubPage from "./pages/NGOHubPage.jsx";
 import AddNGOPage from "./pages/AddNGOPage.jsx";
 
@@ -64,6 +65,9 @@ function App() {
           path="/login"
           element={<CentroLogin setIsAuthenticated={setIsAuthenticated} />}
         />
+        
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
 
         {/* Protected Routes */}
         {isAuthenticated ? (
