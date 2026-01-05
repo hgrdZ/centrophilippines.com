@@ -108,6 +108,8 @@ function CreateEvent() {
   const [preferredSkills, setPreferredSkills] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [eventType, setEventType] = useState('single');
+  const [eventEndDate, setEventEndDate] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     localStorage.getItem("sidebarCollapsed") === "true" || false
   );
@@ -302,12 +304,60 @@ function CreateEvent() {
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) fileInput.value = '';
   };
+  // Clear all form data
+const clearAllFields = () => {
+  setEventTitle("");
+  setEventDate("");
+  setEventEndDate("");
+  setStartTime("");
+  setEndTime("");
+  setEventDescription("");
+  setEventObjectives("");
+  setLocation("");
+  setLocationDetails(null);
+  setVolunteersLimit("");
+  setCallTime("");
+  setEventTasks("");
+  setVolunteerGuidelines("");
+  setVolunteerOpportunities([]);
+  setPreferredSkills([]);
+  setSelectedFile(null);
+  setImagePreview(null);
+  setEventType('single');
+  setCompletionTasks([
+    { id: 1, description: ""},
+    { id: 2, description: ""},
+    { id: 3, description: ""}
+  ]);
+  setCurrentStep(1);
+  
+  // Reset file input
+  const fileInput = document.querySelector('input[type="file"]');
+  if (fileInput) fileInput.value = '';
+};
 
   // Validate Page 1 (Event Details)
   const validatePage1 = () => {
     const missingFields = [];
     if (!eventTitle.trim()) missingFields.push("Event Title");
     if (!eventDate) missingFields.push("Event Date");
+    if (eventType === 'multiple' && !eventEndDate) missingFields.push("Event End Date");
+    
+    // Validate end date is after start date for multiple day events
+    if (eventType === 'multiple' && eventDate && eventEndDate) {
+      const startDate = new Date(eventDate);
+      const endDate = new Date(eventEndDate);
+      
+      if (endDate < startDate) {
+        setModalConfig({
+          title: "Invalid Date Range",
+          message: "Event end date must be after or equal to start date.",
+          onCancel: () => setModalConfig(null),
+          type: "alert",
+        });
+        return false;
+      }
+    }
     if (!startTime) missingFields.push("Start Time");
     if (!endTime) missingFields.push("End Time");
     if (!eventDescription.trim()) missingFields.push("Event Description");
@@ -575,6 +625,8 @@ function CreateEvent() {
         ngo_id: ngoCode,
         event_title: eventTitle.trim(),
         date: eventDate,
+        event_type: eventType,
+        event_end_date: eventType === 'multiple' ? eventEndDate : null,
         time_start: convertTo24Hour(startTime),
         time_end: convertTo24Hour(endTime),
         description: eventDescription.trim(),
@@ -698,34 +750,123 @@ function CreateEvent() {
         />
       </div>
 
-      {/* Date & Time Container */}
-      <div className="w-full flex flex-wrap gap-6 mb-6">
-        <div className="flex-1 min-w-[250px]">
-          <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Date  <span className="text-red-600">*</span>
-          </label>
-          <div className="flex items-center border bg-white border-gray-300 rounded px-4 py-2">
-            <img src={DateIcon} alt="Date" className="w-5 h-5 mr-2" />
+     {/* Date & Time Container */}
+      <div className="w-full mb-6">
+        {/* Event Type Selection - Single Line */}
+        <label className="block font-semibold text-lg text-emerald-800 mb-2">
+          Event Type <span className="text-red-600">*</span>
+        </label>
+        
+        <div className="flex gap-3 mb-4">
+          {/* Single Day Event Option */}
+          <label className={`flex-1 flex items-center cursor-pointer bg-white border-2 rounded-lg px-3 py-2 transition-all ${
+            eventType === 'single' 
+              ? 'border-emerald-600 bg-emerald-50' 
+              : 'border-gray-300 hover:border-emerald-400'
+          }`}>
             <input
-              type="date"
-              value={eventDate}
-              onChange={(e) => setEventDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent"
+              type="radio"
+              name="eventType"
+              value="single"
+              checked={eventType === 'single'}
+              onChange={(e) => {
+                setEventType(e.target.value);
+                setEventEndDate("");
+              }}
+              className="mr-2 w-4 h-4 accent-emerald-700 flex-shrink-0"
             />
-          </div>
+            <div className="flex-1">
+              <span className="font-semibold text-gray-800 text-sm block">Single Day Event</span>
+              <p className="text-xs text-gray-600">One day only</p>
+            </div>
+          </label>
+
+          {/* Multiple Day Event Option */}
+          <label className={`flex-1 flex items-center cursor-pointer bg-white border-2 rounded-lg px-3 py-2 transition-all ${
+            eventType === 'multiple' 
+              ? 'border-emerald-600 bg-emerald-50' 
+              : 'border-gray-300 hover:border-emerald-400'
+          }`}>
+            <input
+              type="radio"
+              name="eventType"
+              value="multiple"
+              checked={eventType === 'multiple'}
+              onChange={(e) => setEventType(e.target.value)}
+              className="mr-2 w-4 h-4 accent-emerald-700 flex-shrink-0"
+            />
+            <div className="flex-1">
+              <span className="font-semibold text-gray-800 text-sm block">Multiple Day Event</span>
+              <p className="text-xs text-gray-600">Spans multiple days</p>
+            </div>
+          </label>
         </div>
 
-        <div className="flex-1 min-w-[200px]">
-          <label className="block font-semibold text-lg text-emerald-800 mb-1">
-            Time <span className="text-red-600">*</span>
+        {/* Date Fields - Show based on event type */}
+        <div className="animate-slideDown mb-4">
+          {eventType === 'single' ? (
+            // Single Day Date Field
+            <div>
+              <label className="block font-semibold text-sm text-emerald-800 mb-1">
+                Event Date <span className="text-red-600">*</span>
+              </label>
+              <div className="flex items-center border bg-white border-gray-300 rounded px-3 py-2">
+                <img src={DateIcon} alt="Date" className="w-4 h-4 mr-2" />
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent text-sm"
+                />
+              </div>
+            </div>
+          ) : (
+            // Multiple Day Date Fields - One Line
+            <div>
+              <label className="block font-semibold text-sm text-emerald-800 mb-1">
+                Event Duration <span className="text-red-600">*</span>
+              </label>
+              <div className="flex gap-3">
+                <div className="flex-1 flex items-center border bg-white border-gray-300 rounded px-3 py-2">
+                  <img src={DateIcon} alt="Date" className="w-4 h-4 mr-2" />
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    placeholder="Start Date"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent text-sm"
+                  />
+                </div>
+                
+               <div className="flex-1 flex items-center border bg-white border-gray-300 rounded px-3 py-2">
+                  <img src={DateIcon} alt="Date" className="w-4 h-4 mr-2" />
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    placeholder="End Date"
+                    className="w-full border-none focus:outline-none cursor-pointer text-gray-700 bg-transparent text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Event Time - Always visible */}
+        <div>
+          <label className="block font-semibold text-sm text-emerald-800 mb-1">
+            {eventType === 'multiple' ? 'Daily Event Time' : 'Event Time'} <span className="text-red-600">*</span>
           </label>
-    <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3">
-            <img src={TimeIcon} alt="Time" className="w-5 h-5 mr-2" />
+          <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-2 gap-2">
+            <img src={TimeIcon} alt="Time" className="w-4 h-4" />
             <select
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-        className="w-full border-none focus:outline-none cursor-pointer bg-transparent text-gray-700"
+              className="flex-1 p-1 border-none focus:outline-none cursor-pointer bg-transparent text-gray-700 text-sm"
             >
               <option value="">Start Time</option>
               {timeOptions.map((time) => (
@@ -737,7 +878,7 @@ function CreateEvent() {
             <select
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-1/2 p-2 focus:outline-none cursor-pointer"
+              className="flex-1 p-1 border-none focus:outline-none cursor-pointer bg-transparent text-gray-700 text-sm"
             >
               <option value="">End Time</option>
               {timeOptions.map((time) => (
@@ -747,9 +888,13 @@ function CreateEvent() {
               ))}
             </select>
           </div>
+          {eventType === 'multiple' && (
+            <p className="text-xs text-emerald-700 mt-1">
+            </p>
+          )}
         </div>
       </div>
-
+      
       {/* Location with Google Maps Autocomplete */}
       <div className="mb-4">
         <label className="block font-semibold text-lg text-green-800 mb-1">
@@ -1027,28 +1172,44 @@ function CreateEvent() {
 </div>
 
       {/* Step 1 Buttons */}
-      <div className="flex justify-between">
-        <button
-          onClick={() => setModalConfig({
-            title: "Close",
-            message: "Are you sure you want to close? All progress will be lost.",
-            onConfirm: () => {
-              setModalConfig(null);
-              navigate("/dashboard");
-            },
-            onCancel: () => setModalConfig(null),
-          })}
-          className="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
-        >
-          Close
-        </button>
-        <button
-          onClick={goToStep2}
-          className="bg-emerald-700 text-white px-6 py-2 rounded-full hover:bg-emerald-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
-        >
-          Next
-        </button>
-      </div>
+<div className="flex justify-between">
+  <div className="flex gap-3">
+    <button
+      onClick={() => setModalConfig({
+        title: "Close",
+        message: "Are you sure you want to close? All progress will be lost.",
+        onConfirm: () => {
+          setModalConfig(null);
+          navigate("/dashboard");
+        },
+        onCancel: () => setModalConfig(null),
+      })}
+      className="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+    >
+      Close
+    </button>
+    <button
+      onClick={() => setModalConfig({
+        title: "Clear All",
+        message: "Are you sure you want to clear all fields? All entered information will be lost.",
+        onConfirm: () => {
+          setModalConfig(null);
+          clearAllFields();
+        },
+        onCancel: () => setModalConfig(null),
+      })}
+      className="bg-amber-300 text-white px-6 py-2 rounded-full hover:bg-yellow-600 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+    >
+      Clear
+    </button>
+  </div>
+  <button
+    onClick={goToStep2}
+    className="bg-emerald-700 text-white px-6 py-2 rounded-full hover:bg-emerald-900 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+  >
+    Next
+  </button>
+</div>
     </div>
   );
 
@@ -1131,6 +1292,18 @@ function CreateEvent() {
               <p className="text-sm text-emerald-600 font-medium">Date:</p>
               <p className="text-gray-800">{eventDate}</p>
             </div>
+            {eventType === 'multiple' && (
+              <>
+                <div>
+                  <p className="text-sm text-emerald-600 font-medium">Event Type:</p>
+                  <p className="text-gray-800">Multiple Day Event</p>
+                </div>
+                <div>
+                  <p className="text-sm text-emerald-600 font-medium">End Date:</p>
+                  <p className="text-gray-800">{eventEndDate}</p>
+                </div>
+              </>
+            )}
             <div>
               <p className="text-sm text-emerald-600 font-medium">Time:</p>
               <p className="text-gray-800">{startTime} - {endTime}</p>
@@ -1339,6 +1512,20 @@ function CreateEvent() {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+          @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-slideDown {
+          animation: slideDown 0.3s ease-out;
         }
 
         @keyframes scaleIn {

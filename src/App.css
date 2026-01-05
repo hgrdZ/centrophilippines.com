@@ -15,6 +15,9 @@
     --color-orange-400: oklch(75% 0.183 55.934);
     --color-orange-500: oklch(70.5% 0.213 47.604);
     --color-orange-600: oklch(64.6% 0.222 41.116);
+     --color-amber-200: oklch(84.642% 0.16926 84.904);
+    --color-amber-300: oklch(81.04% 0.15796 71.973);
+    --color-amber-700: oklch(53.575% 0.15305 44.687);
     --color-amber-400: oklch(82.8% 0.189 84.429);
     --color-amber-500: oklch(76.9% 0.188 70.08);
     --color-amber-800: oklch(47.3% 0.137 46.201);
@@ -323,6 +326,9 @@
   }
   .left-1 {
     left: calc(var(--spacing) * 1);
+  }
+  .left-10 {
+    left: calc(var(--spacing) * 10);
   }
   .left-1\/2 {
     left: calc(1/2 * 100%);
@@ -716,6 +722,12 @@
   .cursor-e-resize{
     cursor: e-resize;
   }
+  .pointer-events-auto {
+    pointer-events: auto;
+  }
+  .pointer-events-none {
+    pointer-events: none;
+  }
 
   .resize {
     resize: both;
@@ -998,8 +1010,23 @@
       border-color: color-mix(in oklab, var(--color-white) 0%, transparent);
     }
   }
+   .bg-amber-200 {
+    background-color: var(--color-amber-200);
+  }
+   .bg-amber-300 {
+    background-color: var(--color-amber-300);
+  }
   .bg-amber-400 {
     background-color: var(--color-amber-400);
+  }
+  .bg-amber-500 {
+    background-color: var(--color-amber-500);
+  }
+  .bg-amber-600 {
+    background-color: var(--color-amber-600);
+  }
+  .bg-amber-700 {
+    background-color: var(--color-amber-700);
   }
   .bg-amber-800 {
     background-color: var(--color-amber-800);
@@ -1181,6 +1208,9 @@
       background-color: color-mix(in oklab, var(--color-white) 95%, transparent);
     }
   }
+  .bg-yellow-200 {
+    background-color: var(--color-yellow-200);
+  }
   .bg-yellow-300 {
     background-color: var(--color-yellow-300);
   }
@@ -1192,6 +1222,12 @@
   }
   .bg-yellow-600 {
     background-color: var(--color-yellow-600);
+  }
+  .bg-yellow-700 {
+    background-color: var(--color-yellow-700);
+  }
+  .bg-yellow-800 {
+    background-color: var(--color-yellow-800);
   }
   .bg-\[length\:100\%_100\%\] {
     background-size: 100% 100%;
